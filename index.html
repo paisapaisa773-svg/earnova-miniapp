@@ -1,140 +1,371 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <script src="https://libtl.com/sdk.js"
-data-zone="12183521"
-data-sdk="show_12183521"></script>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EARNOVA Mini App</title>
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
-<style>
-*{box-sizing:border-box}
-body{margin:0;background:#0b1220;color:#fff;font-family:Arial,sans-serif;padding:20px}
-.header{display:flex;justify-content:space-between;align-items:center}
-.logo{font-size:25px;font-weight:bold;color:#35dc91}
-.profile{background:#18243a;padding:10px 14px;border-radius:20px}
-h2{margin-top:32px;font-size:25px}
-.muted{color:#91a1b9;font-size:14px}
-.wallet{background:linear-gradient(135deg,#123d36,#176b50);padding:22px;border-radius:18px;margin-top:22px}
-.balance{font-size:32px;font-weight:bold;margin:12px 0}
-.small{font-size:13px;color:#d0e9dd}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-top:22px}
-.item{background:#172338;border:1px solid #263650;border-radius:15px;padding:19px 14px;min-height:110px}
-.emoji{font-size:26px}
-.item h3{font-size:15px;margin:12px 0 5px}
-.item p{font-size:12px;color:#91a1b9;margin:0}
-.benefits{background:#172338;padding:18px;border-radius:15px;margin-top:22px}
-.benefits p{color:#b7c4d8;font-size:13px;line-height:1.8}
-button{background:#35dc91;color:#071b15;border:0;padding:11px 17px;border-radius:10px;font-weight:bold}
-.footer{text-align:center;color:#74839a;font-size:12px;margin:30px 0}
-</style>
-</head>
-<body>
-<div class="header">
-<div class="logo">EARNOVA</div>
-<div class="profile">👤 My Account</div>
-</div>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0b1220">
 
-<h2>Welcome to EARNOVA! 👋</h2>
-<p class="muted">Complete tasks and explore rewards.</p>
+    <title>EARNOVA Mini App</title>
 
-<div class="wallet">
-<div>💳 TOTAL WALLET BALANCE</div>
-<div class="balance">₹0.00</div>
-<div class="small">Minimum withdrawal: ₹20</div>
-</div>
+    <!-- Telegram SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-<div class="grid">
-<div class="item" onclick="openPage('Watch Ads')">
-<div class="emoji">📺</div>
-<h3>Watch Ads</h3>
-<p>Watch and earn rewards</p>
-</div>
-<div class="item" onclick="openPage('Daily Tasks')">
-<div class="emoji">🎯</div>
-<h3>Daily Tasks</h3>
-<p>Complete available tasks</p>
-</div>
-<div class="item" onclick="openPage('Refer & Earn')">
-<div class="emoji">👥</div>
-<h3>Refer & Earn</h3>
-<p>Invite friends</p>
-</div>
-<div class="item" onclick="openPage('Leaderboard')">
-<div class="emoji">🏆</div>
-<h3>Leaderboard</h3>
-<p>Top earning members</p>
-</div>
-<div class="item" onclick="openPage('My Wallet')">
-<div class="emoji">💰</div>
-<h3>My Wallet</h3>
-<p>Check your balance</p>
-</div>
-<div class="item" onclick="openPage('Withdraw')">
-<div class="emoji">💸</div>
-<h3>Withdraw</h3>
-<p>Minimum ₹20</p>
-</div>
-</div>
+    <!-- Monetag SDK -->
+    <script
+        src="https://libtl.com/sdk.js"
+        data-zone="12183521"
+        data-sdk="show_12183521">
+    </script>
 
-<div class="benefits">
-<h3>✨ Your Benefits</h3>
-<p>✓ Daily earning opportunities<br>
-✓ Referral rewards<br>
-✓ Task history<br>
-✓ Easy wallet access</p>
-</div>
-
-<div class="footer">EARNOVA • Earn Smart, Stay Genuine</div>
-
-<script src="https://api.adsun.io/sdk.js"></script>
-
-<script>
-const tg = window.Telegram.WebApp;
-tg.ready();
-tg.expand();
-fetch("https://earnova-miniapp.onrender.com/api/register", {
-    method: "POST",
-    headers: {
-        "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-        initData: tg.initData
-    })
-})
-.then(response => response.json())
-.then(data => {
-    if (data.ok) {
-        console.log("EARNOVA user registered");
-    } else {
-        console.log("Registration failed:", data.error);
-    }
-})
-.catch(error => {
-    console.log("Backend connection error:", error);
-});
-const AdController = window.Adsun.init({
-    blockId: "50125"
-});
-
-function openPage(name) {
-    if (name === "Watch Ads") {
-        AdController.show()
-            .then((result) => {
-                alert("Ad completed! Reward verification is pending.");
-            })
-            .catch((error) => {
-                alert("Ad skipped or unavailable. Please try again.");
-            });
-    } else {
-        if (tg.showAlert) {
-            tg.showAlert(name + " section will be available soon.");
-        } else {
-            alert(name + " section will be available soon.");
+    <style>
+        * {
+            box-sizing: border-box;
         }
-    }
-}
-</script>
+
+        body {
+            margin: 0;
+            background: #0b1220;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 25px;
+            font-weight: bold;
+            color: #35dc91;
+        }
+
+        .profile {
+            background: #18243a;
+            padding: 10px 14px;
+            border-radius: 20px;
+        }
+
+        h2 {
+            margin-top: 32px;
+            font-size: 25px;
+        }
+
+        .muted {
+            color: #91a1b9;
+            font-size: 14px;
+        }
+
+        .wallet {
+            background: linear-gradient(135deg, #123d36, #176b50);
+            padding: 22px;
+            border-radius: 18px;
+            margin-top: 22px;
+        }
+
+        .balance {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 12px 0;
+        }
+
+        .small {
+            font-size: 13px;
+            color: #d0e9dd;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 13px;
+            margin-top: 22px;
+        }
+
+        .item {
+            background: #172338;
+            border: 1px solid #263650;
+            border-radius: 15px;
+            padding: 19px 14px;
+            min-height: 110px;
+            cursor: pointer;
+        }
+
+        .emoji {
+            font-size: 26px;
+        }
+
+        .item h3 {
+            font-size: 15px;
+            margin: 12px 0 5px;
+        }
+
+        .item p {
+            font-size: 12px;
+            color: #91a1b9;
+            margin: 0;
+        }
+
+        .benefits {
+            background: #172338;
+            padding: 18px;
+            border-radius: 15px;
+            margin-top: 22px;
+        }
+
+        .benefits p {
+            color: #b7c4d8;
+            font-size: 13px;
+            line-height: 1.8;
+        }
+
+        button {
+            background: #35dc91;
+            color: #071b15;
+            border: 0;
+            padding: 11px 17px;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+
+        .footer {
+            text-align: center;
+            color: #74839a;
+            font-size: 12px;
+            margin: 30px 0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">
+        <div class="logo">EARNOVA</div>
+        <div class="profile">👤 My Account</div>
+    </div>
+
+    <h2>Welcome to EARNOVA! 👋</h2>
+    <p class="muted">Complete tasks and explore rewards.</p>
+
+    <div class="wallet">
+        <div>💳 TOTAL WALLET BALANCE</div>
+        <div class="balance">₹0.00</div>
+        <div class="small">Minimum withdrawal: ₹20</div>
+    </div>
+
+    <div class="grid">
+
+        <div class="item" onclick="openPage('Watch Ads')">
+            <div class="emoji">📺</div>
+            <h3>Watch Ads</h3>
+            <p>Watch and earn rewards</p>
+        </div>
+
+        <div class="item" onclick="openPage('Daily Tasks')">
+            <div class="emoji">🎯</div>
+            <h3>Daily Tasks</h3>
+            <p>Complete available tasks</p>
+        </div>
+
+        <div class="item" onclick="openPage('Refer & Earn')">
+            <div class="emoji">👥</div>
+            <h3>Refer & Earn</h3>
+            <p>Invite friends</p>
+        </div>
+
+        <div class="item" onclick="openPage('Leaderboard')">
+            <div class="emoji">🏆</div>
+            <h3>Leaderboard</h3>
+            <p>Top earning members</p>
+        </div>
+
+        <div class="item" onclick="openPage('My Wallet')">
+            <div class="emoji">💰</div>
+            <h3>My Wallet</h3>
+            <p>Check your balance</p>
+        </div>
+
+        <div class="item" onclick="openPage('Withdraw')">
+            <div class="emoji">💸</div>
+            <h3>Withdraw</h3>
+            <p>Minimum ₹20</p>
+        </div>
+
+    </div>
+
+    <div class="benefits">
+        <h3>✨ Your Benefits</h3>
+        <p>
+            ✓ Daily earning opportunities<br>
+            ✓ Referral rewards<br>
+            ✓ Task history<br>
+            ✓ Easy wallet access
+        </p>
+    </div>
+
+    <div class="footer">
+        EARNOVA • Earn Smart, Stay Genuine
+    </div>
+
+    <!-- Adsun SDK -->
+    <script src="https://api.adsun.io/sdk.js"></script>
+
+    <script>
+        // Telegram setup
+        const tg = window.Telegram?.WebApp;
+
+        if (tg) {
+            tg.ready();
+            tg.expand();
+        }
+
+        // Register Telegram user
+        if (tg && tg.initData) {
+            fetch("https://earnova-miniapp.onrender.com/api/register", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    initData: tg.initData
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log("EARNOVA registration:", data);
+            })
+            .catch(error => {
+                console.log("Registration error:", error);
+            });
+        }
+
+        // Initialize Adsun
+        let AdController = null;
+
+        try {
+            if (window.Adsun) {
+                AdController = window.Adsun.init({
+                    blockId: "50125"
+                });
+            }
+        } catch (error) {
+            console.log("Adsun initialization error:", error);
+        }
+
+        // Network rotation
+        let nextNetwork = "adsun";
+
+        try {
+            nextNetwork =
+                localStorage.getItem("earnova_next_ad") || "adsun";
+        } catch (error) {
+            console.log("Storage unavailable");
+        }
+
+        function saveNextNetwork(network) {
+            nextNetwork = network;
+
+            try {
+                localStorage.setItem("earnova_next_ad", network);
+            } catch (error) {
+                console.log("Could not save ad rotation");
+            }
+        }
+
+        // Show ad from selected network
+        function showNetworkAd(network) {
+            return new Promise((resolve, reject) => {
+                try {
+                    let adPromise;
+
+                    if (network === "adsun") {
+                        if (!AdController ||
+                            typeof AdController.show !== "function") {
+                            reject("Adsun unavailable");
+                            return;
+                        }
+
+                        adPromise = AdController.show();
+
+                    } else {
+                        if (typeof window.show_12183521 !== "function") {
+                            reject("Monetag unavailable");
+                            return;
+                        }
+
+                        adPromise = window.show_12183521();
+                    }
+
+                    Promise.resolve(adPromise)
+                        .then(resolve)
+                        .catch(reject);
+
+                } catch (error) {
+                    reject(error);
+                }
+            });
+        }
+
+        // Watch Ads with fallback
+        async function watchAd() {
+            const first = nextNetwork;
+            const second =
+                first === "adsun" ? "monetag" : "adsun";
+
+            try {
+                await showNetworkAd(first);
+
+                saveNextNetwork(second);
+
+                notify(
+                    "Ad flow completed. Reward verification is pending."
+                );
+
+                return;
+
+            } catch (error) {
+                console.log(first + " ad failed:", error);
+            }
+
+            try {
+                await showNetworkAd(second);
+
+                saveNextNetwork(first);
+
+                notify(
+                    "Ad flow completed. Reward verification is pending."
+                );
+
+            } catch (error) {
+                console.log(second + " ad failed:", error);
+
+                notify(
+                    "No ad available right now. Please try again later."
+                );
+            }
+        }
+
+        // Telegram alert helper
+        function notify(message) {
+            if (tg && typeof tg.showAlert === "function") {
+                tg.showAlert(message);
+            } else {
+                alert(message);
+            }
+        }
+
+        // Main navigation
+        function openPage(name) {
+            if (name === "Watch Ads") {
+                watchAd();
+                return;
+            }
+
+            notify(name + " section will be available soon.");
+        }
+    </script>
+
 </body>
 </html>
