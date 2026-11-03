@@ -91,7 +91,26 @@ button{background:#35dc91;color:#071b15;border:0;padding:11px 17px;border-radius
 const tg = window.Telegram.WebApp;
 tg.ready();
 tg.expand();
-
+fetch("https://earnova-miniapp.onrender.com/api/register", {
+    method: "POST",
+    headers: {
+        "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+        initData: tg.initData
+    })
+})
+.then(response => response.json())
+.then(data => {
+    if (data.ok) {
+        console.log("EARNOVA user registered");
+    } else {
+        console.log("Registration failed:", data.error);
+    }
+})
+.catch(error => {
+    console.log("Backend connection error:", error);
+});
 const AdController = window.Adsun.init({
     blockId: "50125"
 });
