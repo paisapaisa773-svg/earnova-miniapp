@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EARNOVA Mini App</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#0b1220;color:#fff;font-family:Arial,sans-serif;padding:20px}
+.header{display:flex;justify-content:space-between;align-items:center}
+.logo{font-size:25px;font-weight:bold;color:#35dc91}
+.profile{background:#18243a;padding:10px 14px;border-radius:20px}
+h2{margin-top:32px;font-size:25px}
+.muted{color:#91a1b9;font-size:14px}
+.wallet{background:linear-gradient(135deg,#123d36,#176b50);padding:22px;border-radius:18px;margin-top:22px}
+.balance{font-size:32px;font-weight:bold;margin:12px 0}
+.small{font-size:13px;color:#d0e9dd}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-top:22px}
+.item{background:#172338;border:1px solid #263650;border-radius:15px;padding:19px 14px;min-height:110px}
+.emoji{font-size:26px}
+.item h3{font-size:15px;margin:12px 0 5px}
+.item p{font-size:12px;color:#91a1b9;margin:0}
+.benefits{background:#172338;padding:18px;border-radius:15px;margin-top:22px}
+.benefits p{color:#b7c4d8;font-size:13px;line-height:1.8}
+button{background:#35dc91;color:#071b15;border:0;padding:11px 17px;border-radius:10px;font-weight:bold}
+.footer{text-align:center;color:#74839a;font-size:12px;margin:30px 0}
+</style>
+</head>
+<body>
+<div class="header">
+<div class="logo">EARNOVA</div>
+<div class="profile">👤 My Account</div>
+</div>
+
+<h2>Welcome to EARNOVA! 👋</h2>
+<p class="muted">Complete tasks and explore rewards.</p>
+
+<div class="wallet">
+<div>💳 TOTAL WALLET BALANCE</div>
+<div class="balance">₹0.00</div>
+<div class="small">Minimum withdrawal: ₹20</div>
+</div>
+
+<div class="grid">
+<div class="item" onclick="openPage('Watch Ads')">
+<div class="emoji">📺</div>
+<h3>Watch Ads</h3>
+<p>Watch and earn rewards</p>
+</div>
+<div class="item" onclick="openPage('Daily Tasks')">
+<div class="emoji">🎯</div>
+<h3>Daily Tasks</h3>
+<p>Complete available tasks</p>
+</div>
+<div class="item" onclick="openPage('Refer & Earn')">
+<div class="emoji">👥</div>
+<h3>Refer & Earn</h3>
+<p>Invite friends</p>
+</div>
+<div class="item" onclick="openPage('Leaderboard')">
+<div class="emoji">🏆</div>
+<h3>Leaderboard</h3>
+<p>Top earning members</p>
+</div>
+<div class="item" onclick="openPage('My Wallet')">
+<div class="emoji">💰</div>
+<h3>My Wallet</h3>
+<p>Check your balance</p>
+</div>
+<div class="item" onclick="openPage('Withdraw')">
+<div class="emoji">💸</div>
+<h3>Withdraw</h3>
+<p>Minimum ₹20</p>
+</div>
+</div>
+
+<div class="benefits">
+<h3>✨ Your Benefits</h3>
+<p>✓ Daily earning opportunities<br>
+✓ Referral rewards<br>
+✓ Task history<br>
+✓ Easy wallet access</p>
+</div>
+
+<div class="footer">EARNOVA • Earn Smart, Stay Genuine</div>
+
+<script>
+const tg=window.Telegram.WebApp;
+tg.ready();
+tg.expand();
+
+function openPage(name){
+if(tg.showAlert){
+tg.showAlert(name+" section will be available soon.");
+}else{
+alert(name+" section will be available soon.");
+}
+}
+</script>
+</body>
+</html>
