@@ -85,17 +85,33 @@ button{background:#35dc91;color:#071b15;border:0;padding:11px 17px;border-radius
 
 <div class="footer">EARNOVA • Earn Smart, Stay Genuine</div>
 
+<script src="https://api.adsun.io/sdk.js"></script>
+
 <script>
-const tg=window.Telegram.WebApp;
+const tg = window.Telegram.WebApp;
 tg.ready();
 tg.expand();
 
-function openPage(name){
-if(tg.showAlert){
-tg.showAlert(name+" section will be available soon.");
-}else{
-alert(name+" section will be available soon.");
-}
+const AdController = window.Adsun.init({
+    blockId: "50125"
+});
+
+function openPage(name) {
+    if (name === "Watch Ads") {
+        AdController.show()
+            .then((result) => {
+                alert("Ad completed! Reward verification is pending.");
+            })
+            .catch((error) => {
+                alert("Ad skipped or unavailable. Please try again.");
+            });
+    } else {
+        if (tg.showAlert) {
+            tg.showAlert(name + " section will be available soon.");
+        } else {
+            alert(name + " section will be available soon.");
+        }
+    }
 }
 </script>
 </body>
