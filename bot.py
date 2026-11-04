@@ -375,7 +375,7 @@ def monetag_postback():
                     "message": "Duplicate event ignored"
                 }), 200
 
-            if reward_event_type != "valued":
+                if event_type != "impression" or reward_event_type != "valued":
                 return jsonify({
                     "ok": True,
                     "message": "Event recorded; no reward"
