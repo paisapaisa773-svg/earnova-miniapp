@@ -194,17 +194,6 @@ def verify_required_memberships(telegram_id):
     channel = membership_status(telegram_id, CHANNEL_ID)
     group = membership_status(telegram_id, GROUP_ID) if GROUP_ID else None
     return channel, group
-    status = data['result'].get('status')
-        return status in ('creator', 'administrator', 'member') or (status == 'restricted' and data['result'].get('is_member', False))
-    except Exception:
-        app.logger.exception('Telegram membership check failed')
-        return None
-
-
-def verify_required_memberships(telegram_id):
-    channel = membership_status(telegram_id, CHANNEL_ID)
-    group = membership_status(telegram_id, GROUP_ID) if GROUP_ID else None
-    return channel, group
 
 
 @app.after_request
@@ -379,7 +368,7 @@ def complete_task():
         return jsonify(ok=True,status=status,message='Task submitted for review' if status=='pending' else 'Task completed'),200
     except Exception:
         app.logger.exception('Task completion failed'); return jsonify(ok=False,error='Server error'),500
-        @app.route('/api/referral', methods=['POST','OPTIONS'])
+@app.route('/api/referral', methods=['POST','OPTIONS'])
 def referral_summary():
     if request.method=='OPTIONS': return '',204
     user,_=body_user()
