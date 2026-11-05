@@ -92,7 +92,7 @@ hr{border:0;border-top:1px solid #30291c;margin:16px 0}
  <h2 class="section-title">Explore EARNOVA</h2>
  <div class="grid">
   <div class="card" onclick="watchAd()"><div class="emoji">📺</div><h3>Watch Ads</h3><p>Watch advertisements and earn</p></div>
-  <div class="card" onclick="goTo('earn')"><div class="emoji">🎯</div><h3>Available Tasks</h3><p>Open tasks and earn rewards</p></div>
+  <div class="card" onclick="openTaskPopup()"><div class="emoji">🎯</div><h3>Available Tasks</h3><p>Open tasks and earn rewards</p></div>
   <div class="card" onclick="goTo('refer')"><div class="emoji">👥</div><h3>Refer & Earn</h3><p>Invite your friends</p></div>
   <div class="card" onclick="loadLeaderboard()"><div class="emoji">🏆</div><h3>Leaderboard</h3><p>Top earning members</p></div>
   <div class="card" onclick="goTo('wallet')"><div class="emoji">💰</div><h3>My Wallet</h3><p>Check your wallet balance</p></div>
@@ -108,20 +108,13 @@ hr{border:0;border-top:1px solid #30291c;margin:16px 0}
 
 <section class="screen" id="earn">
  <h1>Earn Rewards <span class="gold">💎</span></h1>
- <p>Complete activities and earn rewards. Your completed tasks are saved to your account.</p>
- <div id="membershipNotice" class="panel" style="display:none"></div>
- <h2 class="section-title">Official Tasks</h2>
- <div id="officialTasks" class="feature-list"><div class="panel">Loading official tasks...</div></div>
- <h2 class="section-title">Daily Rewards</h2>
- <div class="feature-list">
-  <div class="task-card"><div class="row"><b>📅 Daily Check-in</b><span class="reward">Up to ₹5.00</span></div><p id="checkinInfo">Checking today's reward...</p><button class="primary full" id="checkinButton" onclick="claimCheckin()">Claim Daily Reward</button><div class="status" id="checkinStatus"></div></div>
-  <div class="task-card"><div class="row"><b>🎁 Daily Bonus Code</b><span class="reward">₹0.50</span></div><p>Enter the bonus code announced by EARNOVA.</p><input id="bonusCode" placeholder="Enter daily bonus code" maxlength="64"><button class="primary full" onclick="redeemBonus()">Submit Bonus Code</button><div id="bonusStatus" class="status"></div></div>
- </div>
- <h2 class="section-title">More Ways to Earn</h2>
- <div class="feature-list">
-  <div class="feature-row" onclick="watchAd()"><div class="emoji">📺</div><div><b>Watch Ads</b><p>Watch an advertisement and earn after server verification. No channel/group joining required.</p></div><div class="arrow">›</div></div>
-  <div class="task-card"><b>📝 Partner Tasks</b><p>Complete active partner tasks. Link visits are not treated as verified channel membership.</p><div id="tasksList">Loading partner tasks...</div><button class="secondary full" onclick="loadTasks()">↻ Refresh Partner Tasks</button></div>
- </div>
+ <p>Complete tasks and earn rewards.</p>
+ <div class="task-card"><b>📢 Official Channel</b><p>Join EARNOVA official channel. Membership is checked automatically.</p><button class="secondary full" onclick="openChannel()">Open Channel</button><button class="primary full" onclick="verifyEarnMembership()">Verify Channel & Group</button><div class="status" id="membershipInfo">Tap verify after joining both.</div></div>
+ <div class="task-card"><b>👥 Official Support Group</b><p>Join our official support group.</p><button class="secondary full" onclick="openGroup()">Open Support Group</button></div>
+ <div class="task-card"><b>📅 Daily Check-in</b><p>Claim your daily reward.</p><div id="earnCheckinInfo" class="status">Checking...</div><button class="primary full" id="earnCheckinButton" onclick="claimEarnCheckin()">Claim Daily Reward</button></div>
+ <div class="task-card"><b>🎁 Daily Bonus Code</b><p>Enter the daily code announced by EARNOVA.</p><input id="earnBonusCode" placeholder="Enter daily bonus code" maxlength="64"><button class="primary full" onclick="redeemEarnBonus()">Submit Bonus Code</button><div id="earnBonusStatus" class="status"></div></div>
+ <div class="task-card"><b>📺 Watch Ads</b><p>Watch an advertisement. No channel or group join condition is required for this task.</p><button class="primary full" onclick="watchAd()">Watch Ad & Earn</button></div>
+ <div class="task-card"><b>🎯 Partner Tasks</b><p>Complete available partner tasks.</p><div id="earnTasksList">Loading tasks...</div><button class="secondary full" onclick="loadTasks()">↻ Refresh Tasks</button></div>
 </section>
 
 <section class="screen" id="refer">
@@ -195,6 +188,55 @@ hr{border:0;border-top:1px solid #30291c;margin:16px 0}
  <button class="nav-btn" data-screen="wallet" onclick="goTo('wallet',this)"><span>💰</span>Wallet</button>
  <button class="nav-btn" data-screen="profileScreen" onclick="goTo('profileScreen',this)"><span>👤</span>Profile</button>
 </nav>
+
+<!-- AVAILABLE TASKS POPUP -->
+<div class="modal-backdrop" id="tasksModal">
+ <div class="modal">
+  <div class="modal-head">
+   <div><h2 style="margin:0">🎯 Available Tasks</h2><p style="margin:5px 0 0">Follow the instructions for each task.</p></div>
+   <button class="close-btn" onclick="closeTaskPopup()">×</button>
+  </div>
+
+  <div class="task-card">
+   <b>📢 Join Official Channel</b>
+   <p>Step 1: Open the EARNOVA official channel and join it.</p>
+   <p class="modal-note">Membership verification is required.</p>
+   <button class="secondary task-action" onclick="openChannel()">Open Channel</button>
+  </div>
+
+  <div class="task-card">
+   <b>👥 Join Official Support Group</b>
+   <p>Step 2: Join the official EARNOVA support group.</p>
+   <p class="modal-note">Membership verification is required.</p>
+   <button class="secondary task-action" onclick="openGroup()">Open Group</button>
+  </div>
+
+  <div class="task-card">
+   <b>📅 Daily Check-in</b>
+   <p>Open this task once every day and claim your daily reward.</p>
+   <p class="reward">7-day reward cycle: ₹0.50 to ₹5.00</p>
+   <div id="checkinInfo" class="status">Checking your status...</div>
+   <button class="primary full" id="checkinButton" onclick="claimCheckin()">Claim Daily Reward</button>
+  </div>
+
+  <div class="task-card">
+   <b>🎁 Daily Bonus Code</b>
+   <p>Enter the bonus code announced by EARNOVA. The code is released at 8 PM.</p>
+   <input id="bonusCode" placeholder="Enter daily bonus code" maxlength="64">
+   <button class="primary full" onclick="redeemBonus()">Submit Bonus Code</button>
+   <div id="bonusStatus" class="status"></div>
+  </div>
+
+  <div class="task-card">
+   <b>📝 Other Available Tasks</b>
+   <p>Quiz, survey, partner link visits and custom tasks will appear here when activated.</p>
+   <div id="tasksList">Loading available tasks...</div>
+   <button class="secondary full" onclick="loadTasks()">↻ Refresh Task List</button>
+  </div>
+
+  <p class="modal-note">Important: A task reward is credited only according to its verification and approval rules. Opening a link does not automatically prove membership.</p>
+ </div>
+</div>
 
 <div class="modal-backdrop" id="messageModal">
  <div class="modal" style="text-align:center">
@@ -280,110 +322,126 @@ async function refreshBalance(){
  finally{if(b)b.disabled=false}
 }
 
-async function getMembership(){
- return await apiPost("/api/membership");
+function openTaskPopup(){goTo("earn");loadEarnScreen();}
+function closeTaskPopup(){document.getElementById("tasksModal")?.classList.remove("show")}
+async function loadEarnScreen(){await verifyEarnMembership(false);await loadCheckin();await loadTasks();}
+async function verifyEarnMembership(show=true){
+ const box=document.getElementById("membershipInfo");
+ try{const r=await apiPost("/api/membership");
+  const c=r.channel_joined===true, g=r.group_joined===true;
+  box.textContent=(c?"✓ Channel joined":"Channel not verified")+" • "+(g?"✓ Group joined":"Group not verified");
+  if(show && c && g)showMessage("Official channel and group membership verified.");
+  else if(show)showMessage("Please join both official channel and support group, then tap Verify again.");
+  return c&&g;
+ }catch(e){box.textContent=e.message;if(show)showMessage(e.message);return false;}
 }
-function showMembershipNotice(message, channelUrl=CHANNEL, groupUrl=GROUP){
- const box=document.getElementById("membershipNotice");
- box.style.display="block";
- box.innerHTML="";
- const p=document.createElement("p");p.textContent=message;box.appendChild(p);
- const c=document.createElement("button");c.className="secondary";c.textContent="Join Official Channel";c.onclick=()=>openLink(channelUrl);box.appendChild(c);
- const g=document.createElement("button");g.className="secondary";g.style.marginLeft="8px";g.textContent="Join Support Group";g.onclick=()=>openLink(groupUrl);box.appendChild(g);
- const v=document.createElement("button");v.className="primary full";v.textContent="I Joined — Verify Again";v.onclick=()=>loadOfficialTasks();box.appendChild(v);
+async function claimEarnCheckin(){
+ const b=document.getElementById("earnCheckinButton");b.disabled=true;
+ try{const joined=await verifyEarnMembership(true);if(!joined)throw new Error("Join both official chats before claiming this task.");const r=await apiPost("/api/checkin");showMessage("Daily reward credited: "+money(r.reward));await refreshBalance();await loadCheckin();}
+ catch(e){showMessage(e.message);b.disabled=false;}
 }
-function clearMembershipNotice(){const box=document.getElementById("membershipNotice");box.style.display="none";box.innerHTML="";}
-async function requireMembership(){
- const m=await getMembership();
- if(m.channel_joined===true && m.group_joined===true){clearMembershipNotice();return true;}
- if(m.channel_joined===null || m.group_joined===null){showMembershipNotice("Membership could not be verified right now. Please try again shortly.");return false;}
- showMembershipNotice("Please join the EARNOVA Official Channel and Support Group, then verify. Already-joined members will continue automatically.");
- return false;
+async function redeemEarnBonus(){
+ const code=document.getElementById("earnBonusCode").value.trim(),box=document.getElementById("earnBonusStatus");
+ if(!code){box.textContent="Please enter bonus code.";return;}
+ try{const r=await apiPost("/api/bonus-code",{code});box.textContent="Accepted: "+money(r.reward);document.getElementById("earnBonusCode").value="";await refreshBalance();}
+ catch(e){box.textContent=e.message;}
 }
-async function loadOfficialTasks(){
- const box=document.getElementById("officialTasks");box.innerHTML="<div class='panel'>Checking membership and task status...</div>";
- try{
-  const r=await apiPost("/api/official-tasks");
-  if(r.channel_joined===true && r.group_joined===true)clearMembershipNotice();
-  else if(r.channel_joined===null || r.group_joined===null)showMembershipNotice("Membership could not be verified. Please try again shortly.");
-  else showMembershipNotice("Join the Official Channel and Support Group to unlock the other earning tasks.");
-  box.innerHTML="";
-  const items=[{key:"channel",title:"📢 Join Official Channel",reward:"₹2.00",joined:r.channel_joined,done:r.channel_completed,url:CHANNEL},{key:"group",title:"👥 Join Official Support Group",reward:"₹2.00",joined:r.group_joined,done:r.group_completed,url:GROUP}];
-  items.forEach(t=>{
-   if(t.done)return;
-   const d=document.createElement("div");d.className="task-card";
-   const row=document.createElement("div");row.className="row";
-   const b=document.createElement("b");b.textContent=t.title;
-   const reward=document.createElement("span");reward.className="reward";reward.textContent=t.reward;row.append(b,reward);d.appendChild(row);
-   const info=document.createElement("p");
-   if(t.done)info.textContent="Completed — reward credited.";
-   else if(t.joined===true)info.textContent="Membership verified. Claim your reward.";
-   else if(t.joined===false)info.textContent="Join this official Telegram destination, then verify.";
-   else info.textContent="Membership verification is temporarily unavailable.";
-   d.appendChild(info);
-   if(t.done){const tag=document.createElement("b");tag.className="gold";tag.textContent="✓ Completed";d.appendChild(tag);}
-   else if(t.joined===true){const claim=document.createElement("button");claim.className="primary full";claim.textContent="Claim ₹2.00";claim.onclick=()=>claimOfficialTask(t.key,claim);d.appendChild(claim);}
-   else if(t.joined===false){const join=document.createElement("button");join.className="secondary";join.textContent=t.key==="channel"?"Join Channel":"Join Group";join.onclick=()=>openLink(t.url);d.appendChild(join);const verify=document.createElement("button");verify.className="primary full";verify.textContent="I Joined — Verify";verify.onclick=()=>loadOfficialTasks();d.appendChild(verify);}
-   box.appendChild(d);
-  });
- }catch(e){box.innerHTML="<div class='panel'></div>";box.firstChild.textContent=e.message;}
-}
-async function claimOfficialTask(taskKey,button){
- button.disabled=true;
- try{const r=await apiPost("/api/official-task/claim",{task_key:taskKey});showMessage(r.message||"Task completed. Reward credited.");await loadOfficialTasks();await refreshBalance();}
- catch(e){button.disabled=false;showMessage(e.message);await loadOfficialTasks();}
-}
+
 async function loadTasks(){
- const box=document.getElementById("tasksList");box.textContent="Loading partner tasks...";
+ const box=document.getElementById("earnTasksList") || document.getElementById("tasksList");
+ box.textContent="Loading tasks...";
  try{
-  const r=await apiPost("/api/tasks");box.innerHTML="";
-  if(!r.tasks||!r.tasks.length){box.textContent="No partner tasks are active right now.";return;}
+  const r=await apiPost("/api/tasks");
+  box.innerHTML="";
+  if(!r.tasks||!r.tasks.length){
+   box.textContent="No additional tasks are active right now. Please check again later.";
+   return;
+  }
   r.tasks.forEach(t=>{
-   if(t.user_status==="completed")return;
    const d=document.createElement("div");d.className="task-card";
    const title=document.createElement("b");title.textContent="🎯 "+t.title;
    const desc=document.createElement("p");desc.textContent=t.description||"Read the task instructions and complete it.";
-   const reward=document.createElement("p");reward.className="reward";reward.textContent="Reward: "+money(t.reward);d.append(title,desc,reward);
-   if(t.target_url){const link=document.createElement("button");link.className="secondary";link.textContent="Open Task Link";link.onclick=()=>openLink(t.target_url);d.appendChild(link);}
-   const b=document.createElement("button");b.className="primary full";b.textContent=t.user_status==="completed"?"Completed":t.user_status==="pending"?"Pending Review":"Submit Task";b.disabled=t.user_status==="completed"||t.user_status==="pending";b.onclick=()=>completeTask(t.id,b);d.appendChild(b);box.appendChild(d);
+   const reward=document.createElement("p");reward.className="reward";reward.textContent="Reward: "+money(t.reward);
+   d.append(title,desc,reward);
+   if(t.target_url){
+    const link=document.createElement("button");link.className="secondary";link.textContent="Open Task Link";
+    link.onclick=()=>openLink(t.target_url);d.appendChild(link);
+   }
+   const b=document.createElement("button");b.className="primary full";
+   b.textContent=t.user_status==="completed"?"Completed":t.user_status==="pending"?"Pending Review":"Submit Task";
+   b.disabled=t.user_status==="completed"||t.user_status==="pending";
+   b.onclick=()=>completeTask(t.id,b);
+   d.appendChild(b);box.appendChild(d);
   });
  }catch(e){box.textContent=e.message}
 }
 async function completeTask(id,b){
- try{b.disabled=true;const r=await apiPost("/api/tasks/complete",{task_id:id});showMessage(r.message||"Task submitted.");await loadTasks();await refreshBalance();}
- catch(e){b.disabled=false;showMessage(e.message);}
+ try{
+  b.disabled=true;
+  const r=await apiPost("/api/tasks/complete",{task_id:id});
+  showMessage(r.message||"Task submitted.");
+  await loadTasks();await refreshBalance();
+ }catch(e){b.disabled=false;showMessage(e.message)}
 }
 
 async function loadCheckin(){
- const box=document.getElementById("checkinInfo");const btn=document.getElementById("checkinButton");
- try{const r=await apiPost("/api/checkin/status");box.textContent=r.checked_today?"You have already claimed today's reward.":"Your next reward is Day "+r.next_day+": "+money(r.rewards[r.next_day-1]);btn.disabled=!!r.checked_today;btn.textContent=r.checked_today?"Already Claimed":"Claim Daily Reward";}
- catch(e){box.textContent=e.message;btn.disabled=true;}
+ const box=document.getElementById("earnCheckinInfo") || document.getElementById("checkinInfo");
+ const btn=document.getElementById("earnCheckinButton") || document.getElementById("checkinButton");
+ try{
+  const r=await apiPost("/api/checkin/status");
+  box.textContent=r.checked_today?"You have already claimed today's reward.":"Your next reward is Day "+r.next_day+": "+money(r.rewards[r.next_day-1]);
+  btn.disabled=!!r.checked_today;
+  btn.textContent=r.checked_today?"Already Claimed":"Claim Daily Reward";
+ }catch(e){box.textContent=e.message;btn.disabled=true}
 }
 async function claimCheckin(){
- const btn=document.getElementById("checkinButton");btn.disabled=true;
- try{if(!await requireMembership()){btn.disabled=false;document.getElementById("checkinStatus").textContent="Join both official destinations, then verify above.";return;}const r=await apiPost("/api/checkin");document.getElementById("checkinStatus").textContent="Day "+r.day+" reward credited: "+money(r.reward);await refreshBalance();await loadCheckin();}
- catch(e){document.getElementById("checkinStatus").textContent=e.message;btn.disabled=false;}
+ const btn=document.getElementById("earnCheckinButton") || document.getElementById("checkinButton");btn.disabled=true;
+ try{
+  const r=await apiPost("/api/checkin");
+  showMessage("Day "+r.day+" reward credited: "+money(r.reward));
+  await refreshBalance();await loadCheckin();
+ }catch(e){showMessage(e.message);btn.disabled=false}
 }
 async function redeemBonus(){
- const code=document.getElementById("bonusCode").value.trim();const box=document.getElementById("bonusStatus");
- if(!code){box.textContent="Please enter your bonus code.";return;}
- box.textContent="Checking code...";
- try{if(!await requireMembership()){box.textContent="Join both official destinations, then verify above.";return;}const r=await apiPost("/api/bonus-code",{code});box.textContent="Code accepted. Reward: "+money(r.reward);document.getElementById("bonusCode").value="";await refreshBalance();}
- catch(e){box.textContent=e.message;}
+ const code=document.getElementById("bonusCode").value.trim();
+ const box=document.getElementById("bonusStatus");
+ if(!code){box.textContent="Please enter your bonus code.";return}
+ box.textContent="Checking code and membership...";
+ try{
+  const r=await apiPost("/api/bonus-code",{code});
+  box.textContent="Code accepted. Reward: "+money(r.reward);
+  document.getElementById("bonusCode").value="";
+  await refreshBalance();
+  showMessage("Bonus code accepted. Reward: "+money(r.reward));
+ }catch(e){box.textContent=e.message}
 }
 
 async function watchAd(){
- if(isWatchingAd)return;isWatchingAd=true;status("Preparing advertisement...");
+ if(isWatchingAd)return;
+ isWatchingAd=true;status("Preparing advertisement...");
  try{
   if(!isRegistered)await registerUser();
-  // Ads intentionally have no official-channel or support-group membership condition.
   const s=await apiPost("/api/ad/start");
   if(!s.ymid)throw new Error("Ad session not received.");
   if(typeof window.show_12183521!=="function")throw new Error("Advertisement is not available right now.");
-  status("Opening advertisement...");await window.show_12183521({ymid:s.ymid});status("Waiting for server verification...");
-  for(let i=0;i<60;i++){await new Promise(r=>setTimeout(r,1000));try{const a=await apiPost("/api/ad/status",{ymid:s.ymid});if(a.credited){await refreshBalance();showMessage("Verified reward: "+money(a.reward));return;}}catch(e){}}
-  status("Reward is pending verification. Check your wallet later.");showMessage("The ad reward is waiting for network verification.");
- }catch(e){status(e.message);showMessage(e.message);}finally{isWatchingAd=false;}
+  status("Opening advertisement...");
+  await window.show_12183521({ymid:s.ymid});
+  status("Waiting for server verification...");
+  for(let i=0;i<60;i++){
+   await new Promise(r=>setTimeout(r,1000));
+   try{
+    const a=await apiPost("/api/ad/status",{ymid:s.ymid});
+    if(a.credited){
+     await refreshBalance();
+     showMessage("Verified reward: "+money(a.reward));
+     return;
+    }
+   }catch(e){}
+  }
+  status("Reward is pending verification. Check your wallet later.");
+  showMessage("The ad reward is waiting for network verification.");
+ }catch(e){status(e.message);showMessage(e.message)}
+ finally{isWatchingAd=false}
 }
 
 async function loadReferral(){
@@ -464,10 +522,11 @@ function goTo(screen,button){
  if(nav)nav.classList.add("active");
  window.scrollTo({top:0,behavior:"smooth"});
  if(screen==="wallet"){refreshBalance();loadWalletDetails()}
- if(screen==="earn"){loadOfficialTasks();loadCheckin();loadTasks()}
+ if(screen==="earn")loadEarnScreen();
  if(screen==="refer")loadReferral();
  if(screen==="profileScreen")refreshBalance();
 }
+document.getElementById("tasksModal").addEventListener("click",function(e){if(e.target===this)closeTaskPopup()});
 document.getElementById("messageModal").addEventListener("click",function(e){if(e.target===this)closeMessage()});
 
 async function initializeApp(){
