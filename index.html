@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,7 +8,6 @@
 <title>EARNOVA - Earn Smart</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="https://libtl.com/sdk.js" data-zone="12183521" data-sdk="show_12183521"></script>
-
 <style>
 :root{--bg:#080808;--card:#151515;--gold:#e8b94f;--gold2:#ffda79;--text:#fff;--muted:#aaa49a;--border:#393020}
 *{box-sizing:border-box}
@@ -48,43 +48,32 @@ p{color:var(--muted);font-size:13px;line-height:1.5}
 .nav-btn{flex:1;border:0;background:transparent;color:#918b80;font-size:10px;padding:5px 1px}
 .nav-btn span{display:block;font-size:20px;margin-bottom:4px}
 .nav-btn.active{color:var(--gold)}
-.task-card{background:#201e19;border:1px solid #443720;border-radius:13px;padding:14px;margin:11px 0}
-.task-card p{margin:5px 0;font-size:12px}
-.task-card .reward{color:var(--gold);font-weight:bold;font-size:13px}
-.task-card button{margin-top:8px}
-.task-icon{font-size:25px}
-.task-heading{display:flex;align-items:center;gap:10px}
-.task-heading>div:nth-child(2){flex:1}
-.task-heading p{margin:4px 0 0}
-.task-section-title{margin:24px 0 10px;font-size:17px}
-.reward-pill{color:var(--gold);font-weight:bold;white-space:nowrap;font-size:13px}
-.task-note{font-size:11px;color:#aaa;line-height:1.5;margin-top:9px}
-input{width:100%;padding:13px;background:#101010;border:1px solid #514126;border-radius:10px;color:white;margin:7px 0}
 .modal-backdrop{display:none;position:fixed;inset:0;background:#000d;z-index:30;align-items:center;justify-content:center;padding:14px}
 .modal-backdrop.show{display:flex}
 .modal{width:100%;max-width:500px;max-height:82vh;overflow-y:auto;background:#151515;border:1px solid #70531d;border-radius:18px;padding:19px}
-.modal-head{display:flex;align-items:center;justify-content:space-between}
+.modal-head{display:flex;align-items:center;justify-content:space-between;position:sticky;top:-19px;background:#151515;padding:4px 0 12px;z-index:2}
 .close-btn{background:#29251d;color:var(--gold);border:1px solid var(--border);border-radius:50%;width:34px;height:34px;font-size:20px}
+.task-card{background:#201e19;border:1px solid #443720;border-radius:13px;padding:14px;margin:11px 0}
+.task-card p{margin:5px 0;font-size:12px}
+.task-card .task-action{margin-top:9px}
+.task-card .reward{color:var(--gold);font-weight:bold;font-size:13px}
+.task-card button{margin-top:8px}
+input{width:100%;padding:13px;background:#101010;border:1px solid #514126;border-radius:10px;color:white;margin:7px 0}
+.modal-note{font-size:11px;color:#aaa;line-height:1.5}
 .footer{text-align:center;color:#777;font-size:11px;margin:28px 0 12px}
 hr{border:0;border-top:1px solid #30291c;margin:16px 0}
-button:disabled{opacity:.5;cursor:not-allowed}
 @media(min-width:600px){main{padding:24px}.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 </style>
 </head>
-
 <body>
 
 <header class="header">
- <div class="brand">
-  <div class="logo">E</div>
-  <div class="brand-name">EARNOVA</div>
- </div>
+ <div class="brand"><div class="logo">E</div><div class="brand-name">EARNOVA</div></div>
  <div class="profile" id="profile">👤 My Account</div>
 </header>
 
 <main>
 
-<!-- HOME SCREEN -->
 <section class="screen active" id="home">
  <div class="welcome">
   <h1>Welcome, <span class="gold" id="welcomeName">User</span> 👋</h1>
@@ -102,111 +91,39 @@ button:disabled{opacity:.5;cursor:not-allowed}
 
  <h2 class="section-title">Explore EARNOVA</h2>
  <div class="grid">
-  <div class="card" onclick="watchAd()">
-   <div class="emoji">📺</div><h3>Watch Ads</h3>
-   <p>Watch advertisements and earn</p>
-  </div>
-  <div class="card" onclick="goTo('earn')">
-   <div class="emoji">🎯</div><h3>Earn Rewards</h3>
-   <p>Complete tasks and earn rewards</p>
-  </div>
-  <div class="card" onclick="goTo('refer')">
-   <div class="emoji">👥</div><h3>Refer & Earn</h3>
-   <p>Invite your friends</p>
-  </div>
-  <div class="card" onclick="loadLeaderboard()">
-   <div class="emoji">🏆</div><h3>Leaderboard</h3>
-   <p>Top earning members</p>
-  </div>
-  <div class="card" onclick="goTo('wallet')">
-   <div class="emoji">💰</div><h3>My Wallet</h3>
-   <p>Check your wallet balance</p>
-  </div>
+  <div class="card" onclick="watchAd()"><div class="emoji">📺</div><h3>Watch Ads</h3><p>Watch advertisements and earn</p></div>
+  <div class="card" onclick="goTo('earn')"><div class="emoji">🎯</div><h3>Available Tasks</h3><p>Open tasks and earn rewards</p></div>
+  <div class="card" onclick="goTo('refer')"><div class="emoji">👥</div><h3>Refer & Earn</h3><p>Invite your friends</p></div>
+  <div class="card" onclick="loadLeaderboard()"><div class="emoji">🏆</div><h3>Leaderboard</h3><p>Top earning members</p></div>
+  <div class="card" onclick="goTo('wallet')"><div class="emoji">💰</div><h3>My Wallet</h3><p>Check your wallet balance</p></div>
  </div>
 
  <h2 class="section-title">Official EARNOVA</h2>
  <div class="feature-list">
-  <div class="feature-row" onclick="openChannel()">
-   <div class="emoji">📢</div>
-   <div><b>Official Telegram Channel</b><p>Genuine updates and announcements</p></div>
-   <div class="arrow">›</div>
-  </div>
-  <div class="feature-row" onclick="openGroup()">
-   <div class="emoji">👥</div>
-   <div><b>Official Support Group</b><p>Community and support</p></div>
-   <div class="arrow">›</div>
-  </div>
-  <div class="feature-row" onclick="openSupport()">
-   <div class="emoji">🎧</div>
-   <div><b>Help & Support</b><p>Contact EARNOVA support</p></div>
-   <div class="arrow">›</div>
-  </div>
+  <div class="feature-row" onclick="openChannel()"><div class="emoji">📢</div><div><b>Official Telegram Channel</b><p>Genuine updates and announcements</p></div><div class="arrow">›</div></div>
+  <div class="feature-row" onclick="openGroup()"><div class="emoji">👥</div><div><b>Official Support Group</b><p>Community and support</p></div><div class="arrow">›</div></div>
+  <div class="feature-row" onclick="openSupport()"><div class="emoji">🎧</div><div><b>Help & Support</b><p>Contact EARNOVA support</p></div><div class="arrow">›</div></div>
  </div>
 </section>
 
-<!-- EARN SCREEN -->
 <section class="screen" id="earn">
  <h1>Earn Rewards <span class="gold">💎</span></h1>
- <p>Complete activities and earn genuine rewards.</p>
-
- <h2 class="task-section-title">⭐ Official EARNOVA Tasks</h2>
- <p>Join our official community and verify your membership to claim rewards.</p>
-
- <div id="officialTasks">
-  <div class="task-card">Loading official tasks...</div>
+ <p>Complete activities and earn rewards. Your completed tasks are saved to your account.</p>
+ <div id="membershipNotice" class="panel" style="display:none"></div>
+ <h2 class="section-title">Official Tasks</h2>
+ <div id="officialTasks" class="feature-list"><div class="panel">Loading official tasks...</div></div>
+ <h2 class="section-title">Daily Rewards</h2>
+ <div class="feature-list">
+  <div class="task-card"><div class="row"><b>📅 Daily Check-in</b><span class="reward">Up to ₹5.00</span></div><p id="checkinInfo">Checking today's reward...</p><button class="primary full" id="checkinButton" onclick="claimCheckin()">Claim Daily Reward</button><div class="status" id="checkinStatus"></div></div>
+  <div class="task-card"><div class="row"><b>🎁 Daily Bonus Code</b><span class="reward">₹0.50</span></div><p>Enter the bonus code announced by EARNOVA.</p><input id="bonusCode" placeholder="Enter daily bonus code" maxlength="64"><button class="primary full" onclick="redeemBonus()">Submit Bonus Code</button><div id="bonusStatus" class="status"></div></div>
  </div>
-
- <h2 class="task-section-title">🎁 Daily Rewards</h2>
-
- <div class="task-card">
-  <div class="task-heading">
-   <div class="task-icon">📅</div>
-   <div>
-    <b>Daily Check-in</b>
-    <p>Claim your daily reward every day.</p>
-   </div>
-   <div class="reward-pill">Up to ₹5</div>
-  </div>
-  <div id="checkinInfo" class="status">Checking your status...</div>
-  <button class="primary full" id="checkinButton" onclick="claimCheckin()">Claim Daily Reward</button>
+ <h2 class="section-title">More Ways to Earn</h2>
+ <div class="feature-list">
+  <div class="feature-row" onclick="watchAd()"><div class="emoji">📺</div><div><b>Watch Ads</b><p>Watch an advertisement and earn after server verification. No channel/group joining required.</p></div><div class="arrow">›</div></div>
+  <div class="task-card"><b>📝 Partner Tasks</b><p>Complete active partner tasks. Link visits are not treated as verified channel membership.</p><div id="tasksList">Loading partner tasks...</div><button class="secondary full" onclick="loadTasks()">↻ Refresh Partner Tasks</button></div>
  </div>
-
- <div class="task-card">
-  <div class="task-heading">
-   <div class="task-icon">🎟️</div>
-   <div>
-    <b>Daily Bonus Code</b>
-    <p>Enter the bonus code announced by EARNOVA.</p>
-   </div>
-   <div class="reward-pill">₹0.50</div>
-  </div>
-  <input id="bonusCode" placeholder="Enter daily bonus code" maxlength="64">
-  <button class="primary full" onclick="redeemBonus()">Submit Bonus Code</button>
-  <div id="bonusStatus" class="status"></div>
- </div>
-
- <h2 class="task-section-title">📺 Watch & Earn</h2>
- <div class="task-card">
-  <div class="task-heading">
-   <div class="task-icon">📺</div>
-   <div>
-    <b>Watch Advertisements</b>
-    <p>Watch an ad. Reward is added after server verification.</p>
-   </div>
-  </div>
-  <button class="primary full" onclick="watchAd()">Watch Ad Now</button>
- </div>
-
- <h2 class="task-section-title">📝 Partner Tasks</h2>
- <p>Complete available partner tasks to earn additional rewards.</p>
- <div id="tasksList">
-  <div class="task-card">Loading partner tasks...</div>
- </div>
- <button class="secondary full" onclick="loadTasks()">↻ Refresh Partner Tasks</button>
- <p class="task-note">Partner link visits are not treated as verified channel membership. Rewards follow the task's own verification and approval rules.</p>
 </section>
 
-<!-- REFER SCREEN -->
 <section class="screen" id="refer">
  <h1>Refer & Earn <span class="gold">👥</span></h1>
  <div class="panel">
@@ -225,7 +142,6 @@ button:disabled{opacity:.5;cursor:not-allowed}
  <div class="panel"><h2>Your Referrals</h2><div id="refList">Loading...</div></div>
 </section>
 
-<!-- WALLET SCREEN -->
 <section class="screen" id="wallet">
  <h1>My Wallet <span class="gold">💰</span></h1>
  <div class="wallet-card">
@@ -245,7 +161,6 @@ button:disabled{opacity:.5;cursor:not-allowed}
  <div class="panel"><h2>Transaction History</h2><div id="transactions">Loading...</div></div>
 </section>
 
-<!-- LEADERBOARD SCREEN -->
 <section class="screen" id="leaderboard">
  <h1>Leaderboard 🏆</h1>
  <div class="panel">
@@ -255,7 +170,6 @@ button:disabled{opacity:.5;cursor:not-allowed}
  </div>
 </section>
 
-<!-- PROFILE SCREEN -->
 <section class="screen" id="profileScreen">
  <h1>My Profile 👤</h1>
  <div class="panel">
@@ -265,22 +179,15 @@ button:disabled{opacity:.5;cursor:not-allowed}
   <div class="row"><span>Wallet balance</span><b id="profileBalance">Loading...</b></div>
  </div>
  <div class="feature-list">
-  <div class="feature-row" onclick="openChannel()">
-   <div class="emoji">📢</div><div><b>Official Channel</b><p>Follow EARNOVA updates</p></div><div class="arrow">›</div>
-  </div>
-  <div class="feature-row" onclick="openGroup()">
-   <div class="emoji">👥</div><div><b>Support Group</b><p>Join our community</p></div><div class="arrow">›</div>
-  </div>
-  <div class="feature-row" onclick="openSupport()">
-   <div class="emoji">🎧</div><div><b>Help & Support</b><p>Contact EARNOVA</p></div><div class="arrow">›</div>
-  </div>
+  <div class="feature-row" onclick="openChannel()"><div class="emoji">📢</div><div><b>Official Channel</b><p>Follow EARNOVA updates</p></div><div class="arrow">›</div></div>
+  <div class="feature-row" onclick="openGroup()"><div class="emoji">👥</div><div><b>Support Group</b><p>Join our community</p></div><div class="arrow">›</div></div>
+  <div class="feature-row" onclick="openSupport()"><div class="emoji">🎧</div><div><b>Help & Support</b><p>Contact EARNOVA</p></div><div class="arrow">›</div></div>
  </div>
 </section>
 
 <div class="footer">EARNOVA • Earn Smart, Stay Genuine</div>
 </main>
 
-<!-- BOTTOM NAVIGATION -->
 <nav class="bottom-nav">
  <button class="nav-btn active" data-screen="home" onclick="goTo('home',this)"><span>🏠</span>Home</button>
  <button class="nav-btn" data-screen="earn" onclick="goTo('earn',this)"><span>🎯</span>Earn</button>
@@ -289,7 +196,6 @@ button:disabled{opacity:.5;cursor:not-allowed}
  <button class="nav-btn" data-screen="profileScreen" onclick="goTo('profileScreen',this)"><span>👤</span>Profile</button>
 </nav>
 
-<!-- MESSAGE POPUP ONLY -->
 <div class="modal-backdrop" id="messageModal">
  <div class="modal" style="text-align:center">
   <h2 class="gold" id="modalTitle">EARNOVA</h2>
@@ -303,7 +209,6 @@ const API="https://earnova-miniapp.onrender.com";
 const CHANNEL="https://t.me/Earnova0fficial";
 const GROUP="https://t.me/+ncm5joi6ZzMxY2M1";
 const SUPPORT="https://t.me/Earn0vaSupportBot";
-
 const tg=window.Telegram?.WebApp;
 let initData="";
 let isRegistered=false;
@@ -311,9 +216,7 @@ let isWatchingAd=false;
 let referralLink="";
 
 if(tg){
- tg.ready();
- tg.expand();
- initData=tg.initData||"";
+ tg.ready();tg.expand();initData=tg.initData||"";
  const user=tg.initDataUnsafe?.user;
  if(user){
   const name=user.first_name||user.username||"Member";
@@ -324,30 +227,18 @@ if(tg){
  }
 }
 
-function money(v){
- const n=Number(v);
- return "₹"+(Number.isFinite(n)?n:0).toFixed(2);
-}
-
+function money(v){const n=Number(v);return "₹"+(Number.isFinite(n)?n:0).toFixed(2)}
 function showMessage(msg,title="EARNOVA"){
  document.getElementById("modalTitle").textContent=title;
  document.getElementById("modalMessage").textContent=msg;
  document.getElementById("messageModal").classList.add("show");
 }
-
-function closeMessage(){
- document.getElementById("messageModal").classList.remove("show");
-}
-
-function status(msg){
- document.getElementById("walletStatus").textContent=msg;
-}
-
+function closeMessage(){document.getElementById("messageModal").classList.remove("show")}
+function status(msg){document.getElementById("walletStatus").textContent=msg}
 function openLink(url){
  if(tg&&tg.openTelegramLink)tg.openTelegramLink(url);
  else window.open(url,"_blank");
 }
-
 function openChannel(){openLink(CHANNEL)}
 function openGroup(){openLink(GROUP)}
 function openSupport(){openLink(SUPPORT)}
@@ -370,14 +261,12 @@ function updateBalance(v){
   document.getElementById(id).textContent=m;
  });
 }
-
 async function registerUser(){
  const r=await apiPost("/api/register");
  isRegistered=true;
  if(r.balance!==undefined)updateBalance(r.balance);
  return r;
 }
-
 async function refreshBalance(){
  const b=document.getElementById("refreshButton");
  if(b)b.disabled=true;
@@ -387,440 +276,203 @@ async function refreshBalance(){
   const r=await apiPost("/api/balance");
   updateBalance(r.balance);
   status("Wallet balance updated.");
- }catch(e){
-  status(e.message);
- }finally{
-  if(b)b.disabled=false;
- }
+ }catch(e){status(e.message)}
+ finally{if(b)b.disabled=false}
 }
 
-/* OFFICIAL TASKS */
+async function getMembership(){
+ return await apiPost("/api/membership");
+}
+function showMembershipNotice(message, channelUrl=CHANNEL, groupUrl=GROUP){
+ const box=document.getElementById("membershipNotice");
+ box.style.display="block";
+ box.innerHTML="";
+ const p=document.createElement("p");p.textContent=message;box.appendChild(p);
+ const c=document.createElement("button");c.className="secondary";c.textContent="Join Official Channel";c.onclick=()=>openLink(channelUrl);box.appendChild(c);
+ const g=document.createElement("button");g.className="secondary";g.style.marginLeft="8px";g.textContent="Join Support Group";g.onclick=()=>openLink(groupUrl);box.appendChild(g);
+ const v=document.createElement("button");v.className="primary full";v.textContent="I Joined — Verify Again";v.onclick=()=>loadOfficialTasks();box.appendChild(v);
+}
+function clearMembershipNotice(){const box=document.getElementById("membershipNotice");box.style.display="none";box.innerHTML="";}
+async function requireMembership(){
+ const m=await getMembership();
+ if(m.channel_joined===true && m.group_joined===true){clearMembershipNotice();return true;}
+ if(m.channel_joined===null || m.group_joined===null){showMembershipNotice("Membership could not be verified right now. Please try again shortly.");return false;}
+ showMembershipNotice("Please join the EARNOVA Official Channel and Support Group, then verify. Already-joined members will continue automatically.");
+ return false;
+}
 async function loadOfficialTasks(){
- const box=document.getElementById("officialTasks");
- box.innerHTML='<div class="task-card">Loading official tasks...</div>';
-
+ const box=document.getElementById("officialTasks");box.innerHTML="<div class='panel'>Checking membership and task status...</div>";
  try{
   const r=await apiPost("/api/official-tasks");
+  if(r.channel_joined===true && r.group_joined===true)clearMembershipNotice();
+  else if(r.channel_joined===null || r.group_joined===null)showMembershipNotice("Membership could not be verified. Please try again shortly.");
+  else showMembershipNotice("Join the Official Channel and Support Group to unlock the other earning tasks.");
   box.innerHTML="";
-
-  if(!r.tasks||!r.tasks.length){
-   box.innerHTML='<div class="task-card">All official tasks completed. Thank you for being part of EARNOVA! 🎉</div>';
-   return;
-  }
-
-  r.tasks.forEach(t=>{
-   const d=document.createElement("div");
-   d.className="task-card";
-
-   const heading=document.createElement("div");
-   heading.className="task-heading";
-
-   const emoji=document.createElement("div");
-   emoji.className="task-icon";
-   emoji.textContent=t.id==="official_channel"?"📢":"👥";
-
-   const info=document.createElement("div");
-   const title=document.createElement("b");
-   title.textContent=t.title;
-   const desc=document.createElement("p");
-   desc.textContent=t.description||"Join the official EARNOVA community.";
-
-   info.append(title,desc);
-
-   const reward=document.createElement("div");
-   reward.className="reward-pill";
-   reward.textContent=money(t.reward);
-
-   heading.append(emoji,info,reward);
-   d.appendChild(heading);
-
-   const join=document.createElement("button");
-   join.className="secondary full";
-   join.textContent=t.id==="official_channel"?"Join Official Channel":"Join Support Group";
-   join.onclick=()=>openLink(t.target_url||(
-    t.id==="official_channel"?CHANNEL:GROUP
-   ));
-   d.appendChild(join);
-
-   const verify=document.createElement("button");
-   verify.className="primary full";
-   verify.textContent="✓ Verify & Claim Reward";
-   verify.onclick=()=>claimOfficialTask(t.id,verify);
-   d.appendChild(verify);
-
-   const note=document.createElement("div");
-   note.className="task-note";
-   note.textContent="Reward will be credited only after Telegram confirms your membership.";
-   d.appendChild(note);
-
+  const items=[{key:"channel",title:"📢 Join Official Channel",reward:"₹2.00",joined:r.channel_joined,done:r.channel_completed,url:CHANNEL},{key:"group",title:"👥 Join Official Support Group",reward:"₹2.00",joined:r.group_joined,done:r.group_completed,url:GROUP}];
+  items.forEach(t=>{
+   if(t.done)return;
+   const d=document.createElement("div");d.className="task-card";
+   const row=document.createElement("div");row.className="row";
+   const b=document.createElement("b");b.textContent=t.title;
+   const reward=document.createElement("span");reward.className="reward";reward.textContent=t.reward;row.append(b,reward);d.appendChild(row);
+   const info=document.createElement("p");
+   if(t.done)info.textContent="Completed — reward credited.";
+   else if(t.joined===true)info.textContent="Membership verified. Claim your reward.";
+   else if(t.joined===false)info.textContent="Join this official Telegram destination, then verify.";
+   else info.textContent="Membership verification is temporarily unavailable.";
+   d.appendChild(info);
+   if(t.done){const tag=document.createElement("b");tag.className="gold";tag.textContent="✓ Completed";d.appendChild(tag);}
+   else if(t.joined===true){const claim=document.createElement("button");claim.className="primary full";claim.textContent="Claim ₹2.00";claim.onclick=()=>claimOfficialTask(t.key,claim);d.appendChild(claim);}
+   else if(t.joined===false){const join=document.createElement("button");join.className="secondary";join.textContent=t.key==="channel"?"Join Channel":"Join Group";join.onclick=()=>openLink(t.url);d.appendChild(join);const verify=document.createElement("button");verify.className="primary full";verify.textContent="I Joined — Verify";verify.onclick=()=>loadOfficialTasks();d.appendChild(verify);}
    box.appendChild(d);
   });
-
- }catch(e){
-  box.innerHTML="";
-  const d=document.createElement("div");
-  d.className="task-card";
-  d.textContent=e.message;
-  box.appendChild(d);
- }
+ }catch(e){box.innerHTML="<div class='panel'></div>";box.firstChild.textContent=e.message;}
 }
-
-async function claimOfficialTask(taskId,button){
+async function claimOfficialTask(taskKey,button){
  button.disabled=true;
- button.textContent="Verifying membership...";
-
- try{
-  const r=await apiPost("/api/official-task/claim",{task_id:taskId});
-  showMessage(r.message||("Verified! Reward credited: "+money(r.reward)));
-  await refreshBalance();
-  await loadOfficialTasks();
- }catch(e){
-  showMessage(e.message,"Verification");
-  button.disabled=false;
-  button.textContent="✓ Verify & Claim Reward";
- }
+ try{const r=await apiPost("/api/official-task/claim",{task_key:taskKey});showMessage(r.message||"Task completed. Reward credited.");await loadOfficialTasks();await refreshBalance();}
+ catch(e){button.disabled=false;showMessage(e.message);await loadOfficialTasks();}
 }
-
-/* PARTNER TASKS */
 async function loadTasks(){
- const box=document.getElementById("tasksList");
- box.innerHTML='<div class="task-card">Loading partner tasks...</div>';
-
+ const box=document.getElementById("tasksList");box.textContent="Loading partner tasks...";
  try{
-  const r=await apiPost("/api/tasks");
-  box.innerHTML="";
-
-  const available=(r.tasks||[]).filter(t=>t.user_status!=="completed");
-
-  if(!available.length){
-   box.innerHTML='<div class="task-card">No additional partner tasks are available right now.</div>';
-   return;
-  }
-
-  available.forEach(t=>{
-   const d=document.createElement("div");
-   d.className="task-card";
-
-   const title=document.createElement("b");
-   title.textContent="🎯 "+t.title;
-
-   const desc=document.createElement("p");
-   desc.textContent=t.description||"Read the task instructions and complete it.";
-
-   const reward=document.createElement("p");
-   reward.className="reward";
-   reward.textContent="Reward: "+money(t.reward);
-
-   d.append(title,desc,reward);
-
-   if(t.target_url){
-    const link=document.createElement("button");
-    link.className="secondary full";
-    link.textContent="Open Task Link";
-    link.onclick=()=>openLink(t.target_url);
-    d.appendChild(link);
-   }
-
-   const b=document.createElement("button");
-   b.className="primary full";
-   b.textContent=t.user_status==="pending"?"Pending Review":"Submit Task";
-   b.disabled=t.user_status==="pending";
-   b.onclick=()=>completeTask(t.id,b);
-   d.appendChild(b);
-
-   box.appendChild(d);
+  const r=await apiPost("/api/tasks");box.innerHTML="";
+  if(!r.tasks||!r.tasks.length){box.textContent="No partner tasks are active right now.";return;}
+  r.tasks.forEach(t=>{
+   if(t.user_status==="completed")return;
+   const d=document.createElement("div");d.className="task-card";
+   const title=document.createElement("b");title.textContent="🎯 "+t.title;
+   const desc=document.createElement("p");desc.textContent=t.description||"Read the task instructions and complete it.";
+   const reward=document.createElement("p");reward.className="reward";reward.textContent="Reward: "+money(t.reward);d.append(title,desc,reward);
+   if(t.target_url){const link=document.createElement("button");link.className="secondary";link.textContent="Open Task Link";link.onclick=()=>openLink(t.target_url);d.appendChild(link);}
+   const b=document.createElement("button");b.className="primary full";b.textContent=t.user_status==="completed"?"Completed":t.user_status==="pending"?"Pending Review":"Submit Task";b.disabled=t.user_status==="completed"||t.user_status==="pending";b.onclick=()=>completeTask(t.id,b);d.appendChild(b);box.appendChild(d);
   });
-
- }catch(e){
-  box.innerHTML="";
-  const d=document.createElement("div");
-  d.className="task-card";
-  d.textContent=e.message;
-  box.appendChild(d);
- }
+ }catch(e){box.textContent=e.message}
 }
-
 async function completeTask(id,b){
- try{
-  b.disabled=true;
-  const r=await apiPost("/api/tasks/complete",{task_id:id});
-  showMessage(r.message||"Task submitted.");
-  await loadTasks();
-  await refreshBalance();
- }catch(e){
-  b.disabled=false;
-  showMessage(e.message);
- }
+ try{b.disabled=true;const r=await apiPost("/api/tasks/complete",{task_id:id});showMessage(r.message||"Task submitted.");await loadTasks();await refreshBalance();}
+ catch(e){b.disabled=false;showMessage(e.message);}
 }
 
-/* DAILY CHECK-IN */
 async function loadCheckin(){
- const box=document.getElementById("checkinInfo");
- const btn=document.getElementById("checkinButton");
-
- try{
-  const r=await apiPost("/api/checkin/status");
-  box.textContent=r.checked_today
-   ?"You have already claimed today's reward."
-   :"Your next reward is Day "+r.next_day+": "+money(r.rewards[r.next_day-1]);
-
-  btn.disabled=!!r.checked_today;
-  btn.textContent=r.checked_today?"Already Claimed":"Claim Daily Reward";
- }catch(e){
-  box.textContent=e.message;
-  btn.disabled=true;
- }
+ const box=document.getElementById("checkinInfo");const btn=document.getElementById("checkinButton");
+ try{const r=await apiPost("/api/checkin/status");box.textContent=r.checked_today?"You have already claimed today's reward.":"Your next reward is Day "+r.next_day+": "+money(r.rewards[r.next_day-1]);btn.disabled=!!r.checked_today;btn.textContent=r.checked_today?"Already Claimed":"Claim Daily Reward";}
+ catch(e){box.textContent=e.message;btn.disabled=true;}
 }
-
 async function claimCheckin(){
- const btn=document.getElementById("checkinButton");
- btn.disabled=true;
-
- try{
-  const r=await apiPost("/api/checkin");
-  showMessage("Day "+r.day+" reward credited: "+money(r.reward));
-  await refreshBalance();
-  await loadCheckin();
- }catch(e){
-  showMessage(e.message);
-  btn.disabled=false;
- }
+ const btn=document.getElementById("checkinButton");btn.disabled=true;
+ try{if(!await requireMembership()){btn.disabled=false;document.getElementById("checkinStatus").textContent="Join both official destinations, then verify above.";return;}const r=await apiPost("/api/checkin");document.getElementById("checkinStatus").textContent="Day "+r.day+" reward credited: "+money(r.reward);await refreshBalance();await loadCheckin();}
+ catch(e){document.getElementById("checkinStatus").textContent=e.message;btn.disabled=false;}
 }
-
-/* BONUS CODE */
 async function redeemBonus(){
- const code=document.getElementById("bonusCode").value.trim();
- const box=document.getElementById("bonusStatus");
-
- if(!code){
-  box.textContent="Please enter your bonus code.";
-  return;
- }
-
- box.textContent="Checking code and membership...";
-
- try{
-  const r=await apiPost("/api/bonus-code",{code});
-  box.textContent="Code accepted. Reward: "+money(r.reward);
-  document.getElementById("bonusCode").value="";
-  await refreshBalance();
-  showMessage("Bonus code accepted. Reward: "+money(r.reward));
- }catch(e){
-  box.textContent=e.message;
- }
+ const code=document.getElementById("bonusCode").value.trim();const box=document.getElementById("bonusStatus");
+ if(!code){box.textContent="Please enter your bonus code.";return;}
+ box.textContent="Checking code...";
+ try{if(!await requireMembership()){box.textContent="Join both official destinations, then verify above.";return;}const r=await apiPost("/api/bonus-code",{code});box.textContent="Code accepted. Reward: "+money(r.reward);document.getElementById("bonusCode").value="";await refreshBalance();}
+ catch(e){box.textContent=e.message;}
 }
 
-/* WATCH ADS */
 async function watchAd(){
- if(isWatchingAd)return;
- isWatchingAd=true;
- status("Preparing advertisement...");
-
+ if(isWatchingAd)return;isWatchingAd=true;status("Preparing advertisement...");
  try{
   if(!isRegistered)await registerUser();
-
+  // Ads intentionally have no official-channel or support-group membership condition.
   const s=await apiPost("/api/ad/start");
   if(!s.ymid)throw new Error("Ad session not received.");
-
-  if(typeof window.show_12183521!=="function"){
-   throw new Error("Advertisement is not available right now.");
-  }
-
-  status("Opening advertisement...");
-  await window.show_12183521({ymid:s.ymid});
-  status("Waiting for server verification...");
-
-  for(let i=0;i<60;i++){
-   await new Promise(r=>setTimeout(r,1000));
-   try{
-    const a=await apiPost("/api/ad/status",{ymid:s.ymid});
-    if(a.credited){
-     await refreshBalance();
-     showMessage("Verified reward: "+money(a.reward));
-     return;
-    }
-   }catch(e){}
-  }
-
-  status("Reward is pending verification. Check your wallet later.");
-  showMessage("The ad reward is waiting for network verification.");
-
- }catch(e){
-  status(e.message);
-  showMessage(e.message);
- }finally{
-  isWatchingAd=false;
- }
+  if(typeof window.show_12183521!=="function")throw new Error("Advertisement is not available right now.");
+  status("Opening advertisement...");await window.show_12183521({ymid:s.ymid});status("Waiting for server verification...");
+  for(let i=0;i<60;i++){await new Promise(r=>setTimeout(r,1000));try{const a=await apiPost("/api/ad/status",{ymid:s.ymid});if(a.credited){await refreshBalance();showMessage("Verified reward: "+money(a.reward));return;}}catch(e){}}
+  status("Reward is pending verification. Check your wallet later.");showMessage("The ad reward is waiting for network verification.");
+ }catch(e){status(e.message);showMessage(e.message);}finally{isWatchingAd=false;}
 }
 
-/* REFERRALS */
 async function loadReferral(){
  const box=document.getElementById("refLink");
-
  try{
   const r=await apiPost("/api/referral");
   referralLink=r.referral_link||"";
   box.textContent=referralLink||"Referral link unavailable";
-
   document.getElementById("refTotal").textContent=r.total??0;
   document.getElementById("refSuccess").textContent=r.successful??0;
   document.getElementById("refPending").textContent=r.pending??0;
   document.getElementById("refEarnings").textContent=money(r.earnings);
-
-  const list=document.getElementById("refList");
-  list.innerHTML="";
-
-  if(!r.referrals||!r.referrals.length){
-   list.textContent="No referrals yet.";
-   return;
-  }
-
+  const list=document.getElementById("refList");list.innerHTML="";
+  if(!r.referrals||!r.referrals.length){list.textContent="No referrals yet.";return}
   r.referrals.forEach(x=>{
-   const d=document.createElement("div");
-   d.className="task-card";
-   d.textContent=(x.first_name||x.username||"Member")+" • "+x.status;
-   list.appendChild(d);
+   const d=document.createElement("div");d.className="task-card";
+   d.textContent=(x.first_name||x.username||"Member")+" • "+x.status;list.appendChild(d);
   });
-
- }catch(e){
-  box.textContent=e.message;
- }
+ }catch(e){box.textContent=e.message}
 }
-
 function copyReferral(){
- if(!referralLink){
-  showMessage("Referral link is not available yet.");
-  return;
- }
-
+ if(!referralLink){showMessage("Referral link is not available yet.");return}
  if(navigator.clipboard&&navigator.clipboard.writeText){
-  navigator.clipboard.writeText(referralLink)
-   .then(()=>showMessage("Referral link copied."))
-   .catch(()=>showMessage(referralLink));
- }else{
-  showMessage(referralLink);
- }
+  navigator.clipboard.writeText(referralLink).then(()=>showMessage("Referral link copied.")).catch(()=>showMessage(referralLink));
+ }else showMessage(referralLink);
 }
-
 function shareReferral(){
- if(!referralLink){
-  showMessage("Referral link is not available yet.");
-  return;
- }
+ if(!referralLink){showMessage("Referral link is not available yet.");return}
  openLink("https://t.me/share/url?url="+encodeURIComponent(referralLink)+"&text="+encodeURIComponent("Join EARNOVA!"));
 }
 
-/* WALLET */
 async function loadWalletDetails(){
  const r=await apiPost("/api/wallet");
  updateBalance(r.balance);
-
  const min=money(r.minimum_withdrawal);
  document.getElementById("minimumWallet").textContent="Minimum withdrawal: "+min;
  document.getElementById("minimumHome").textContent="Minimum withdrawal: "+min;
-
  if(r.upi_id)document.getElementById("upiInput").value=r.upi_id;
-
- const el=document.getElementById("transactions");
- el.innerHTML="";
-
- if(!r.transactions||!r.transactions.length){
-  el.textContent="No transactions yet.";
-  return;
- }
-
+ const el=document.getElementById("transactions");el.innerHTML="";
+ if(!r.transactions||!r.transactions.length){el.textContent="No transactions yet.";return}
  r.transactions.forEach(t=>{
-  const d=document.createElement("div");
-  d.className="task-card";
+  const d=document.createElement("div");d.className="task-card";
   d.textContent=(t.transaction_type||"Transaction")+" • "+money(t.amount)+" • "+(t.status||"");
   el.appendChild(d);
  });
 }
-
 async function requestWithdraw(){
  const upi=document.getElementById("upiInput").value.trim();
  const amount=document.getElementById("withdrawAmount").value;
  const box=document.getElementById("withdrawStatus");
-
  box.textContent="Submitting request...";
-
  try{
   const r=await apiPost("/api/withdraw",{upi_id:upi,amount});
   box.textContent="Request #"+r.withdrawal_id+" submitted. Status: "+r.status;
   document.getElementById("withdrawAmount").value="";
-  await refreshBalance();
-  await loadWalletDetails();
- }catch(e){
-  box.textContent=e.message;
- }
+  await refreshBalance();await loadWalletDetails();
+ }catch(e){box.textContent=e.message}
 }
-
-/* LEADERBOARD */
 async function loadLeaderboard(period="monthly"){
  goTo("leaderboard");
-
- const box=document.getElementById("leadersList");
- box.textContent="Loading...";
-
+ const box=document.getElementById("leadersList");box.textContent="Loading...";
  try{
   const r=await apiPost("/api/leaderboard",{period});
   box.innerHTML="";
-
-  if(!r.leaders||!r.leaders.length){
-   box.textContent="No leaderboard data yet.";
-   return;
-  }
-
+  if(!r.leaders||!r.leaders.length){box.textContent="No leaderboard data yet.";return}
   r.leaders.forEach((x,i)=>{
-   const d=document.createElement("div");
-   d.className="task-card";
+   const d=document.createElement("div");d.className="task-card";
    d.textContent=(i+1)+". "+(x.first_name||x.username||"Member")+" • "+x.successful_referrals+" successful referrals";
    box.appendChild(d);
   });
-
- }catch(e){
-  box.textContent=e.message;
- }
+ }catch(e){box.textContent=e.message}
 }
-
-/* NAVIGATION */
 function goTo(screen,button){
  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
-
- const target=document.getElementById(screen);
- if(target)target.classList.add("active");
-
+ const target=document.getElementById(screen);if(target)target.classList.add("active");
  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
-
  const nav=button||document.querySelector('.nav-btn[data-screen="'+screen+'"]');
  if(nav)nav.classList.add("active");
-
  window.scrollTo({top:0,behavior:"smooth"});
-
- if(screen==="earn"){
-  loadOfficialTasks();
-  loadTasks();
-  loadCheckin();
- }
-
- if(screen==="wallet"){
-  refreshBalance();
-  loadWalletDetails();
- }
-
+ if(screen==="wallet"){refreshBalance();loadWalletDetails()}
+ if(screen==="earn"){loadOfficialTasks();loadCheckin();loadTasks()}
  if(screen==="refer")loadReferral();
  if(screen==="profileScreen")refreshBalance();
 }
+document.getElementById("messageModal").addEventListener("click",function(e){if(e.target===this)closeMessage()});
 
-document.getElementById("messageModal").addEventListener("click",function(e){
- if(e.target===this)closeMessage();
-});
-
-/* APP START */
 async function initializeApp(){
  try{
-  await registerUser();
-  await refreshBalance();
+  await registerUser();await refreshBalance();
  }catch(e){
   document.getElementById("balance").textContent="Unavailable";
   document.getElementById("walletBalance").textContent="Unavailable";
@@ -828,7 +480,6 @@ async function initializeApp(){
   status(e.message);
  }
 }
-
 initializeApp();
 </script>
 </body>
