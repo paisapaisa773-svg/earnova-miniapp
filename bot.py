@@ -369,12 +369,6 @@ def monetag_postback():
                 estimated_price
             )).fetchone()
 
-            if not inserted:
-                return jsonify({
-                    "ok": True,
-                    "message": "Duplicate event ignored"
-                }), 200
-
             if event_type != "impression" or reward_event_type != "valued":
                 return jsonify({
                     "ok": True,
@@ -406,7 +400,6 @@ def monetag_postback():
                 WHERE telegram_id = %s
                   AND status = 'credited'
             """, (telegram_id,)).fetchone()
-
             ad_number = int(completed["total"]) + 1
             reward = reward_for_ad(ad_number)
 
