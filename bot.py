@@ -193,7 +193,8 @@ def membership_status(telegram_id, chat_id):
 def verify_required_memberships(telegram_id):
     channel = membership_status(telegram_id, CHANNEL_ID)
     group = membership_status(telegram_id, GROUP_ID) if GROUP_ID else None
-    return channel, group         status = data['result'].get('status')
+    return channel, group
+    status = data['result'].get('status')
         return status in ('creator', 'administrator', 'member') or (status == 'restricted' and data['result'].get('is_member', False))
     except Exception:
         app.logger.exception('Telegram membership check failed')
