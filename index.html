@@ -2,487 +2,522 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#0b1220">
-    <title>EARNOVA Mini App</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#080808">
+<title>EARNOVA - Earn Smart</title>
 
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script
-        src="https://libtl.com/sdk.js"
-        data-zone="12183521"
-        data-sdk="show_12183521">
-    </script>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://libtl.com/sdk.js" data-zone="12183521" data-sdk="show_12183521"></script>
 
-    <style>
-        * { box-sizing: border-box; }
-
-        body {
-            margin: 0;
-            padding: 20px;
-            background: #0b1220;
-            color: white;
-            font-family: Arial, sans-serif;
-        }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo {
-            font-size: 25px;
-            font-weight: bold;
-            color: #35dc91;
-        }
-
-        .profile {
-            background: #18243a;
-            padding: 10px 14px;
-            border-radius: 20px;
-            font-size: 13px;
-        }
-
-        h2 {
-            margin-top: 32px;
-            font-size: 25px;
-        }
-
-        .muted {
-            color: #91a1b9;
-            font-size: 14px;
-        }
-
-        .wallet {
-            background: linear-gradient(135deg, #123d36, #176b50);
-            padding: 22px;
-            border-radius: 18px;
-            margin-top: 22px;
-        }
-
-        .balance {
-            font-size: 32px;
-            font-weight: bold;
-            margin: 12px 0;
-        }
-
-        .small {
-            font-size: 13px;
-            color: #d0e9dd;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 13px;
-            margin-top: 22px;
-        }
-
-        .item {
-            background: #172338;
-            border: 1px solid #263650;
-            border-radius: 15px;
-            padding: 19px 14px;
-            min-height: 110px;
-            cursor: pointer;
-        }
-
-        .emoji { font-size: 26px; }
-
-        .item h3 {
-            font-size: 15px;
-            margin: 12px 0 5px;
-        }
-
-        .item p {
-            font-size: 12px;
-            color: #91a1b9;
-            margin: 0;
-        }
-
-        .benefits {
-            background: #172338;
-            padding: 18px;
-            border-radius: 15px;
-            margin-top: 22px;
-        }
-
-        .benefits p {
-            color: #b7c4d8;
-            font-size: 13px;
-            line-height: 1.8;
-        }
-
-        button {
-            background: #35dc91;
-            color: #071b15;
-            border: 0;
-            padding: 11px 17px;
-            border-radius: 10px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        button:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        .refresh-btn {
-            margin-top: 12px;
-            background: #d9f7e9;
-        }
-
-        .status {
-            margin-top: 15px;
-            font-size: 13px;
-            color: #d0e9dd;
-            line-height: 1.6;
-            overflow-wrap: anywhere;
-        }
-
-        .footer {
-            text-align: center;
-            color: #74839a;
-            font-size: 12px;
-            margin: 30px 0;
-        }
-    </style>
+<style>
+:root{
+ --bg:#080808;
+ --card:#151515;
+ --card2:#1d1a12;
+ --gold:#e8b94f;
+ --gold2:#ffda79;
+ --text:#ffffff;
+ --muted:#aaa49a;
+ --border:#393020;
+}
+*{box-sizing:border-box}
+body{
+ margin:0;background:var(--bg);color:var(--text);
+ font-family:Arial,sans-serif;padding-bottom:85px;
+}
+button{font-family:inherit;cursor:pointer}
+.header{
+ display:flex;justify-content:space-between;align-items:center;
+ padding:17px 16px;border-bottom:1px solid var(--border);
+ position:sticky;top:0;background:#080808;z-index:5;
+}
+.brand{display:flex;align-items:center;gap:10px}
+.logo{
+ width:39px;height:39px;border-radius:12px;
+ background:linear-gradient(145deg,#ffdf83,#b77b17);
+ color:#111;display:grid;place-items:center;
+ font-size:23px;font-weight:900;
+}
+.brand-name{font-size:21px;font-weight:900;letter-spacing:1px;color:var(--gold)}
+.profile{
+ background:#1b1b1b;border:1px solid var(--border);
+ border-radius:20px;padding:9px 12px;font-size:12px;
+ max-width:135px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+main{padding:17px 15px;max-width:650px;margin:auto}
+.screen{display:none}
+.screen.active{display:block}
+h1{font-size:25px;margin:12px 0 6px}
+h2{font-size:19px;margin:0 0 14px}
+h3{font-size:15px;margin:10px 0 5px}
+p{color:var(--muted);font-size:13px;line-height:1.5}
+.gold{color:var(--gold)}
+.welcome{margin:9px 0 20px}
+.wallet-card{
+ padding:22px;border-radius:19px;
+ background:linear-gradient(135deg,#29200e,#17130b 65%,#30220c);
+ border:1px solid #72551d;margin:18px 0;
+}
+.wallet-label{font-size:12px;color:#e3c77f;letter-spacing:1px}
+.balance{font-size:36px;font-weight:900;margin:12px 0}
+.small{font-size:12px;color:#c5b78f}
+.primary{
+ background:linear-gradient(135deg,var(--gold2),#c58b25);
+ color:#171006;border:0;padding:12px 17px;
+ border-radius:10px;font-weight:bold;
+}
+.secondary{
+ background:#242018;color:var(--gold);
+ border:1px solid var(--border);padding:10px 14px;
+ border-radius:10px;font-weight:bold;
+}
+.full{width:100%}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.card{
+ background:var(--card);border:1px solid #292929;
+ border-radius:15px;padding:16px 13px;min-height:112px;
+ cursor:pointer;transition:.15s;
+}
+.card:active{transform:scale(.98)}
+.card .emoji{font-size:26px}
+.card h3{font-size:14px}
+.card p{margin:5px 0 0;font-size:11px}
+.section-title{margin:25px 0 13px}
+.panel{
+ background:var(--card);border:1px solid #292929;
+ border-radius:15px;padding:17px;margin:14px 0;
+}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.status{
+ color:#d6c18d;font-size:12px;line-height:1.6;
+ margin-top:12px;overflow-wrap:anywhere;
+}
+.feature-list{display:grid;gap:10px}
+.feature-row{
+ background:var(--card);border:1px solid #292929;
+ padding:15px;border-radius:13px;display:flex;
+ align-items:center;gap:13px;cursor:pointer;
+}
+.feature-row .emoji{font-size:24px}
+.feature-row div:nth-child(2){flex:1}
+.feature-row p{margin:4px 0 0;font-size:11px}
+.arrow{color:var(--gold);font-size:20px}
+.bottom-nav{
+ position:fixed;bottom:0;left:0;right:0;z-index:10;
+ background:#111;border-top:1px solid var(--border);
+ display:flex;justify-content:space-around;
+ padding:9px 3px calc(9px + env(safe-area-inset-bottom));
+}
+.nav-btn{
+ flex:1;border:0;background:transparent;color:#918b80;
+ font-size:10px;padding:5px 1px;
+}
+.nav-btn span{display:block;font-size:20px;margin-bottom:4px}
+.nav-btn.active{color:var(--gold)}
+.modal-backdrop{
+ display:none;position:fixed;inset:0;background:#000c;
+ z-index:20;align-items:center;justify-content:center;padding:20px;
+}
+.modal-backdrop.show{display:flex}
+.modal{
+ width:100%;max-width:360px;background:#171717;
+ border:1px solid #70531d;border-radius:18px;padding:23px;text-align:center;
+}
+.modal-icon{font-size:39px}
+.modal h2{color:var(--gold);margin:12px 0}
+.modal p{line-height:1.7}
+.modal button{margin-top:10px}
+.footer{text-align:center;color:#777;font-size:11px;margin:28px 0 12px}
+hr{border:0;border-top:1px solid #30291c;margin:16px 0}
+@media(min-width:600px){
+ main{padding:24px}
+ .grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+</style>
 </head>
 
 <body>
 
-    <div class="header">
-        <div class="logo">EARNOVA</div>
-        <div class="profile" id="profile">👤 My Account</div>
-    </div>
-
-    <h2>Welcome to EARNOVA! 👋</h2>
-    <p class="muted">Complete tasks and explore rewards.</p>
-
-    <div class="wallet">
-        <div>💳 TOTAL WALLET BALANCE</div>
-        <div class="balance" id="balance">Loading...</div>
-        <div class="small">Minimum withdrawal: ₹20</div>
-        <button class="refresh-btn" id="refreshButton"
-                onclick="refreshBalance()">
-            Refresh Balance
-        </button>
-        <div class="status" id="walletStatus"></div>
-    </div>
-
-    <div class="grid">
-
-        <div class="item" onclick="watchAd()">
-            <div class="emoji">📺</div>
-            <h3>Watch Ads</h3>
-            <p>Watch and earn rewards</p>
-        </div>
-
-        <div class="item" onclick="openPage('Daily Tasks')">
-            <div class="emoji">🎯</div>
-            <h3>Daily Tasks</h3>
-            <p>Complete available tasks</p>
-        </div>
-
-        <div class="item" onclick="openPage('Refer & Earn')">
-            <div class="emoji">👥</div>
-            <h3>Refer & Earn</h3>
-            <p>Invite friends</p>
-        </div>
-
-        <div class="item" onclick="openPage('Leaderboard')">
-            <div class="emoji">🏆</div>
-            <h3>Leaderboard</h3>
-            <p>Top earning members</p>
-        </div>
-
-        <div class="item" onclick="openPage('My Wallet')">
-            <div class="emoji">💰</div>
-            <h3>My Wallet</h3>
-            <p>Check your balance</p>
-        </div>
-
-        <div class="item" onclick="openPage('Withdraw')">
-            <div class="emoji">💸</div>
-            <h3>Withdraw</h3>
-            <p>Minimum ₹20</p>
-        </div>
-
-    </div>
-
-    <div class="benefits">
-        <h3>✨ Your Benefits</h3>
-        <p>
-            ✓ Daily earning opportunities<br>
-            ✓ Referral rewards<br>
-            ✓ Task history<br>
-            ✓ Easy wallet access
-        </p>
-    </div>
-
-    <div class="footer">
-        EARNOVA • Earn Smart, Stay Genuine
-    </div>
-
-    <script>
-        const API = "https://earnova-miniapp.onrender.com";
-        const tg = window.Telegram?.WebApp;
-
-        let initData = "";
-        let isRegistered = false;
-        let isWatchingAd = false;
-
-        if (tg) {
-            tg.ready();
-            tg.expand();
-
-            initData = tg.initData || "";
-
-            const user = tg.initDataUnsafe?.user;
-
-            if (user) {
-                const displayName =
-                    user.first_name || user.username || "My Account";
-
-                document.getElementById("profile").textContent =
-                    "👤 " + displayName;
-            }
-        }
-
-        function showMessage(message) {
-            if (tg && typeof tg.showAlert === "function") {
-                tg.showAlert(message);
-            } else {
-                alert(message);
-            }
-        }
-
-        function setWalletStatus(message) {
-            document.getElementById("walletStatus").textContent = message;
-        }
-
-        function formatMoney(amount) {
-            const number = Number(amount);
-
-            if (!Number.isFinite(number)) {
-                return "₹0.00";
-            }
-
-            return "₹" + number.toFixed(2);
-        }
-
-        async function apiPost(path, data = {}) {
-            const response = await fetch(API + path, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    ...data,
-                    initData: initData
-                })
-            });
-
-            const result = await response.json();
-
-            if (!response.ok || !result.ok) {
-                throw new Error(result.error || "Server request failed");
-            }
-
-            return result;
-        }
-
-        async function registerUser() {
-            if (!initData) {
-                throw new Error(
-                    "Please open EARNOVA from your Telegram bot."
-                );
-            }
-
-            const result = await apiPost("/api/register");
-
-            isRegistered = true;
-
-            if (result.balance !== undefined) {
-                document.getElementById("balance").textContent =
-                    formatMoney(result.balance);
-            }
-
-            return result;
-        }
-
-        async function refreshBalance() {
-            const button = document.getElementById("refreshButton");
-
-            button.disabled = true;
-            setWalletStatus("Checking your wallet...");
-
-            try {
-                if (!isRegistered) {
-                    await registerUser();
-                }
-
-                const result = await apiPost("/api/balance");
-
-                document.getElementById("balance").textContent =
-                    formatMoney(result.balance);
-
-                setWalletStatus("Wallet balance updated.");
-
-            } catch (error) {
-                console.error("Balance error:", error);
-                setWalletStatus(error.message);
-            } finally {
-                button.disabled = false;
-            }
-        }
-
-        async function startMonetagSession() {
-            const result = await apiPost("/api/ad/start");
-
-            if (!result.ymid) {
-                throw new Error("Ad session ID not received.");
-            }
-
-            return result.ymid;
-        }
-
-        async function checkAdStatus(ymid) {
-            return await apiPost("/api/ad/status", { ymid });
-        }
-
-        async function waitForReward(ymid) {
-            setWalletStatus(
-                "Ad finished. Waiting for Monetag reward verification..."
-            );
-
-            const maxChecks = 60;
-
-            for (let i = 0; i < maxChecks; i++) {
-                await new Promise(resolve => setTimeout(resolve, 1000));
-
-                try {
-                    const result = await checkAdStatus(ymid);
-
-                    if (result.credited) {
-                        document.getElementById("balance").textContent =
-                            formatMoney(
-                                (await apiPost("/api/balance")).balance
-                            );
-
-                        setWalletStatus(
-                            "Reward verified! You received " +
-                            formatMoney(result.reward)
-                        );
-
-                        showMessage(
-                            "Congratulations! Your reward of " +
-                            formatMoney(result.reward) +
-                            " has been credited to your wallet."
-                        );
-
-                        return true;
-                    }
-
-                } catch (error) {
-                    console.log("Reward status check:", error.message);
-                }
-            }
-
-            await refreshBalance();
-
-            setWalletStatus(
-                "Reward is still pending. It will appear after Monetag verifies the ad. Please check your wallet again later."
-            );
-
-            return false;
-        }
-
-        async function watchAd() {
-            if (isWatchingAd) {
-                return;
-            }
-
-            isWatchingAd = true;
-
-            const adCard = document.querySelector(".item");
-            setWalletStatus("Preparing your advertisement...");
-
-            try {
-                if (!initData) {
-                    throw new Error(
-                        "Please open EARNOVA from your Telegram bot."
-                    );
-                }
-
-                if (!isRegistered) {
-                    await registerUser();
-                }
-
-                const ymid = await startMonetagSession();
-
-                if (typeof window.show_12183521 !== "function") {
-                    throw new Error(
-                        "Monetag ad is not available. Please try again later."
-                    );
-                }
-
-                setWalletStatus("Opening advertisement...");
-
-                await window.show_12183521({ ymid: ymid });
-
-                await waitForReward(ymid);
-
-            } catch (error) {
-                console.error("Watch ad error:", error);
-
-                setWalletStatus(error.message);
-
-                showMessage(error.message);
-
-                await refreshBalance();
-
-            } finally {
-                isWatchingAd = false;
-            }
-        }
-
-        function openPage(name) {
-            if (name === "Watch Ads") {
-                watchAd();
-                return;
-            }
-
-            if (name === "My Wallet") {
-                refreshBalance();
-                return;
-            }
-
-            if (name === "Withdraw") {
-                showMessage(
-                    "Minimum withdrawal is ₹20. Withdrawal feature is not active yet."
-                );
-                return;
-            }
-
-            showMessage(name + " section will be available soon.");
-        }
-
-        async function initializeApp() {
-            try {
-                await registerUser();
-                await refreshBalance();
-            } catch (error) {
-                console.error("App initialization:", error);
-                document.getElementById("balance").textContent = "Unavailable";
-                setWalletStatus(error.message);
-            }
-        }
-
-        initializeApp();
-    </script>
+<header class="header">
+ <div class="brand">
+  <div class="logo">E</div>
+  <div class="brand-name">EARNOVA</div>
+ </div>
+ <div class="profile" id="profile">👤 My Account</div>
+</header>
+
+<main>
+
+<!-- HOME -->
+<section class="screen active" id="home">
+ <div class="welcome">
+  <h1>Welcome, <span class="gold" id="welcomeName">User</span> 👋</h1>
+  <p>Earn smart. Stay genuine. Explore EARNOVA rewards.</p>
+ </div>
+
+ <div class="wallet-card">
+  <div class="wallet-label">💰 TOTAL WALLET BALANCE</div>
+  <div class="balance" id="balance">Loading...</div>
+  <div class="small">Minimum withdrawal: ₹20</div>
+  <br>
+  <button class="primary" onclick="goTo('wallet')">View My Wallet →</button>
+  <button class="secondary" onclick="refreshBalance()" id="refreshButton">↻ Refresh</button>
+  <div class="status" id="walletStatus">Connecting to EARNOVA...</div>
+ </div>
+
+ <h2 class="section-title">Explore EARNOVA</h2>
+ <div class="grid">
+  <div class="card" onclick="watchAd()">
+   <div class="emoji">📺</div><h3>Watch Ads</h3>
+   <p>Watch advertisements and earn</p>
+  </div>
+  <div class="card" onclick="comingSoon('Daily Tasks')">
+   <div class="emoji">🎯</div><h3>Daily Tasks</h3>
+   <p>Complete tasks and get rewards</p>
+  </div>
+  <div class="card" onclick="comingSoon('Daily Check-in')">
+   <div class="emoji">📅</div><h3>Daily Check-in</h3>
+   <p>Daily attendance rewards</p>
+  </div>
+  <div class="card" onclick="comingSoon('Refer & Earn')">
+   <div class="emoji">👥</div><h3>Refer & Earn</h3>
+   <p>Invite your friends</p>
+  </div>
+  <div class="card" onclick="comingSoon('Leaderboard')">
+   <div class="emoji">🏆</div><h3>Leaderboard</h3>
+   <p>Top earning members</p>
+  </div>
+  <div class="card" onclick="goTo('wallet')">
+   <div class="emoji">💰</div><h3>My Wallet</h3>
+   <p>Check your wallet balance</p>
+  </div>
+ </div>
+
+ <h2 class="section-title">More Features</h2>
+ <div class="feature-list">
+  <div class="feature-row" onclick="comingSoon('Daily Challenges')">
+   <div class="emoji">🎁</div><div><b>Daily Challenges</b><p>New challenges coming soon</p></div><div class="arrow">›</div>
+  </div>
+  <div class="feature-row" onclick="comingSoon('Transaction History')">
+   <div class="emoji">📜</div><div><b>Transaction History</b><p>View your earning records</p></div><div class="arrow">›</div>
+  </div>
+  <div class="feature-row" onclick="comingSoon('Notifications')">
+   <div class="emoji">🔔</div><div><b>Notifications</b><p>Important updates and announcements</p></div><div class="arrow">›</div>
+  </div>
+  <div class="feature-row" onclick="comingSoon('Help & Support')">
+   <div class="emoji">🎧</div><div><b>Help & Support</b><p>Get help with EARNOVA</p></div><div class="arrow">›</div>
+  </div>
+ </div>
+</section>
+
+<!-- EARN -->
+<section class="screen" id="earn">
+ <h1>Earn Rewards <span class="gold">💎</span></h1>
+ <p>Choose an earning activity below.</p>
+ <div class="feature-list">
+  <div class="feature-row" onclick="watchAd()">
+   <div class="emoji">📺</div><div><b>Watch Ads</b><p>Available earning feature</p></div><div class="arrow">›</div>
+  </div>
+  <div class="feature-row" onclick="comingSoon('Daily Tasks')">
+   <div class="emoji">🎯</div><div><b>Daily Tasks</b><p>Coming soon</p></div><div class="arrow">›</div>
+  </div>
+  <div class="feature-row" onclick="comingSoon('Daily Check-in')">
+   <div class="emoji">📅</div><div><b>Daily Check-in</b><p>Coming soon</p></div><div class="arrow">›</div>
+  </div>
+  <div class="feature-row" onclick="comingSoon('Daily Challenges')">
+   <div class="emoji">🎁</div><div><b>Daily Challenges</b><p>Coming soon</p></div><div class="arrow">›</div>
+  </div>
+ </div>
+</section>
+
+<!-- REFER -->
+<section class="screen" id="refer">
+ <h1>Refer & Earn <span class="gold">👥</span></h1>
+ <div class="panel">
+  <h2>Invite your friends</h2>
+  <p>Invite friends to EARNOVA and explore referral rewards when this feature launches.</p>
+  <button class="primary full" onclick="comingSoon('Refer & Earn')">Referral Feature — Coming Soon</button>
+ </div>
+ <div class="panel">
+  <h3>How it will work</h3>
+  <p>Referral link, invite tracking and reward details will be announced after the feature is ready.</p>
+ </div>
+</section>
+
+<!-- WALLET -->
+<section class="screen" id="wallet">
+ <h1>My Wallet <span class="gold">💰</span></h1>
+ <div class="wallet-card">
+  <div class="wallet-label">AVAILABLE BALANCE</div>
+  <div class="balance" id="walletBalance">Loading...</div>
+  <div class="small">Minimum withdrawal: ₹20</div>
+  <br>
+  <button class="secondary" onclick="refreshBalance()">↻ Refresh Balance</button>
+ </div>
+ <div class="panel">
+  <h3>Withdraw Money</h3>
+  <p>Withdrawal service is not active yet. We will announce when it is ready.</p>
+  <button class="primary full" onclick="comingSoon('Withdraw')">Withdraw — Coming Soon</button>
+ </div>
+ <div class="panel" onclick="comingSoon('Transaction History')">
+  <div class="row"><b>📜 Transaction History</b><span class="arrow">›</span></div>
+  <p>View your earning and withdrawal records when available.</p>
+ </div>
+</section>
+
+<!-- PROFILE -->
+<section class="screen" id="profileScreen">
+ <h1>My Profile <span class="gold">👤</span></h1>
+ <div class="panel">
+  <h2 id="profileName">EARNOVA Member</h2>
+  <p id="profileUsername">Telegram account</p>
+  <hr>
+  <div class="row"><span>Account status</span><b class="gold">Connected</b></div>
+  <br>
+  <div class="row"><span>Wallet balance</span><b id="profileBalance">Loading...</b></div>
+ </div>
+ <div class="feature-list">
+  <div class="feature-row" onclick="comingSoon('Notifications')">
+   <div class="emoji">🔔</div><div><b>Notifications</b><p>Coming soon</p></div><div class="arrow">›</div>
+  </div>
+  <div class="feature-row" onclick="comingSoon('Help & Support')">
+   <div class="emoji">🎧</div><div><b>Help & Support</b><p>Coming soon</p></div><div class="arrow">›</div>
+  </div>
+  <div class="feature-row" onclick="openChannel()">
+   <div class="emoji">📢</div><div><b>Official Telegram Channel</b><p>Follow EARNOVA updates</p></div><div class="arrow">›</div>
+  </div>
+ </div>
+</section>
+
+<div class="footer">EARNOVA • Earn Smart, Stay Genuine</div>
+</main>
+
+<nav class="bottom-nav">
+ <button class="nav-btn active" data-screen="home" onclick="goTo('home',this)"><span>🏠</span>Home</button>
+ <button class="nav-btn" data-screen="earn" onclick="goTo('earn',this)"><span>🎯</span>Earn</button>
+ <button class="nav-btn" data-screen="refer" onclick="goTo('refer',this)"><span>👥</span>Refer</button>
+ <button class="nav-btn" data-screen="wallet" onclick="goTo('wallet',this)"><span>💰</span>Wallet</button>
+ <button class="nav-btn" data-screen="profileScreen" onclick="goTo('profileScreen',this)"><span>👤</span>Profile</button>
+</nav>
+
+<!-- COMING SOON POPUP -->
+<div class="modal-backdrop" id="comingModal">
+ <div class="modal">
+  <div class="modal-icon">🚧</div>
+  <h2>Coming Soon!</h2>
+  <p id="comingText">This feature is currently under development.</p>
+  <p>Full updates ke liye hamare official Telegram channel ko subscribe karein.</p>
+  <button class="primary full" onclick="openChannel()">📢 Subscribe Telegram Channel</button>
+  <button class="secondary full" onclick="closeModal()">Close</button>
+ </div>
+</div>
+
+<script>
+const API = "https://earnova-miniapp.onrender.com";
+const CHANNEL = "https://t.me/Earnova0fficial";
+const tg = window.Telegram?.WebApp;
+
+let initData = "";
+let isRegistered = false;
+let isWatchingAd = false;
+
+if(tg){
+ tg.ready();
+ tg.expand();
+ initData = tg.initData || "";
+ const user = tg.initDataUnsafe?.user;
+ if(user){
+  const name = user.first_name || user.username || "Member";
+  document.getElementById("profile").textContent = "👤 " + name;
+  document.getElementById("welcomeName").textContent = name;
+  document.getElementById("profileName").textContent = name;
+  document.getElementById("profileUsername").textContent =
+   user.username ? "@" + user.username : "Telegram member";
+ }
+}
+
+function showMessage(message){
+ if(tg && typeof tg.showAlert === "function") tg.showAlert(message);
+ else alert(message);
+}
+
+function setWalletStatus(message){
+ document.getElementById("walletStatus").textContent = message;
+}
+
+function formatMoney(amount){
+ const number = Number(amount);
+ if(!Number.isFinite(number)) return "₹0.00";
+ return "₹" + number.toFixed(2);
+}
+
+async function apiPost(path,data={}){
+ const response = await fetch(API + path,{
+  method:"POST",
+  headers:{"Content-Type":"application/json"},
+  body:JSON.stringify({...data,initData:initData})
+ });
+ const result = await response.json();
+ if(!response.ok || !result.ok){
+  throw new Error(result.error || "Server request failed");
+ }
+ return result;
+}
+
+async function registerUser(){
+ if(!initData){
+  throw new Error("Please open EARNOVA from your Telegram bot.");
+ }
+ const result = await apiPost("/api/register");
+ isRegistered = true;
+ if(result.balance !== undefined) updateBalance(result.balance);
+ return result;
+}
+
+function updateBalance(amount){
+ const money = formatMoney(amount);
+ document.getElementById("balance").textContent = money;
+ document.getElementById("walletBalance").textContent = money;
+ document.getElementById("profileBalance").textContent = money;
+}
+
+async function refreshBalance(){
+ const button = document.getElementById("refreshButton");
+ if(button) button.disabled = true;
+ setWalletStatus("Checking your wallet...");
+ try{
+  if(!isRegistered) await registerUser();
+  const result = await apiPost("/api/balance");
+  updateBalance(result.balance);
+  setWalletStatus("Wallet balance updated.");
+ }catch(error){
+  console.error("Balance error:",error);
+  setWalletStatus(error.message);
+ }finally{
+  if(button) button.disabled = false;
+ }
+}
+
+async function startMonetagSession(){
+ const result = await apiPost("/api/ad/start");
+ if(!result.ymid) throw new Error("Ad session ID not received.");
+ return result.ymid;
+}
+
+async function checkAdStatus(ymid){
+ return await apiPost("/api/ad/status",{ymid});
+}
+
+async function waitForReward(ymid){
+ setWalletStatus("Ad finished. Waiting for Monetag reward verification...");
+ const maxChecks = 60;
+
+ for(let i=0;i<maxChecks;i++){
+  await new Promise(resolve=>setTimeout(resolve,1000));
+  try{
+   const result = await checkAdStatus(ymid);
+   if(result.credited){
+    const balanceResult = await apiPost("/api/balance");
+    updateBalance(balanceResult.balance);
+    setWalletStatus("Reward verified! You received " + formatMoney(result.reward));
+    showMessage("Congratulations! Your reward of " +
+     formatMoney(result.reward) + " has been credited to your wallet.");
+    return true;
+   }
+  }catch(error){
+   console.log("Reward status check:",error.message);
+  }
+ }
+
+ await refreshBalance();
+ setWalletStatus("Reward is still pending. It will appear after Monetag verifies the ad. Please check your wallet again later.");
+ return false;
+}
+
+async function watchAd(){
+ if(isWatchingAd) return;
+ isWatchingAd = true;
+ setWalletStatus("Preparing your advertisement...");
+
+ try{
+  if(!initData){
+   throw new Error("Please open EARNOVA from your Telegram bot.");
+  }
+  if(!isRegistered) await registerUser();
+
+  const ymid = await startMonetagSession();
+
+  if(typeof window.show_12183521 !== "function"){
+   throw new Error("Monetag ad is not available. Please try again later.");
+  }
+
+  setWalletStatus("Opening advertisement...");
+  await window.show_12183521({ymid:ymid});
+  await waitForReward(ymid);
+
+ }catch(error){
+  console.error("Watch ad error:",error);
+  setWalletStatus(error.message);
+  showMessage(error.message);
+  await refreshBalance();
+ }finally{
+  isWatchingAd = false;
+ }
+}
+
+function goTo(screen,button){
+ document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+ const target = document.getElementById(screen);
+ if(target) target.classList.add("active");
+
+ document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
+ const navButton = button || document.querySelector('.nav-btn[data-screen="'+screen+'"]');
+ if(navButton) navButton.classList.add("active");
+
+ if(screen==="wallet") refreshBalance();
+ if(screen==="profileScreen") refreshBalance();
+
+ window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function comingSoon(name){
+ document.getElementById("comingText").textContent =
+  name + " is currently under development. It is not active yet.";
+ document.getElementById("comingModal").classList.add("show");
+}
+
+function closeModal(){
+ document.getElementById("comingModal").classList.remove("show");
+}
+
+function openChannel(){
+ if(tg && typeof tg.openTelegramLink==="function"){
+  tg.openTelegramLink(CHANNEL);
+ }else{
+  window.open(CHANNEL,"_blank");
+ }
+}
+
+document.getElementById("comingModal").addEventListener("click",function(event){
+ if(event.target===this) closeModal();
+});
+
+async function initializeApp(){
+ try{
+  await registerUser();
+  await refreshBalance();
+ }catch(error){
+  console.error("App initialization:",error);
+  document.getElementById("balance").textContent = "Unavailable";
+  document.getElementById("walletBalance").textContent = "Unavailable";
+  document.getElementById("profileBalance").textContent = "Unavailable";
+  setWalletStatus(error.message);
+ }
+}
+
+initializeApp();
+</script>
 
 </body>
 </html>
