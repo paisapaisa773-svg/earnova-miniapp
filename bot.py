@@ -17,15 +17,13 @@ app = Flask(__name__)
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 DATABASE_URL = os.environ.get("DATABASE_URL")
 POSTBACK_SECRET = os.environ.get("POSTBACK_SECRET")
-
 FRONTEND_ORIGIN = "https://paisapaisa773-svg.github.io"
 
 
 def get_db():
-    return psycopg.connect(
-        DATABASE_URL,
-        row_factory=dict_row
-    )
+    if not DATABASE_URL:
+        raise RuntimeError("DATABASE_URL is not configured")
+    return psycopg.connect(DATABASE_URL, row_factory=dict_row)
 
 
 def create_tables(db):
@@ -38,7 +36,6 @@ def create_tables(db):
             created_at TIMESTAMPTZ DEFAULT NOW()
         )
     """)
-
     db.execute("""
         CREATE TABLE IF NOT EXISTS wallet_transactions (
             id BIGSERIAL PRIMARY KEY,
@@ -50,7 +47,6 @@ def create_tables(db):
             created_at TIMESTAMPTZ DEFAULT NOW()
         )
     """)
-
     db.execute("""
         CREATE TABLE IF NOT EXISTS ad_history (
             id BIGSERIAL PRIMARY KEY,
@@ -63,7 +59,6 @@ def create_tables(db):
             UNIQUE(network, event_id)
         )
     """)
-
     db.execute("""
         CREATE TABLE IF NOT EXISTS network_events (
             id BIGSERIAL PRIMARY KEY,
@@ -80,48 +75,56 @@ def create_tables(db):
             UNIQUE(network, ymid, event_type)
         )
     """)
+    db.execute("""
+        CREATE INDEX IF NOT EXISTS idx_ad_history_user_status
+        ON ad_history (telegram_id, status)
+    """)
+    db.execute("""
+        CREATE INDEX IF NOT EXISTS idx_wallet_transactions_user
+        ON wallet_transactions (telegram_id, created_at DESC)
+    """)
 
 
 def verify_telegram_data(init_data):
     if not BOT_TOKEN or not init_data:
         return None
 
-    data = dict(parse_qsl(init_data))
-    received_hash = data.pop("hash", None)
-
-    if not received_hash:
-        return None
-
     try:
+        data = dict(parse_qsl(init_data, keep_blank_values=True))
+        received_hash = data.pop("hash", None)
+
+        if not received_hash:
+            return None
+
         auth_date = int(data.get("auth_date", "0"))
-    except (ValueError, TypeError):
-        return None
+        now = int(time.time())
 
-    if time.time() - auth_date > 86400 or auth_date > time.time() + 60:
-        return None
+        if auth_date <= 0 or now - auth_date > 86400 or auth_date > now + 60:
+            return None
 
-    check_string = "\n".join(
-        f"{key}={value}" for key, value in sorted(data.items())
-    )
+        check_string = "\n".join(
+            f"{key}={value}" for key, value in sorted(data.items())
+        )
 
-    secret_key = hmac.new(
-        b"WebAppData",
-        BOT_TOKEN.encode(),
-        hashlib.sha256
-    ).digest()
+        secret_key = hmac.new(
+            b"WebAppData", BOT_TOKEN.encode(), hashlib.sha256
+        ).digest()
 
-    calculated_hash = hmac.new(
-        secret_key,
-        check_string.encode(),
-        hashlib.sha256
-    ).hexdigest()
+        calculated_hash = hmac.new(
+            secret_key, check_string.encode(), hashlib.sha256
+        ).hexdigest()
 
-    if not hmac.compare_digest(calculated_hash, received_hash):
-        return None
+        if not hmac.compare_digest(calculated_hash, received_hash):
+            return None
 
-    try:
-        return json.loads(data.get("user", "{}"))
-    except (json.JSONDecodeError, TypeError):
+        user = json.loads(data.get("user", "{}"))
+
+        if not isinstance(user, dict) or not user.get("id"):
+            return None
+
+        return user
+
+    except (ValueError, TypeError, json.JSONDecodeError):
         return None
 
 
@@ -132,17 +135,21 @@ def reward_for_ad(ad_number):
         Decimal("1.50"),
         Decimal("0.90"),
         Decimal("0.80"),
-        Decimal("0.70")
+        Decimal("0.70"),
     ]
 
     if ad_number <= len(rewards):
         return rewards[ad_number - 1]
 
-    next_reward = Decimal("0.70") - (
-        Decimal("0.10") * (ad_number - 6)
+    return max(
+        Decimal("0.10"),
+        Decimal("0.70") - Decimal("0.10") * (ad_number - 6)
     )
 
-    return max(Decimal("0.10"), next_reward)
+
+def get_authenticated_user():
+    body = request.get_json(silent=True) or {}
+    return verify_telegram_data(body.get("initData", ""))
 
 
 @app.after_request
@@ -150,10 +157,11 @@ def add_cors(response):
     response.headers["Access-Control-Allow-Origin"] = FRONTEND_ORIGIN
     response.headers["Access-Control-Allow-Headers"] = "Content-Type"
     response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+    response.headers["Vary"] = "Origin"
     return response
 
 
-@app.route("/health")
+@app.route("/health", methods=["GET"])
 def health():
     try:
         with get_db() as db:
@@ -163,7 +171,7 @@ def health():
         return jsonify({
             "status": "EARNOVA Backend Running",
             "database": "Connected"
-        })
+        }), 200
 
     except Exception:
         app.logger.exception("Health check failed")
@@ -178,16 +186,17 @@ def register():
     if request.method == "OPTIONS":
         return "", 204
 
-    body = request.get_json(silent=True) or {}
-    user = verify_telegram_data(body.get("initData", ""))
+    user = get_authenticated_user()
 
-    if not user or not user.get("id"):
+    if not user:
         return jsonify({
             "ok": False,
             "error": "Invalid Telegram data"
         }), 401
 
     try:
+        telegram_id = int(user["id"])
+
         with get_db() as db:
             create_tables(db)
 
@@ -196,18 +205,60 @@ def register():
                 VALUES (%s, %s)
                 ON CONFLICT (telegram_id)
                 DO UPDATE SET username = EXCLUDED.username
-            """, (
-                int(user["id"]),
-                user.get("username", "")
-            ))
+            """, (telegram_id, user.get("username", "")))
+
+            row = db.execute("""
+                SELECT balance FROM users
+                WHERE telegram_id = %s
+            """, (telegram_id,)).fetchone()
 
         return jsonify({
             "ok": True,
-            "message": "User registered"
-        })
+            "balance": str(row["balance"])
+        }), 200
 
     except Exception:
         app.logger.exception("Registration failed")
+        return jsonify({"ok": False, "error": "Server error"}), 500
+
+
+@app.route("/api/balance", methods=["POST", "OPTIONS"])
+def get_balance():
+    if request.method == "OPTIONS":
+        return "", 204
+
+    user = get_authenticated_user()
+
+    if not user:
+        return jsonify({
+            "ok": False,
+            "error": "Invalid Telegram data"
+        }), 401
+
+    try:
+        telegram_id = int(user["id"])
+
+        with get_db() as db:
+            create_tables(db)
+
+            row = db.execute("""
+                SELECT balance FROM users
+                WHERE telegram_id = %s
+            """, (telegram_id,)).fetchone()
+
+            if not row:
+                return jsonify({
+                    "ok": False,
+                    "error": "User not registered"
+                }), 404
+
+        return jsonify({
+            "ok": True,
+            "balance": str(row["balance"])
+        }), 200
+
+    except Exception:
+        app.logger.exception("Balance lookup failed")
         return jsonify({"ok": False, "error": "Server error"}), 500
 
 
@@ -216,19 +267,18 @@ def start_ad():
     if request.method == "OPTIONS":
         return "", 204
 
-    body = request.get_json(silent=True) or {}
-    user = verify_telegram_data(body.get("initData", ""))
+    user = get_authenticated_user()
 
-    if not user or not user.get("id"):
+    if not user:
         return jsonify({
             "ok": False,
             "error": "Invalid Telegram data"
         }), 401
 
-    telegram_id = int(user["id"])
-    ymid = uuid.uuid4().hex
-
     try:
+        telegram_id = int(user["id"])
+        ymid = uuid.uuid4().hex
+
         with get_db() as db:
             create_tables(db)
 
@@ -237,21 +287,18 @@ def start_ad():
                 VALUES (%s, %s)
                 ON CONFLICT (telegram_id)
                 DO UPDATE SET username = EXCLUDED.username
-            """, (
-                telegram_id,
-                user.get("username", "")
-            ))
+            """, (telegram_id, user.get("username", "")))
 
             db.execute("""
                 INSERT INTO ad_history
-                (telegram_id, network, event_id, status)
+                    (telegram_id, network, event_id, status)
                 VALUES (%s, 'monetag', %s, 'pending')
             """, (telegram_id, ymid))
 
         return jsonify({
             "ok": True,
             "ymid": ymid
-        })
+        }), 200
 
     except Exception:
         app.logger.exception("Ad session creation failed")
@@ -261,21 +308,76 @@ def start_ad():
         }), 500
 
 
+@app.route("/api/ad/status", methods=["POST", "OPTIONS"])
+def ad_status():
+    if request.method == "OPTIONS":
+        return "", 204
+
+    user = get_authenticated_user()
+
+    if not user:
+        return jsonify({
+            "ok": False,
+            "error": "Invalid Telegram data"
+        }), 401
+
+    body = request.get_json(silent=True) or {}
+    ymid = str(body.get("ymid", "")).strip()
+
+    if not ymid or len(ymid) > 100:
+        return jsonify({
+            "ok": False,
+            "error": "Invalid ad session"
+        }), 400
+
+    try:
+        telegram_id = int(user["id"])
+
+        with get_db() as db:
+            create_tables(db)
+
+            row = db.execute("""
+                SELECT status, reward
+                FROM ad_history
+                WHERE network = 'monetag'
+                  AND event_id = %s
+                  AND telegram_id = %s
+            """, (ymid, telegram_id)).fetchone()
+
+        if not row:
+            return jsonify({
+                "ok": False,
+                "error": "Ad session not found"
+            }), 404
+
+        return jsonify({
+            "ok": True,
+            "status": row["status"],
+            "reward": str(row["reward"]),
+            "credited": row["status"] == "credited"
+        }), 200
+
+    except Exception:
+        app.logger.exception("Ad status lookup failed")
+        return jsonify({"ok": False, "error": "Server error"}), 500
+
+
 @app.route("/postback", methods=["GET"])
 def monetag_postback():
     supplied_secret = request.args.get("secret", "")
 
     if (
         not POSTBACK_SECRET
-        or not hmac.compare_digest(
-            supplied_secret,
-            POSTBACK_SECRET
-        )
+        or not hmac.compare_digest(supplied_secret, POSTBACK_SECRET)
     ):
-        return jsonify({"ok": False, "error": "Unauthorized"}), 403
+        return jsonify({
+            "ok": False,
+            "error": "Unauthorized"
+        }), 403
 
     ymid = request.args.get("ymid", "").strip()
     event_type = request.args.get("event_type", "").strip().lower()
+
     reward_event_type = request.args.get(
         "reward_event_type", ""
     ).strip().lower()
@@ -319,7 +421,8 @@ def monetag_postback():
             ad = db.execute("""
                 SELECT telegram_id, status
                 FROM ad_history
-                WHERE network = 'monetag' AND event_id = %s
+                WHERE network = 'monetag'
+                  AND event_id = %s
                 FOR UPDATE
             """, (ymid,)).fetchone()
 
@@ -369,7 +472,16 @@ def monetag_postback():
                 estimated_price
             )).fetchone()
 
-            if event_type != "impression" or reward_event_type != "valued":
+            if not inserted:
+                return jsonify({
+                    "ok": True,
+                    "message": "Duplicate event ignored"
+                }), 200
+
+            if (
+                event_type != "impression"
+                or reward_event_type != "valued"
+            ):
                 return jsonify({
                     "ok": True,
                     "message": "Event recorded; no reward"
@@ -381,14 +493,14 @@ def monetag_postback():
                     "message": "Reward already credited"
                 }), 200
 
-            user = db.execute("""
+            user_row = db.execute("""
                 SELECT balance
                 FROM users
                 WHERE telegram_id = %s
                 FOR UPDATE
             """, (telegram_id,)).fetchone()
 
-            if not user:
+            if not user_row:
                 return jsonify({
                     "ok": False,
                     "error": "User not found"
@@ -400,8 +512,33 @@ def monetag_postback():
                 WHERE telegram_id = %s
                   AND status = 'credited'
             """, (telegram_id,)).fetchone()
+
             ad_number = int(completed["total"]) + 1
             reward = reward_for_ad(ad_number)
+
+            transaction = db.execute("""
+                INSERT INTO wallet_transactions (
+                    telegram_id,
+                    amount,
+                    transaction_type,
+                    status,
+                    idempotency_key
+                )
+                VALUES (%s, %s, 'ad_reward', 'completed', %s)
+                ON CONFLICT (idempotency_key)
+                DO NOTHING
+                RETURNING id
+            """, (
+                telegram_id,
+                reward,
+                "monetag:" + ymid
+            )).fetchone()
+
+            if not transaction:
+                return jsonify({
+                    "ok": True,
+                    "message": "Reward transaction already exists"
+                }), 200
 
             db.execute("""
                 UPDATE users
@@ -412,24 +549,9 @@ def monetag_postback():
             db.execute("""
                 UPDATE ad_history
                 SET reward = %s, status = 'credited'
-                WHERE network = 'monetag' AND event_id = %s
+                WHERE network = 'monetag'
+                  AND event_id = %s
             """, (reward, ymid))
-
-            db.execute("""
-                INSERT INTO wallet_transactions (
-                    telegram_id,
-                    amount,
-                    transaction_type,
-                    status,
-                    idempotency_key
-                )
-                VALUES (%s, %s, 'ad_reward', 'completed', %s)
-                ON CONFLICT (idempotency_key) DO NOTHING
-            """, (
-                telegram_id,
-                reward,
-                "monetag:" + ymid
-            ))
 
         return jsonify({
             "ok": True,
