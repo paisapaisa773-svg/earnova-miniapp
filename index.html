@@ -5,13 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#0b1220">
-
     <title>EARNOVA Mini App</title>
 
-    <!-- Telegram SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
-    <!-- Monetag SDK -->
     <script
         src="https://libtl.com/sdk.js"
         data-zone="12183521"
@@ -19,16 +15,14 @@
     </script>
 
     <style>
-        * {
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
 
         body {
             margin: 0;
-            background: #0b1220;
-            color: #fff;
-            font-family: Arial, sans-serif;
             padding: 20px;
+            background: #0b1220;
+            color: white;
+            font-family: Arial, sans-serif;
         }
 
         .header {
@@ -47,6 +41,7 @@
             background: #18243a;
             padding: 10px 14px;
             border-radius: 20px;
+            font-size: 13px;
         }
 
         h2 {
@@ -93,9 +88,7 @@
             cursor: pointer;
         }
 
-        .emoji {
-            font-size: 26px;
-        }
+        .emoji { font-size: 26px; }
 
         .item h3 {
             font-size: 15px;
@@ -128,6 +121,25 @@
             padding: 11px 17px;
             border-radius: 10px;
             font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .refresh-btn {
+            margin-top: 12px;
+            background: #d9f7e9;
+        }
+
+        .status {
+            margin-top: 15px;
+            font-size: 13px;
+            color: #d0e9dd;
+            line-height: 1.6;
+            overflow-wrap: anywhere;
         }
 
         .footer {
@@ -143,7 +155,7 @@
 
     <div class="header">
         <div class="logo">EARNOVA</div>
-        <div class="profile">👤 My Account</div>
+        <div class="profile" id="profile">👤 My Account</div>
     </div>
 
     <h2>Welcome to EARNOVA! 👋</h2>
@@ -151,13 +163,18 @@
 
     <div class="wallet">
         <div>💳 TOTAL WALLET BALANCE</div>
-        <div class="balance">₹0.00</div>
+        <div class="balance" id="balance">Loading...</div>
         <div class="small">Minimum withdrawal: ₹20</div>
+        <button class="refresh-btn" id="refreshButton"
+                onclick="refreshBalance()">
+            Refresh Balance
+        </button>
+        <div class="status" id="walletStatus"></div>
     </div>
 
     <div class="grid">
 
-        <div class="item" onclick="openPage('Watch Ads')">
+        <div class="item" onclick="watchAd()">
             <div class="emoji">📺</div>
             <h3>Watch Ads</h3>
             <p>Watch and earn rewards</p>
@@ -209,159 +226,32 @@
         EARNOVA • Earn Smart, Stay Genuine
     </div>
 
-    <!-- Adsun SDK -->
-    <script src="https://api.adsun.io/sdk.js"></script>
-
     <script>
-        // Telegram setup
+        const API = "https://earnova-miniapp.onrender.com";
         const tg = window.Telegram?.WebApp;
+
+        let initData = "";
+        let isRegistered = false;
+        let isWatchingAd = false;
 
         if (tg) {
             tg.ready();
             tg.expand();
-        }
 
-        // Register Telegram user
-        if (tg && tg.initData) {
-            fetch("https://earnova-miniapp.onrender.com/api/register", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    initData: tg.initData
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log("EARNOVA registration:", data);
-            })
-            .catch(error => {
-                console.log("Registration error:", error);
-            });
-        }
+            initData = tg.initData || "";
 
-        // Initialize Adsun
-        let AdController = null;
+            const user = tg.initDataUnsafe?.user;
 
-        try {
-            if (window.Adsun) {
-                AdController = window.Adsun.init({
-                    blockId: "50125"
-                });
-            }
-        } catch (error) {
-            console.log("Adsun initialization error:", error);
-        }
+            if (user) {
+                const displayName =
+                    user.first_name || user.username || "My Account";
 
-        // Network rotation
-        let nextNetwork = "adsun";
-
-        try {
-            nextNetwork =
-                localStorage.getItem("earnova_next_ad") || "adsun";
-        } catch (error) {
-            console.log("Storage unavailable");
-        }
-
-        function saveNextNetwork(network) {
-            nextNetwork = network;
-
-            try {
-                localStorage.setItem("earnova_next_ad", network);
-            } catch (error) {
-                console.log("Could not save ad rotation");
+                document.getElementById("profile").textContent =
+                    "👤 " + displayName;
             }
         }
 
-        
-async function showNetworkAd(network, ymid = null) {
-    if (network === "adsun") {
-        if (
-            !window.AdController ||
-            typeof window.AdController.show !== "function"
-        ) {
-            throw new Error("Adsun unavailable");
-        }
-
-        return await window.AdController.show();
-    }
-
-    if (network === "monetag") {
-        if (typeof window.show_12183521 !== "function") {
-            throw new Error("Monetag unavailable");
-        }
-
-        return await window.show_12183521({ ymid });
-    }
-
-    throw new Error("Unknown ad network");
-}
-
-async function startMonetagAd() {
-    const initData =
-        window.Telegram?.WebApp?.initData || "";
-
-    if (!initData) {
-        throw new Error("Telegram user data unavailable");
-    }
-
-    const response = await fetch(
-        "https://earnova-miniapp.onrender.com/api/ad/start",
-        {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ initData })
-        }
-    );
-
-    const data = await response.json();
-
-    if (!response.ok || !data.ok || !data.ymid) {
-        throw new Error(data.error || "Could not start ad");
-    }
-
-    return data.ymid;
-}
-
-async function watchAd() {
-    const first = nextNetwork;
-    const second =
-        first === "adsun" ? "monetag" : "adsun";
-
-    for (const network of [first, second]) {
-        try {
-            let result;
-
-            if (network === "monetag") {
-                const ymid = await startMonetagAd();
-                result = await showNetworkAd("monetag", ymid);
-            } else {
-                result = await showNetworkAd("adsun");
-            }
-
-            saveNextNetwork(
-                network === "adsun" ? "monetag" : "adsun"
-            );
-
-            notify(
-                "Ad finished. Reward verification is pending."
-            );
-
-            return result;
-
-        } catch (error) {
-            console.log(network + " ad failed:", error);
-        }
-    }
-
-    notify("No ad available right now. Please try again later.");
-}
-
-        // Telegram alert helper
-        function notify(message) {
+        function showMessage(message) {
             if (tg && typeof tg.showAlert === "function") {
                 tg.showAlert(message);
             } else {
@@ -369,15 +259,229 @@ async function watchAd() {
             }
         }
 
-        // Main navigation
+        function setWalletStatus(message) {
+            document.getElementById("walletStatus").textContent = message;
+        }
+
+        function formatMoney(amount) {
+            const number = Number(amount);
+
+            if (!Number.isFinite(number)) {
+                return "₹0.00";
+            }
+
+            return "₹" + number.toFixed(2);
+        }
+
+        async function apiPost(path, data = {}) {
+            const response = await fetch(API + path, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    ...data,
+                    initData: initData
+                })
+            });
+
+            const result = await response.json();
+
+            if (!response.ok || !result.ok) {
+                throw new Error(result.error || "Server request failed");
+            }
+
+            return result;
+        }
+
+        async function registerUser() {
+            if (!initData) {
+                throw new Error(
+                    "Please open EARNOVA from your Telegram bot."
+                );
+            }
+
+            const result = await apiPost("/api/register");
+
+            isRegistered = true;
+
+            if (result.balance !== undefined) {
+                document.getElementById("balance").textContent =
+                    formatMoney(result.balance);
+            }
+
+            return result;
+        }
+
+        async function refreshBalance() {
+            const button = document.getElementById("refreshButton");
+
+            button.disabled = true;
+            setWalletStatus("Checking your wallet...");
+
+            try {
+                if (!isRegistered) {
+                    await registerUser();
+                }
+
+                const result = await apiPost("/api/balance");
+
+                document.getElementById("balance").textContent =
+                    formatMoney(result.balance);
+
+                setWalletStatus("Wallet balance updated.");
+
+            } catch (error) {
+                console.error("Balance error:", error);
+                setWalletStatus(error.message);
+            } finally {
+                button.disabled = false;
+            }
+        }
+
+        async function startMonetagSession() {
+            const result = await apiPost("/api/ad/start");
+
+            if (!result.ymid) {
+                throw new Error("Ad session ID not received.");
+            }
+
+            return result.ymid;
+        }
+
+        async function checkAdStatus(ymid) {
+            return await apiPost("/api/ad/status", { ymid });
+        }
+
+        async function waitForReward(ymid) {
+            setWalletStatus(
+                "Ad finished. Waiting for Monetag reward verification..."
+            );
+
+            const maxChecks = 60;
+
+            for (let i = 0; i < maxChecks; i++) {
+                await new Promise(resolve => setTimeout(resolve, 1000));
+
+                try {
+                    const result = await checkAdStatus(ymid);
+
+                    if (result.credited) {
+                        document.getElementById("balance").textContent =
+                            formatMoney(
+                                (await apiPost("/api/balance")).balance
+                            );
+
+                        setWalletStatus(
+                            "Reward verified! You received " +
+                            formatMoney(result.reward)
+                        );
+
+                        showMessage(
+                            "Congratulations! Your reward of " +
+                            formatMoney(result.reward) +
+                            " has been credited to your wallet."
+                        );
+
+                        return true;
+                    }
+
+                } catch (error) {
+                    console.log("Reward status check:", error.message);
+                }
+            }
+
+            await refreshBalance();
+
+            setWalletStatus(
+                "Reward is still pending. It will appear after Monetag verifies the ad. Please check your wallet again later."
+            );
+
+            return false;
+        }
+
+        async function watchAd() {
+            if (isWatchingAd) {
+                return;
+            }
+
+            isWatchingAd = true;
+
+            const adCard = document.querySelector(".item");
+            setWalletStatus("Preparing your advertisement...");
+
+            try {
+                if (!initData) {
+                    throw new Error(
+                        "Please open EARNOVA from your Telegram bot."
+                    );
+                }
+
+                if (!isRegistered) {
+                    await registerUser();
+                }
+
+                const ymid = await startMonetagSession();
+
+                if (typeof window.show_12183521 !== "function") {
+                    throw new Error(
+                        "Monetag ad is not available. Please try again later."
+                    );
+                }
+
+                setWalletStatus("Opening advertisement...");
+
+                await window.show_12183521({ ymid: ymid });
+
+                await waitForReward(ymid);
+
+            } catch (error) {
+                console.error("Watch ad error:", error);
+
+                setWalletStatus(error.message);
+
+                showMessage(error.message);
+
+                await refreshBalance();
+
+            } finally {
+                isWatchingAd = false;
+            }
+        }
+
         function openPage(name) {
             if (name === "Watch Ads") {
                 watchAd();
                 return;
             }
 
-            notify(name + " section will be available soon.");
+            if (name === "My Wallet") {
+                refreshBalance();
+                return;
+            }
+
+            if (name === "Withdraw") {
+                showMessage(
+                    "Minimum withdrawal is ₹20. Withdrawal feature is not active yet."
+                );
+                return;
+            }
+
+            showMessage(name + " section will be available soon.");
         }
+
+        async function initializeApp() {
+            try {
+                await registerUser();
+                await refreshBalance();
+            } catch (error) {
+                console.error("App initialization:", error);
+                document.getElementById("balance").textContent = "Unavailable";
+                setWalletStatus(error.message);
+            }
+        }
+
+        initializeApp();
     </script>
 
 </body>
