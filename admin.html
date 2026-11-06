@@ -1,1 +1,159 @@
-
+<!doctype html>
+<html lang="hi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#101827">
+  <title>EARNOVA Admin Panel</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root{color-scheme:dark;--bg:#0b1220;--panel:#121d30;--panel2:#18263d;--line:#293a55;--txt:#edf3ff;--muted:#9aabc4;--blue:#4e8cff;--green:#25c58a;--red:#f16b75;--yellow:#f2bd55}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font:14px system-ui,-apple-system,Segoe UI,sans-serif}
+    header{padding:18px 16px;background:#101a2b;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+    header h1{margin:0;font-size:21px}header p{margin:5px 0 0;color:var(--muted);font-size:12px}
+    main{max-width:1100px;margin:auto;padding:14px}
+    .notice{padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--panel);margin-bottom:14px;color:var(--muted);line-height:1.5}
+    .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+    button,.tab{border:1px solid var(--line);background:var(--panel2);color:var(--txt);padding:10px 13px;border-radius:9px;font-weight:600;cursor:pointer}
+    button.primary{background:var(--blue);border-color:var(--blue);color:white}button.good{background:#126b50;border-color:#126b50}button.danger{background:#762f3a;border-color:#762f3a}
+    button:disabled{opacity:.5;cursor:not-allowed}.tabs{display:flex;gap:7px;overflow:auto;padding-bottom:10px;margin-bottom:12px}.tab.active{background:var(--blue);border-color:var(--blue)}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px}.stat,.card{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:14px}
+    .stat small{color:var(--muted)}.stat strong{display:block;font-size:22px;margin-top:7px;overflow-wrap:anywhere}
+    .section-title{font-size:17px;margin:8px 0 12px}.row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+    .muted{color:var(--muted)}.hidden{display:none!important}.stack{display:grid;gap:10px}.item{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:13px}
+    .item h3{font-size:15px;margin:0 0 7px}.item p{margin:5px 0;color:var(--muted);overflow-wrap:anywhere}
+    .actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.actions button{padding:8px 10px;font-size:12px}
+    input,select,textarea{width:100%;padding:11px;border:1px solid var(--line);border-radius:9px;background:#0d1728;color:var(--txt);font:inherit}
+    textarea{min-height:75px;resize:vertical}label{display:block;color:var(--muted);font-size:12px;margin:10px 0 5px}
+    .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px}.form-actions{margin-top:12px}
+    .pill{display:inline-block;border-radius:20px;padding:3px 8px;background:#263852;color:#cfe0ff;font-size:11px}
+    .pill.pending{background:#59451e;color:#ffe0a0}.pill.approved,.pill.completed{background:#124b3b;color:#a7f3d0}.pill.rejected{background:#592b35;color:#ffc0c5}
+    #toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#243650;padding:11px 16px;border-radius:10px;max-width:90%;z-index:20;display:none}
+    .empty{padding:24px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:12px}
+    .danger-text{color:#ff9aa2}.small{font-size:12px}
+    @media(min-width:700px){main{padding:22px}header{padding-left:max(18px,calc((100% - 1060px)/2))}}
+  </style>
+</head>
+<body>
+<header><h1>⚡ EARNOVA Admin</h1><p>Secure control panel · Telegram Admin only</p></header>
+<main>
+  <div class="notice" id="statusBox">Telegram Mini App authentication verify हो रही है…</div>
+  <section id="setup" class="card hidden">
+    <h2 class="section-title">Backend URL सेट करें</h2>
+    <p class="muted">अपना Render Flask backend URL डालें। उदाहरण: https://your-service.onrender.com</p>
+    <label>Flask Backend URL</label><input id="apiBaseInput" placeholder="https://your-backend.onrender.com">
+    <div class="form-actions"><button class="primary" onclick="saveApiBase()">Save & Reload</button></div>
+  </section>
+  <section id="app" class="hidden">
+    <div class="toolbar"><button class="primary" onclick="loadSection('dashboard')">↻ Refresh</button><button onclick="changeApi()">Backend URL</button><span class="muted small" id="adminIdentity"></span></div>
+    <nav class="tabs" id="tabs">
+      <button class="tab active" data-tab="dashboard" onclick="loadSection('dashboard')">Dashboard</button>
+      <button class="tab" data-tab="withdrawals" onclick="loadSection('withdrawals')">Withdrawals</button>
+      <button class="tab" data-tab="users" onclick="loadSection('users')">Users</button>
+      <button class="tab" data-tab="tasks" onclick="loadSection('tasks')">Tasks</button>
+      <button class="tab" data-tab="submissions" onclick="loadSection('submissions')">Task Reviews</button>
+      <button class="tab" data-tab="bonuses" onclick="loadSection('bonuses')">Bonus Codes</button>
+      <button class="tab" data-tab="referrals" onclick="loadSection('referrals')">Referrals</button>
+    </nav>
+    <div id="content"></div>
+  </section>
+</main>
+<div id="toast"></div>
+<script>
+(() => {
+  const tg = window.Telegram?.WebApp;
+  if (tg) { tg.ready(); tg.expand(); }
+  const ADMIN_ID = 7691713278;
+  let API_BASE = (localStorage.getItem('earnova_admin_api') || '').replace(/\/+$/,'');
+  let current = 'dashboard';
+  const initData = tg?.initData || '';
+  const $ = id => document.getElementById(id);
+  const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  function toast(msg){$('toast').textContent=msg;$('toast').style.display='block';setTimeout(()=>$('toast').style.display='none',3200)}
+  function status(msg,bad=false){$('statusBox').textContent=msg;$('statusBox').style.color=bad?'#ff9aa2':'#9aabc4'}
+  window.saveApiBase=()=>{const v=$('apiBaseInput').value.trim().replace(/\/+$/,'');if(!/^https:\/\/[^/]+/i.test(v)){toast('HTTPS Render URL डालें');return}localStorage.setItem('earnova_admin_api',v);location.reload()};
+  window.changeApi=()=>{$('setup').classList.remove('hidden');$('apiBaseInput').value=API_BASE};
+  async function api(path,method='GET',data=null){
+    if(!API_BASE) throw new Error('पहले Render backend URL सेट करें');
+    const opts={method,headers:{'Content-Type':'application/json','X-Telegram-Init-Data':initData}};
+    if(data) opts.body=JSON.stringify({...data,initData});
+    const res=await fetch(API_BASE+path,opts);
+    let out={};try{out=await res.json()}catch{}
+    if(!res.ok||out.ok===false) throw new Error(out.error||('Request failed: '+res.status));
+    return out;
+  }
+  function card(title,value){return `<div class="stat"><small>${esc(title)}</small><strong>${esc(value??0)}</strong></div>`}
+  function money(v){return '₹'+Number(v||0).toFixed(2)}
+  function pill(s){return `<span class="pill ${esc(s)}">${esc(s||'unknown')}</span>`}
+  function list(items,empty='कोई रिकॉर्ड नहीं मिला'){return items?.length?`<div class="stack">${items.map(x=>x).join('')}</div>`:`<div class="empty">${empty}</div>`}
+  function setTab(tab){current=tab;document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab))}
+  window.loadSection=async(tab)=>{setTab(tab);$('content').innerHTML='<div class="empty">Loading…</div>';try{
+    if(tab==='dashboard') await dashboard();
+    if(tab==='withdrawals') await withdrawals();
+    if(tab==='users') await users();
+    if(tab==='tasks') await tasks();
+    if(tab==='submissions') await submissions();
+    if(tab==='bonuses') await bonuses();
+    if(tab==='referrals') await referrals();
+  }catch(e){$('content').innerHTML=`<div class="notice danger-text">${esc(e.message)}</div>`}};
+  async function dashboard(){
+    const d=await api('/api/admin/dashboard','POST');
+    $('content').innerHTML=`<h2 class="section-title">Platform Overview</h2><div class="grid">
+      ${card('Registered Users',d.total_users)}${card('Total User Balance',money(d.total_balance))}
+      ${card('Pending Withdrawals',d.pending_withdrawals)}${card('Total Withdrawals',d.total_withdrawals)}
+      ${card('Pending Tasks',d.pending_tasks)}${card('Completed Tasks',d.completed_tasks)}
+      ${card('Total Referrals',d.total_referrals)}${card('Ad Rewards',money(d.ad_rewards))}
+    </div><p class="muted small">आँकड़े backend database से प्राप्त होते हैं।</p>`;
+  }
+  async function withdrawals(){
+    const d=await api('/api/admin/withdrawals','POST',{status:'all'});
+    $('content').innerHTML=`<h2 class="section-title">Withdrawal Requests</h2>${list((d.withdrawals||[]).map(w=>`<article class="item"><div class="row"><h3>#${esc(w.id)} · ${money(w.amount)}</h3>${pill(w.status)}</div><p>User ID: ${esc(w.telegram_id)} · UPI: ${esc(w.upi_id)}</p><p>Requested: ${esc(w.created_at||'')}</p>${w.rejection_reason?`<p>Reason: ${esc(w.rejection_reason)}</p>`:''}<div class="actions">${w.status==='pending'?`<button class="good" onclick="reviewWithdrawal(${Number(w.id)},'approve')">Approve paid</button><button class="danger" onclick="reviewWithdrawal(${Number(w.id)},'reject')">Reject & refund</button>`:''}</div></article>`))}`;
+  }
+  window.reviewWithdrawal=async(id,action)=>{let reason='';if(action==='reject'){reason=prompt('Rejection reason लिखें:');if(reason===null)return;if(!reason.trim()){toast('Reason जरूरी है');return} }if(action==='approve'&&!confirm('क्या आपने UPI payment वास्तव में कर दिया है?'))return;if(action==='reject'&&!confirm('Request reject करके balance refund करना है?'))return;try{await api('/api/admin/withdrawals/review','POST',{withdrawal_id:id,action,reason});toast('Request updated');withdrawals()}catch(e){toast(e.message)}};
+  async function users(){
+    $('content').innerHTML=`<h2 class="section-title">User Management</h2><div class="row"><input id="userQuery" placeholder="Telegram ID या username से खोजें"><button class="primary" onclick="searchUsers()">Search</button></div><div id="userResults" style="margin-top:12px"></div>`;
+    await searchUsers();
+  }
+  window.searchUsers=async()=>{try{const q=$('userQuery')?.value||'';const d=await api('/api/admin/users','POST',{q});$('userResults').innerHTML=list((d.users||[]).map(u=>`<article class="item"><h3>${esc(u.first_name||u.username||'User')} ${pill('user')}</h3><p>Telegram ID: ${esc(u.telegram_id)} · Username: @${esc(u.username||'—')}</p><p>Balance: ${money(u.balance)} · Joined: ${esc(u.created_at||'')}</p><button onclick="userTransactions(${Number(u.telegram_id)})">Transactions</button><div id="tx-${Number(u.telegram_id)}"></div></article>`))}catch(e){$('userResults').innerHTML=`<p class="danger-text">${esc(e.message)}</p>`}};
+  window.userTransactions=async(id)=>{try{const d=await api('/api/admin/user-transactions','POST',{telegram_id:id});$('tx-'+id).innerHTML=list((d.transactions||[]).map(t=>`<p>${esc(t.transaction_type)} · ${money(t.amount)} · ${esc(t.status)} · ${esc(t.created_at)}</p>`),'No transactions')}catch(e){toast(e.message)}};
+  async function tasks(){
+    const d=await api('/api/admin/tasks','POST',{});
+    $('content').innerHTML=`<h2 class="section-title">Create / Manage Tasks</h2><div class="card"><div class="form-grid">
+      <div><label>Title</label><input id="taskTitle"></div><div><label>Reward (₹)</label><input id="taskReward" type="number" min="0.01" step="0.01"></div>
+      <div><label>Task Type</label><input id="taskType" value="custom"></div><div><label>Verification</label><select id="taskVerification"><option value="manual">Manual review</option><option value="automatic">Automatic (only if genuinely verifiable)</option></select></div>
+      <div><label>Target URL</label><input id="taskUrl" type="url"></div><div><label>Description</label><textarea id="taskDesc"></textarea></div></div><div class="form-actions"><button class="primary" onclick="saveTask()">Create Task</button></div></div>
+      <h3 class="section-title">Existing Tasks</h3>${list((d.tasks||[]).map(t=>`<article class="item"><div class="row"><h3>#${esc(t.id)} · ${esc(t.title)}</h3>${pill(t.active?'active':'inactive')}</div><p>${money(t.reward)} · ${esc(t.verification)} · ${esc(t.target_url||'')}</p><div class="actions"><button onclick="toggleTask(${Number(t.id)},${!t.active})">${t.active?'Deactivate':'Activate'}</button><button class="danger" onclick="deleteTask(${Number(t.id)})">Delete</button></div></article>`))}`;
+  }
+  window.saveTask=async()=>{try{await api('/api/admin/tasks/create','POST',{title:$('taskTitle').value,description:$('taskDesc').value,reward:$('taskReward').value,task_type:$('taskType').value,verification:$('taskVerification').value,target_url:$('taskUrl').value});toast('Task created');tasks()}catch(e){toast(e.message)}};
+  window.toggleTask=async(id,active)=>{try{await api('/api/admin/tasks/update','POST',{task_id:id,active});toast('Task updated');tasks()}catch(e){toast(e.message)}};
+  window.deleteTask=async(id)=>{if(!confirm('Task deactivate करना है?'))return;try{await api('/api/admin/tasks/update','POST',{task_id:id,active:false});toast('Task deactivated');tasks()}catch(e){toast(e.message)}};
+  async function submissions(){
+    const d=await api('/api/admin/task-submissions','POST',{status:'pending'});
+    $('content').innerHTML=`<h2 class="section-title">Pending Task Submissions</h2>${list((d.submissions||[]).map(s=>`<article class="item"><h3>Task #${esc(s.task_id)} · ${esc(s.title||'')}</h3><p>User: ${esc(s.telegram_id)} · Reward: ${money(s.reward)}</p><p>Submitted: ${esc(s.created_at||'')}</p><div class="actions"><button class="good" onclick="reviewTask(${Number(s.id)},'approve')">Approve</button><button class="danger" onclick="reviewTask(${Number(s.id)},'reject')">Reject</button></div></article>`))}`;
+  }
+  window.reviewTask=async(id,action)=>{let reason='';if(action==='reject'){reason=prompt('Reject करने का कारण:');if(reason===null)return}try{await api('/api/admin/task-submissions/review','POST',{submission_id:id,action,reason});toast('Submission reviewed');submissions()}catch(e){toast(e.message)}};
+  async function bonuses(){
+    const d=await api('/api/admin/bonus-codes','POST',{});
+    $('content').innerHTML=`<h2 class="section-title">Create Bonus Code</h2><div class="card"><div class="form-grid"><div><label>Code</label><input id="bonusCode"></div><div><label>Reward (₹)</label><input id="bonusReward" type="number" step="0.01" min="0.01"></div><div><label>Max Claims</label><input id="bonusMax" type="number" min="1" value="100"></div><div><label>Release Date</label><input id="bonusRelease" type="datetime-local"></div><div><label>Expiry Date</label><input id="bonusExpiry" type="datetime-local"></div></div><div class="form-actions"><button class="primary" onclick="createBonus()">Create Code</button></div></div><h3 class="section-title">Bonus Codes</h3>${list((d.codes||[]).map(c=>`<article class="item"><div class="row"><h3>${esc(c.code)}</h3>${pill(c.active?'active':'inactive')}</div><p>Reward ${money(c.reward)} · Claims ${esc(c.claims)}/${esc(c.max_claims)}</p><p>Release: ${esc(c.release_at||'—')} · Expiry: ${esc(c.expires_at||'—')}</p><button onclick="toggleBonus(${Number(c.id)},${!c.active})">${c.active?'Deactivate':'Activate'}</button></article>`))}`;
+  }
+  window.createBonus=async()=>{try{await api('/api/admin/bonus-codes/create','POST',{code:$('bonusCode').value,reward:$('bonusReward').value,max_claims:$('bonusMax').value,release_at:$('bonusRelease').value||null,expires_at:$('bonusExpiry').value||null});toast('Bonus code created');bonuses()}catch(e){toast(e.message)}};
+  window.toggleBonus=async(id,active)=>{try{await api('/api/admin/bonus-codes/update','POST',{bonus_id:id,active});toast('Updated');bonuses()}catch(e){toast(e.message)}};
+  async function referrals(){
+    const d=await api('/api/admin/referrals','POST',{status:'all'});
+    $('content').innerHTML=`<h2 class="section-title">Referral Review</h2>${list((d.referrals||[]).map(r=>`<article class="item"><div class="row"><h3>Referral #${esc(r.id)}</h3>${pill(r.status)}</div><p>Referrer: ${esc(r.referrer_id)} · Referred user: ${esc(r.referred_id)}</p><p>${esc(r.created_at||'')}</p><div class="actions">${r.status==='pending'?`<button class="good" onclick="reviewReferral(${Number(r.id)},'approve')">Approve</button><button class="danger" onclick="reviewReferral(${Number(r.id)},'reject')">Reject</button>`:''}</div></article>`))}`;
+  }
+  window.reviewReferral=async(id,action)=>{if(!confirm(`Referral ${action} करना है?`))return;try{await api('/api/admin/referrals/review','POST',{referral_id:id,action});toast('Referral updated');referrals()}catch(e){toast(e.message)}};
+  async function boot(){
+    if(!initData){status('इसे Telegram के EARNOVA Mini App के अंदर खोलें। सीधे browser से admin login नहीं होगा।',true);return}
+    let tgUser;try{tgUser=JSON.parse(new URLSearchParams(initData).get('user')||'{}')}catch{}
+    if(Number(tgUser?.id)!==ADMIN_ID){status('Access denied: यह Telegram account Admin नहीं है।',true);return}
+    $('adminIdentity').textContent='Admin ID: '+ADMIN_ID;
+    if(!API_BASE){status('Telegram identity मिली। अब Render backend URL सेट करें।');$('setup').classList.remove('hidden');return}
+    try{await api('/api/admin/dashboard','POST');status('Admin identity और backend access verified.');$('app').classList.remove('hidden');await loadSection('dashboard')}
+    catch(e){status('Backend verification failed: '+e.message,true);if(/Failed to fetch|NetworkError/i.test(e.message))changeApi()}
+  }
+  boot();
+})();
+</script>
+</body>
+</html>
