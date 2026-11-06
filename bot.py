@@ -8,6 +8,9 @@ from psycopg.rows import dict_row
 
 app = Flask(__name__)
 BOT_TOKEN = os.environ.get('BOT_TOKEN')
+ADMIN_BOT_TOKEN = os.environ.get('ADMIN_BOT_TOKEN')
+ADMIN_WEBHOOK_SECRET = os.environ.get('ADMIN_WEBHOOK_SECRET', '')
+ADMIN_MINI_APP_URL = os.environ.get('ADMIN_MINI_APP_URL', 'https://paisapaisa773-svg.github.io/earnova-miniapp/admin.html')
 DATABASE_URL = os.environ.get('DATABASE_URL')
 POSTBACK_SECRET = os.environ.get('POSTBACK_SECRET')
 FRONTEND_ORIGIN = 'https://paisapaisa773-svg.github.io'
@@ -563,6 +566,90 @@ def send_telegram_message(chat_id,text,reply_markup=None):
     data=__import__('urllib.parse',fromlist=['urlencode']).urlencode(payload).encode()
     req=urllib.request.Request(f'https://api.telegram.org/bot{BOT_TOKEN}/sendMessage',data=data)
     with urllib.request.urlopen(req,timeout=10) as response: response.read()
+
+
+# Separate admin bot webhook. It does not change the existing user-bot webhook.
+def send_admin_telegram_message(chat_id, text, reply_markup=None):
+    if not ADMIN_BOT_TOKEN or not chat_id:
+        raise RuntimeError('ADMIN_BOT_TOKEN is not configured')
+    import urllib.request
+    payload = {'chat_id': chat_id, 'text': text}
+    if reply_markup:
+        payload['reply_markup'] = json.dumps(reply_markup)
+    data = __import__('urllib.parse', fromlist=['urlencode']).urlencode(payload).encode()
+    req = urllib.request.Request(
+        f'https://api.telegram.org/bot{ADMIN_BOT_TOKEN}/sendMessage', data=data
+    )
+    with urllib.request.urlopen(req, timeout=15) as response:
+        result = json.loads(response.read().decode())
+    if not result.get('ok'):
+        raise RuntimeError('Telegram sendMessage failed')
+
+
+@app.route('/admin/telegram/webhook', methods=['POST'])
+def admin_telegram_webhook():
+    if not ADMIN_BOT_TOKEN or not ADMIN_WEBHOOK_SECRET:
+        return jsonify(ok=False, error='Admin bot is not configured'), 503
+    supplied = request.headers.get('X-Telegram-Bot-Api-Secret-Token', '')
+    if not hmac.compare_digest(supplied, ADMIN_WEBHOOK_SECRET):
+        return jsonify(ok=False), 403
+
+    update = request.get_json(silent=True) or {}
+    msg = update.get('message') or {}
+    chat = msg.get('chat') or {}
+    tguser = msg.get('from') or {}
+    text_in = (msg.get('text') or '').strip()
+    if not chat.get('id') or not tguser.get('id'):
+        return jsonify(ok=True), 200
+
+    if int(tguser['id']) != ADMIN_ID:
+        if text_in.startswith('/start'):
+            send_admin_telegram_message(chat['id'], '⛔ यह Admin Bot केवल अधिकृत Admin के लिए है।')
+        return jsonify(ok=True), 200
+
+    if text_in.startswith('/start'):
+        keyboard = {'inline_keyboard': [[{
+            'text': '⚙️ Open EARNOVA Admin Panel',
+            'web_app': {'url': ADMIN_MINI_APP_URL}
+        }]]}
+        send_admin_telegram_message(
+            chat['id'],
+            '✅ EARNOVA Admin Bot चालू है। नीचे बटन दबाकर Admin Panel खोलें।',
+            keyboard
+        )
+    elif text_in.startswith('/help'):
+        send_admin_telegram_message(chat['id'], 'Admin Panel खोलने के लिए /start भेजें।')
+    return jsonify(ok=True), 200
+
+
+@app.route('/admin/setup-webhook', methods=['GET'])
+def setup_admin_webhook():
+    # One-time setup helper. The key is the same secret Telegram will send in webhook headers.
+    supplied = request.args.get('key', '')
+    if not ADMIN_WEBHOOK_SECRET or not hmac.compare_digest(supplied, ADMIN_WEBHOOK_SECRET):
+        return jsonify(ok=False, error='Unauthorized'), 403
+    if not ADMIN_BOT_TOKEN:
+        return jsonify(ok=False, error='ADMIN_BOT_TOKEN is not configured'), 503
+    try:
+        import urllib.request
+        webhook_url = request.url_root.rstrip('/') + '/admin/telegram/webhook'
+        payload = __import__('urllib.parse', fromlist=['urlencode']).urlencode({
+            'url': webhook_url,
+            'secret_token': ADMIN_WEBHOOK_SECRET,
+            'allowed_updates': json.dumps(['message'])
+        }).encode()
+        req = urllib.request.Request(
+            f'https://api.telegram.org/bot{ADMIN_BOT_TOKEN}/setWebhook', data=payload
+        )
+        with urllib.request.urlopen(req, timeout=20) as response:
+            result = json.loads(response.read().decode())
+        if not result.get('ok'):
+            app.logger.error('Admin webhook setup rejected by Telegram')
+            return jsonify(ok=False, error='Telegram rejected webhook setup'), 502
+        return jsonify(ok=True, message='Admin bot webhook configured', webhook_url=webhook_url), 200
+    except Exception:
+        app.logger.exception('Admin webhook setup failed')
+        return jsonify(ok=False, error='Could not configure admin webhook'), 502
 
 
 if __name__=='__main__':
