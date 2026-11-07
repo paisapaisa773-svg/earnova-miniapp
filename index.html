@@ -490,7 +490,7 @@ main{max-width:520px;padding:12px 14px 30px}
 <section class="screen" id="profileScreen">
  <div class="screen-heading"><h1>Profile</h1></div>
  <div class="profile-hero"><div class="profile-avatar">♛<b>E</b></div><h2 id="profileName">EARNOVA Member</h2><p id="profileUsername">Telegram account</p><span class="connected-pill">Level 1</span></div>
- <div class="profile-stats"><div><b id="profileTasks">—</b><small>Available Tasks</small></div><div><b id="profileBalance">Loading...</b><small>Balance</small></div><div><b id="profileReferrals">—</b><small>Referrals</small></div></div>
+ <div class="profile-stats"><div><b id="profileTasks">—</b><small>Partner Tasks</small></div><div><b id="profileBalance">Loading...</b><small>Balance</small></div><div><b id="profileReferrals">—</b><small>Referrals</small></div></div>
  <div class="feature-list">
   <div class="feature-row" onclick="goTo('refer')"><div class="emoji">👥</div><div><b>My Referrals</b><p>View your invited friends</p></div><div class="arrow">›</div></div>
   <div class="feature-row" onclick="goTo('leaderboard')"><div class="emoji">🏆</div><div><b>Leaderboard</b><p>See member rankings</p></div><div class="arrow">›</div></div>
@@ -721,11 +721,13 @@ async function loadTasks(){
  try{
   const r=await apiPost("/api/tasks");
   box.innerHTML="";
+  const profileTasks=document.getElementById("profileTasks");if(profileTasks)profileTasks.textContent=(r.tasks||[]).length;
   if(!r.tasks||!r.tasks.length){
    box.textContent="No additional tasks are active right now. Please check again later.";
+   const activeFilter=document.querySelector("#earn .task-tabs button.active");
+   filterTasks(activeFilter?.textContent.trim().toLowerCase()||"all",activeFilter);
    return;
   }
-  const profileTasks=document.getElementById("profileTasks");if(profileTasks)profileTasks.textContent=r.tasks.length;
   r.tasks.forEach(t=>{
    const d=document.createElement("div");d.className="task-card task-line";
    const taskType=String(t.task_type||t.type||t.category||"other").toLowerCase();
@@ -744,6 +746,8 @@ async function loadTasks(){
    b.onclick=()=>completeTask(t.id,b);
    d.appendChild(b);box.appendChild(d);
   });
+  const activeFilter=document.querySelector("#earn .task-tabs button.active");
+  filterTasks(activeFilter?.textContent.trim().toLowerCase()||"all",activeFilter);
  }catch(e){box.textContent=e.message}
 }
 async function completeTask(id,b){
