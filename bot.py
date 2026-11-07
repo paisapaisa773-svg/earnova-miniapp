@@ -745,8 +745,10 @@ def admin_user_detail():
             if not user:
                 return jsonify(ok=False, error='User not found'), 404
             totals = db.execute("""SELECT
-                COALESCE(SUM(amount) FILTER (WHERE status='completed' AND amount>0),0) total_earned,
-                COUNT(*) FILTER (WHERE status='completed' AND amount>0) credited_entries
+                COALESCE(SUM(amount) FILTER (
+                    WHERE status='completed' AND amount>0
+                    AND transaction_type <> 'withdrawal_refund'
+                ),0) total_earned
                 FROM wallet_transactions WHERE telegram_id=%s""", (tid,)).fetchone()
             task_stats = db.execute("""SELECT
                 COUNT(*) FILTER (WHERE status='completed') completed_tasks,
