@@ -446,8 +446,8 @@ main{max-width:520px;padding:12px 14px 30px}
   <button class="primary full" onclick="verifyEarnMembership()">Verify Membership</button><div class="status" id="membershipInfo">Tap verify after joining.</div>
  </div>
  <div class="task-card task-line" data-task-type="video"><span class="task-icon red">▶</span><div><b>Watch 1 Video</b><p>Watch an advertisement to earn.</p><small>~ 1 min</small><button class="primary" onclick="watchAd()">Start</button></div></div>
- <div class="task-card task-line"><span class="task-icon green">🎁</span><div><b>Daily Check-in</b><p>Claim your daily reward.</p><div id="earnCheckinInfo" class="status">Checking...</div><button class="primary" id="earnCheckinButton" onclick="claimEarnCheckin()">Claim</button></div></div>
- <div class="task-card"><b>🎟️ Daily Bonus Code</b><p>Enter the bonus code announced by EARNOVA.</p><input id="earnBonusCode" placeholder="Enter bonus code" maxlength="64"><button class="primary full" onclick="redeemEarnBonus()">Submit</button><div id="earnBonusStatus" class="status"></div></div>
+ <div class="task-card task-line" data-task-type="reward"><span class="task-icon green">🎁</span><div><b>Daily Check-in</b><p>Claim your daily reward.</p><div id="earnCheckinInfo" class="status">Checking...</div><button class="primary" id="earnCheckinButton" onclick="claimEarnCheckin()">Claim</button></div></div>
+ <div class="task-card task-line" data-task-type="reward"><b>🎟️ Daily Bonus Code</b><p>Enter the bonus code announced by EARNOVA.</p><input id="earnBonusCode" placeholder="Enter bonus code" maxlength="64"><button class="primary full" onclick="redeemEarnBonus()">Submit</button><div id="earnBonusStatus" class="status"></div></div>
  <div class="task-card"><b>🎯 Partner Tasks</b><p>Complete available partner tasks.</p><div id="earnTasksList">Loading tasks...</div><button class="secondary full" onclick="loadTasks()">↻ Refresh Tasks</button></div>
 </section>
 
@@ -490,7 +490,7 @@ main{max-width:520px;padding:12px 14px 30px}
 <section class="screen" id="profileScreen">
  <div class="screen-heading"><h1>Profile</h1></div>
  <div class="profile-hero"><div class="profile-avatar">♛<b>E</b></div><h2 id="profileName">EARNOVA Member</h2><p id="profileUsername">Telegram account</p><span class="connected-pill">Level 1</span></div>
- <div class="profile-stats"><div><b>—</b><small>Tasks</small></div><div><b id="profileBalance">Loading...</b><small>Balance</small></div><div><b>—</b><small>Referrals</small></div></div>
+ <div class="profile-stats"><div><b id="profileTasks">—</b><small>Available Tasks</small></div><div><b id="profileBalance">Loading...</b><small>Balance</small></div><div><b id="profileReferrals">—</b><small>Referrals</small></div></div>
  <div class="feature-list">
   <div class="feature-row" onclick="goTo('refer')"><div class="emoji">👥</div><div><b>My Referrals</b><p>View your invited friends</p></div><div class="arrow">›</div></div>
   <div class="feature-row" onclick="goTo('leaderboard')"><div class="emoji">🏆</div><div><b>Leaderboard</b><p>See member rankings</p></div><div class="arrow">›</div></div>
@@ -506,10 +506,10 @@ main{max-width:520px;padding:12px 14px 30px}
  <div class="screen-heading"><h1>Settings</h1><p>Manage your app preferences</p></div>
  <div class="feature-list">
   <div class="feature-row"><div class="emoji">🌙</div><div><b>Dark Mode</b><p>EARNOVA dark appearance</p></div><div class="toggle-pill on">●</div></div>
-  <div class="feature-row"><div class="emoji">🌐</div><div><b>Language</b><p>English</p></div><div class="arrow">›</div></div>
-  <div class="feature-row"><div class="emoji">🔔</div><div><b>Notifications</b><p>Reward and task updates</p></div><div class="toggle-pill on">●</div></div>
-  <div class="feature-row" onclick="openSupport()"><div class="emoji">🛡️</div><div><b>Privacy Policy</b><p>Privacy and data information</p></div><div class="arrow">›</div></div>
-  <div class="feature-row" onclick="openSupport()"><div class="emoji">📄</div><div><b>Terms & Conditions</b><p>App usage information</p></div><div class="arrow">›</div></div>
+  <div class="feature-row"><div class="emoji">🌐</div><div><b>Language</b><p>English (currently supported)</p></div></div>
+  <div class="feature-row"><div class="emoji">🔔</div><div><b>Notifications</b><p>Managed in your Telegram settings</p></div></div>
+  <div class="feature-row" onclick="showMessage('Please contact EARNOVA Support to request current privacy information.','Privacy Information')"><div class="emoji">🛡️</div><div><b>Privacy Information</b><p>Ask support about data and privacy</p></div><div class="arrow">›</div></div>
+  <div class="feature-row" onclick="showMessage('Please contact EARNOVA Support to request current terms information.','Terms Information')"><div class="emoji">📄</div><div><b>Terms Information</b><p>Ask support about app usage terms</p></div><div class="arrow">›</div></div>
   <div class="feature-row"><div class="emoji">ℹ️</div><div><b>About App</b><p>EARNOVA • Earn Smart</p></div></div>
  </div>
  <button class="primary full" onclick="goTo('profileScreen')">Back to Profile</button>
@@ -610,7 +610,7 @@ if(tg){
  if(user){
   const name=user.first_name||user.username||"Member";
   document.getElementById("profile").textContent="👤 "+name;
-  document.getElementById("welcomeName").textContent=name;
+  const welcomeName=document.getElementById("welcomeName");if(welcomeName)welcomeName.textContent=name;
   document.getElementById("profileName").textContent=name;
   document.getElementById("profileUsername").textContent=user.username?"@"+user.username:"Telegram member";
  }
@@ -725,8 +725,11 @@ async function loadTasks(){
    box.textContent="No additional tasks are active right now. Please check again later.";
    return;
   }
+  const profileTasks=document.getElementById("profileTasks");if(profileTasks)profileTasks.textContent=r.tasks.length;
   r.tasks.forEach(t=>{
-   const d=document.createElement("div");d.className="task-card";
+   const d=document.createElement("div");d.className="task-card task-line";
+   const taskType=String(t.task_type||t.type||t.category||"other").toLowerCase();
+   d.dataset.taskType=taskType.includes("quiz")?"quiz":(taskType.includes("video")?"video":(taskType.includes("join")||taskType.includes("channel")||taskType.includes("group")?"join":"other"));
    const title=document.createElement("b");title.textContent="🎯 "+t.title;
    const desc=document.createElement("p");desc.textContent=t.description||"Read the task instructions and complete it.";
    const reward=document.createElement("p");reward.className="reward";reward.textContent="Reward: "+money(t.reward);
@@ -819,6 +822,7 @@ async function loadReferral(){
   referralLink=r.referral_link||"";
   box.textContent=referralLink||"Referral link unavailable";
   document.getElementById("refTotal").textContent=r.total??0;
+  const profileReferrals=document.getElementById("profileReferrals");if(profileReferrals)profileReferrals.textContent=r.total??0;
   document.getElementById("refSuccess").textContent=r.successful??0;
   document.getElementById("refPending").textContent=r.pending??0;
   document.getElementById("refEarnings").textContent=money(r.earnings);
@@ -895,7 +899,7 @@ async function requestWithdraw(){
  }catch(e){box.textContent=e.message}
 }
 async function loadLeaderboard(period="monthly"){
- goTo("leaderboard");
+ if(!document.getElementById("leaderboard").classList.contains("active"))goTo("leaderboard");
  const box=document.getElementById("leadersList");box.textContent="Loading...";
  try{
   const r=await apiPost("/api/leaderboard",{period});
@@ -942,9 +946,12 @@ function startIntroFlow(){
 function filterTasks(type,button){
  document.querySelectorAll(".task-tabs button").forEach(b=>b.classList.remove("active"));
  if(button)button.classList.add("active");
- document.querySelectorAll("#earn .task-line[data-task-type]").forEach(card=>{
-  card.style.display=(type==="all"||card.dataset.taskType===type)?"flex":"none";
- });
+ const cards=[...document.querySelectorAll("#earn .task-line[data-task-type]")];
+ let visible=0;
+ cards.forEach(card=>{const match=type==="all"||card.dataset.taskType===type;card.style.display=match?"flex":"none";if(match)visible++;});
+ let empty=document.getElementById("taskFilterEmpty");
+ if(!empty){empty=document.createElement("p");empty.id="taskFilterEmpty";empty.className="status";document.querySelector("#earn .task-tabs").after(empty);}
+ empty.textContent=visible?"":("No "+(type==="all"?"":type+" ")+"tasks are available right now.");
 }
 function goTo(screen,button){
  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
