@@ -729,7 +729,7 @@ async function loadTasks(){
    return;
   }
   r.tasks.forEach(t=>{
-   const d=document.createElement("div");d.className="task-card task-line";
+   const d=document.createElement("div");d.className="task-card task-filter-item";
    const taskType=String(t.task_type||t.type||t.category||"other").toLowerCase();
    d.dataset.taskType=taskType.includes("quiz")?"quiz":(taskType.includes("video")?"video":(taskType.includes("join")||taskType.includes("channel")||taskType.includes("group")?"join":"other"));
    const title=document.createElement("b");title.textContent="🎯 "+t.title;
@@ -950,9 +950,9 @@ function startIntroFlow(){
 function filterTasks(type,button){
  document.querySelectorAll(".task-tabs button").forEach(b=>b.classList.remove("active"));
  if(button)button.classList.add("active");
- const cards=[...document.querySelectorAll("#earn .task-line[data-task-type]")];
+ const cards=[...document.querySelectorAll("#earn .task-line[data-task-type], #earn .task-filter-item[data-task-type]")];
  let visible=0;
- cards.forEach(card=>{const match=type==="all"||card.dataset.taskType===type;card.style.display=match?"flex":"none";if(match)visible++;});
+ cards.forEach(card=>{const match=type==="all"||card.dataset.taskType===type;card.style.display=match?(card.classList.contains("task-line")?"flex":"block"):"none";if(match)visible++;});
  let empty=document.getElementById("taskFilterEmpty");
  if(!empty){empty=document.createElement("p");empty.id="taskFilterEmpty";empty.className="status";document.querySelector("#earn .task-tabs").after(empty);}
  empty.textContent=visible?"":("No "+(type==="all"?"":type+" ")+"tasks are available right now.");
