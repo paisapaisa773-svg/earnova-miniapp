@@ -393,13 +393,13 @@ main{max-width:520px;padding:12px 14px 30px}
 
 <section class="screen" id="earn">
  <div class="screen-heading"><div class="eyebrow">EARNOVA TASK CENTER</div><h1>Tasks</h1><p>Complete activities and earn rewards.</p></div>
- <div class="task-tabs"><button class="active">All</button><button>Video</button><button>Join</button><button>Quiz</button></div>
+ <div class="task-tabs"><button class="active" onclick="filterTasks('all',this)">All</button><button onclick="filterTasks('video',this)">Video</button><button onclick="filterTasks('join',this)">Join</button><button onclick="filterTasks('quiz',this)">Quiz</button></div>
  <div class="task-card task-list-card" id="membershipTasks">
-  <div class="task-card task-line" id="channelMembershipTask"><span class="task-icon blue">➤</span><div><b>Join Our Channel</b><p>Join the official channel and earn rewards.</p><small>Membership task</small><button class="secondary" onclick="openChannel()">Join</button></div></div>
-  <div class="task-card task-line" id="groupMembershipTask"><span class="task-icon blue">👥</span><div><b>Join Support Group</b><p>Join our official support group.</p><button class="secondary" onclick="openGroup()">Join</button></div></div>
+  <div class="task-card task-line" data-task-type="join" id="channelMembershipTask"><span class="task-icon blue">➤</span><div><b>Join Our Channel</b><p>Join the official channel and earn rewards.</p><small>Membership task</small><button class="secondary" onclick="openChannel()">Join</button></div></div>
+  <div class="task-card task-line" data-task-type="join" id="groupMembershipTask"><span class="task-icon blue">👥</span><div><b>Join Support Group</b><p>Join our official support group.</p><button class="secondary" onclick="openGroup()">Join</button></div></div>
   <button class="primary full" onclick="verifyEarnMembership()">Verify Membership</button><div class="status" id="membershipInfo">Tap verify after joining.</div>
  </div>
- <div class="task-card task-line"><span class="task-icon red">▶</span><div><b>Watch 1 Video</b><p>Watch an advertisement to earn.</p><small>~ 1 min</small><button class="primary" onclick="watchAd()">Start</button></div></div>
+ <div class="task-card task-line" data-task-type="video"><span class="task-icon red">▶</span><div><b>Watch 1 Video</b><p>Watch an advertisement to earn.</p><small>~ 1 min</small><button class="primary" onclick="watchAd()">Start</button></div></div>
  <div class="task-card task-line"><span class="task-icon green">🎁</span><div><b>Daily Check-in</b><p>Claim your daily reward.</p><div id="earnCheckinInfo" class="status">Checking...</div><button class="primary" id="earnCheckinButton" onclick="claimEarnCheckin()">Claim</button></div></div>
  <div class="task-card"><b>🎟️ Daily Bonus Code</b><p>Enter the bonus code announced by EARNOVA.</p><input id="earnBonusCode" placeholder="Enter bonus code" maxlength="64"><button class="primary full" onclick="redeemEarnBonus()">Submit</button><div id="earnBonusStatus" class="status"></div></div>
  <div class="task-card"><b>🎯 Partner Tasks</b><p>Complete available partner tasks.</p><div id="earnTasksList">Loading tasks...</div><button class="secondary full" onclick="loadTasks()">↻ Refresh Tasks</button></div>
@@ -861,6 +861,13 @@ async function loadLeaderboard(period="monthly"){
    box.appendChild(d);
   });
  }catch(e){box.textContent=e.message}
+}
+function filterTasks(type,button){
+ document.querySelectorAll(".task-tabs button").forEach(b=>b.classList.remove("active"));
+ if(button)button.classList.add("active");
+ document.querySelectorAll("#earn .task-line[data-task-type]").forEach(card=>{
+  card.style.display=(type==="all"||card.dataset.taskType===type)?"flex":"none";
+ });
 }
 function goTo(screen,button){
  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
