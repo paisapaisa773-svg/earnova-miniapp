@@ -64,7 +64,7 @@
   const tg = window.Telegram?.WebApp;
   if (tg) { tg.ready(); tg.expand(); }
   const ADMIN_ID = 7691713278;
-  let API_BASE = (localStorage.getItem('earnova_admin_api') || '').replace(/\/+$/,'');
+  let API_BASE = (localStorage.getItem('earnova_admin_api') || 'https://earnova-miniapp.onrender.com').replace(/\/+$/,'');
   let current = 'dashboard';
   const initData = tg?.initData || '';
   const $ = id => document.getElementById(id);
@@ -74,7 +74,7 @@
   window.saveApiBase=()=>{const v=$('apiBaseInput').value.trim().replace(/\/+$/,'');if(!/^https:\/\/[^/]+/i.test(v)){toast('HTTPS Render URL डालें');return}localStorage.setItem('earnova_admin_api',v);location.reload()};
   window.changeApi=()=>{$('setup').classList.remove('hidden');$('apiBaseInput').value=API_BASE};
   async function api(path,method='GET',data=null){
-    if(!API_BASE) throw new Error('पहले Render backend URL सेट करें');
+    if(!API_BASE) throw new Error('Render backend URL सेट करें');
     const opts={method,headers:{'Content-Type':'application/json','X-Telegram-Init-Data':initData}};
     if(data) opts.body=JSON.stringify({...data,initData});
     const res=await fetch(API_BASE+path,opts);
@@ -148,7 +148,6 @@
     let tgUser;try{tgUser=JSON.parse(new URLSearchParams(initData).get('user')||'{}')}catch{}
     if(Number(tgUser?.id)!==ADMIN_ID){status('Access denied: यह Telegram account Admin नहीं है।',true);return}
     $('adminIdentity').textContent='Admin ID: '+ADMIN_ID;
-    if(!API_BASE){status('Telegram identity मिली। अब Render backend URL सेट करें।');$('setup').classList.remove('hidden');return}
     try{await api('/api/admin/dashboard','POST');status('Admin identity और backend access verified.');$('app').classList.remove('hidden');await loadSection('dashboard')}
     catch(e){status('Backend verification failed: '+e.message,true);if(/Failed to fetch|NetworkError/i.test(e.message))changeApi()}
   }
