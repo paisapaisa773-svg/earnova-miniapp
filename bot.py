@@ -705,11 +705,11 @@ def admin_users():
         with get_db() as db:
             create_tables(db)
             if q:
-                rows=db.execute("""SELECT telegram_id,username,first_name,balance,created_at FROM users
-                    WHERE telegram_id::text ILIKE %s OR COALESCE(username,'') ILIKE %s OR COALESCE(first_name,'') ILIKE %s
-                    ORDER BY created_at DESC LIMIT 100""",(f'%{q}%',f'%{q}%',f'%{q}%')).fetchall()
+                rows=db.execute("""SELECT telegram_id,username,first_name,last_name,balance,created_at FROM users
+                    WHERE telegram_id::text ILIKE %s OR COALESCE(username,'') ILIKE %s OR COALESCE(first_name,'') ILIKE %s OR COALESCE(last_name,'') ILIKE %s
+                    ORDER BY created_at DESC LIMIT 100""",(f'%{q}%',f'%{q}%',f'%{q}%',f'%{q}%')).fetchall()
             else:
-                rows=db.execute("SELECT telegram_id,username,first_name,balance,created_at FROM users ORDER BY created_at DESC LIMIT 50").fetchall()
+                rows=db.execute("SELECT telegram_id,username,first_name,last_name,balance,created_at FROM users ORDER BY created_at DESC LIMIT 50").fetchall()
         return jsonify(ok=True,users=[{**r,'balance':str(r['balance']),'created_at':r['created_at'].isoformat() if r['created_at'] else None} for r in rows])
     except Exception: return admin_error('users')
 
