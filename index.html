@@ -109,8 +109,12 @@ hr{border:0;border-top:1px solid #30291c;margin:16px 0}
 <section class="screen" id="earn">
  <h1>Earn Rewards <span class="gold">💎</span></h1>
  <p>Complete tasks and earn rewards.</p>
- <div class="task-card"><b>📢 Official Channel</b><p>Join EARNOVA official channel. Membership is checked automatically.</p><button class="secondary full" onclick="openChannel()">Open Channel</button><button class="primary full" onclick="verifyEarnMembership()">Verify Channel & Group</button><div class="status" id="membershipInfo">Tap verify after joining both.</div></div>
- <div class="task-card"><b>👥 Official Support Group</b><p>Join our official support group.</p><button class="secondary full" onclick="openGroup()">Open Support Group</button></div>
+ <div class="task-card" id="membershipTasks">
+  <div class="task-card" id="channelMembershipTask"><b>📢 Official Channel</b><p>Join EARNOVA official channel. Membership is checked automatically.</p><button class="secondary full" onclick="openChannel()">Open Channel</button></div>
+  <div class="task-card" id="groupMembershipTask"><b>👥 Official Support Group</b><p>Join our official support group.</p><button class="secondary full" onclick="openGroup()">Open Support Group</button></div>
+  <button class="primary full" onclick="verifyEarnMembership()">Verify Channel & Group</button>
+  <div class="status" id="membershipInfo">Tap verify after joining both.</div>
+ </div>
  <div class="task-card"><b>📅 Daily Check-in</b><p>Claim your daily reward.</p><div id="earnCheckinInfo" class="status">Checking...</div><button class="primary full" id="earnCheckinButton" onclick="claimEarnCheckin()">Claim Daily Reward</button></div>
  <div class="task-card"><b>🎁 Daily Bonus Code</b><p>Enter the daily code announced by EARNOVA.</p><input id="earnBonusCode" placeholder="Enter daily bonus code" maxlength="64"><button class="primary full" onclick="redeemEarnBonus()">Submit Bonus Code</button><div id="earnBonusStatus" class="status"></div></div>
  <div class="task-card"><b>📺 Watch Ads</b><p>Watch an advertisement. No channel or group join condition is required for this task.</p><button class="primary full" onclick="watchAd()">Watch Ad & Earn</button></div>
@@ -197,18 +201,19 @@ hr{border:0;border-top:1px solid #30291c;margin:16px 0}
    <button class="close-btn" onclick="closeTaskPopup()">×</button>
   </div>
 
-  <div class="task-card">
-   <b>📢 Join Official Channel</b>
-   <p>Step 1: Open the EARNOVA official channel and join it.</p>
-   <p class="modal-note">Membership verification is required.</p>
-   <button class="secondary task-action" onclick="openChannel()">Open Channel</button>
-  </div>
-
-  <div class="task-card">
-   <b>👥 Join Official Support Group</b>
-   <p>Step 2: Join the official EARNOVA support group.</p>
-   <p class="modal-note">Membership verification is required.</p>
-   <button class="secondary task-action" onclick="openGroup()">Open Group</button>
+  <div id="modalMembershipTasks">
+   <div class="task-card" id="modalChannelMembershipTask">
+    <b>📢 Join Official Channel</b>
+    <p>Step 1: Open the EARNOVA official channel and join it.</p>
+    <button class="secondary task-action" onclick="openChannel()">Open Channel</button>
+   </div>
+   <div class="task-card" id="modalGroupMembershipTask">
+    <b>👥 Join Official Support Group</b>
+    <p>Step 2: Join the official EARNOVA support group.</p>
+    <button class="secondary task-action" onclick="openGroup()">Open Group</button>
+   </div>
+   <button class="primary full" onclick="verifyEarnMembership()">Verify Channel & Group</button>
+   <div class="status" id="modalMembershipInfo">Join both official chats, then verify.</div>
   </div>
 
   <div class="task-card">
@@ -325,15 +330,29 @@ async function refreshBalance(){
 function openTaskPopup(){goTo("earn");loadEarnScreen();}
 function closeTaskPopup(){document.getElementById("tasksModal")?.classList.remove("show")}
 async function loadEarnScreen(){await verifyEarnMembership(false);await loadCheckin();await loadTasks();}
+function applyMembershipTaskVisibility(verified){
+ const ids=["membershipTasks","modalMembershipTasks"];
+ ids.forEach(id=>{const el=document.getElementById(id);if(el)el.style.display=verified?"none":"";});
+ const message=verified?"✓ Channel and Support Group membership verified. Join tasks completed.":"";
+ ["membershipInfo","modalMembershipInfo"].forEach(id=>{const el=document.getElementById(id);if(el&&message)el.textContent=message;});
+}
 async function verifyEarnMembership(show=true){
- const box=document.getElementById("membershipInfo");
- try{const r=await apiPost("/api/membership");
-  const c=r.channel_joined===true, g=r.group_joined===true;
-  box.textContent=(c?"✓ Channel joined":"Channel not verified")+" • "+(g?"✓ Group joined":"Group not verified");
-  if(show && c && g)showMessage("Official channel and group membership verified.");
-  else if(show)showMessage("Please join both official channel and support group, then tap Verify again.");
-  return c&&g;
- }catch(e){box.textContent=e.message;if(show)showMessage(e.message);return false;}
+ const boxes=["membershipInfo","modalMembershipInfo"].map(id=>document.getElementById(id)).filter(Boolean);
+ try{
+  const r=await apiPost("/api/membership");
+  const c=r.channel_joined===true, g=r.group_joined===true, verified=c&&g;
+  const detail=(c?"✓ Channel joined":"Channel not verified")+" • "+(g?"✓ Group joined":"Group not verified");
+  boxes.forEach(box=>box.textContent=verified?"✓ Channel and Support Group membership verified. Join tasks completed.":detail);
+  applyMembershipTaskVisibility(verified);
+  if(show&&verified)showMessage("Both memberships verified. Join tasks are now completed.");
+  else if(show)showMessage("Please join both the official channel and support group, then tap Verify again.");
+  return verified;
+ }catch(e){
+  boxes.forEach(box=>box.textContent=e.message);
+  applyMembershipTaskVisibility(false);
+  if(show)showMessage(e.message);
+  return false;
+ }
 }
 async function claimEarnCheckin(){
  const b=document.getElementById("earnCheckinButton");b.disabled=true;
