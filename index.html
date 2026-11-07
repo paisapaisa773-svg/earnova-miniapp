@@ -313,10 +313,107 @@ input:focus{border-color:#a78bfa;box-shadow:0 0 0 3px rgba(139,92,246,.16)}
 #refer .grid{align-items:stretch}
 #refer .grid .panel{margin:7px 0}
 #refer .grid .panel h2{font-size:21px;margin:7px 0}
+
+/* Reference-matched EARNOVA purple dashboard */
+:root{--bg:#070718;--card:#17172d;--gold:#c69aff;--gold2:#f0d6ff;--text:#fff;--muted:#aaa8c4;--border:#30234f}
+body{background:radial-gradient(ellipse at 50% -20%,#25104a 0%,#080817 52%,#060611 100%);font-family:Arial,sans-serif;padding-bottom:90px}
+.header{display:none}
+main{max-width:520px;padding:12px 14px 30px}
+.card,.panel,.task-card{background:linear-gradient(145deg,#1a1932,#101020);border:1px solid #30264c;border-radius:18px}
+.gold,.brand-name{color:#d5a4ff}
+.primary,.withdraw-pill,.hot-task button{background:linear-gradient(100deg,#7424f4,#a020ff);border:0;color:#fff;border-radius:22px}
+.secondary{background:#24243d;border:1px solid #44405f;color:#fff;border-radius:22px}
+.home-top{display:flex;align-items:center;justify-content:space-between;padding:5px 2px 16px}
+.menu-button,.notify-button{width:35px;height:35px;border:0;background:transparent;color:#fff;font-size:23px}
+.home-brand{font-size:21px;font-weight:900;font-style:italic;letter-spacing:.5px;color:#e5c9ff}
+.brand-crown{color:#ffcf37;font-size:22px}
+.notify-button{position:relative}.notify-button i{position:absolute;right:0;top:0;background:#e33b58;border-radius:50%;font-size:9px;padding:3px;font-style:normal}
+.balance-banner{display:flex;align-items:center;justify-content:space-between;padding:18px 16px;border-radius:20px;background:linear-gradient(120deg,#25116c,#6512df 58%,#301071);box-shadow:0 8px 28px #5d13a955;margin-bottom:14px}
+.balance-banner small{display:block;color:#eee;font-size:12px}.balance-banner strong{display:block;font-size:27px;margin:3px 0 9px}
+.balance-banner .status{font-size:9px;color:#e6d8ff;margin-top:5px}.balance-banner .small{font-size:9px}
+.wallet-art{font-size:54px;filter:drop-shadow(0 5px 10px #12052d)}
+.withdraw-pill{padding:9px 18px;font-weight:700}
+.quick-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:14px 0 17px}
+.quick-action{min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:11px 2px;border-radius:15px;background:linear-gradient(145deg,#211936,#141326);border:1px solid #382858;color:#fff}
+.quick-icon{display:grid;place-items:center;width:40px;height:40px;border-radius:13px;background:#30204d;font-size:21px}
+.quick-action b{font-size:11px;white-space:nowrap}
+.referral-banner{width:100%;display:flex;justify-content:space-between;align-items:center;text-align:left;padding:14px 18px;border:1px solid #63318c;border-radius:17px;background:linear-gradient(110deg,#43117d,#9b27d5 75%,#401070);color:#fff}
+.referral-banner b{display:block;font-size:17px}.referral-banner small{display:block;margin-top:4px;font-size:12px}.gift-art{font-size:42px}
+.dashboard-heading{display:flex;justify-content:space-between;align-items:center;margin:21px 2px 10px}.section-title{font-size:16px;margin:0}.text-link{background:none;border:0;color:#d4a0ff;font-size:12px}
+.hot-task{display:flex;align-items:center;gap:10px;padding:10px;margin:8px 0;border-radius:15px;background:#17172b;border:1px solid #292541}
+.hot-task>span:nth-child(2){display:grid;gap:4px;flex:1}.hot-task b{font-size:12px}.hot-task small{font-size:10px;color:var(--muted)}.hot-task button{padding:8px 14px}
+.task-icon{width:43px;height:43px;flex:0 0 43px;border-radius:13px;display:grid;place-items:center;color:#fff;font-size:22px}
+.task-icon.red{background:#d9283a}.task-icon.blue{background:#168ce8}.task-icon.green{background:#16ad68}
+.task-tabs{display:flex;gap:8px;overflow:auto;margin:15px 0}
+.task-tabs button{border:0;border-radius:20px;background:#24243b;color:#ddd;padding:9px 15px;white-space:nowrap}
+.task-tabs button.active{background:#7b20ed;color:#fff}
+.task-list-card{padding:10px}.task-line{display:flex;align-items:center;gap:12px;padding:12px;margin:8px 0;background:#1b1b31;border:1px solid #302b4b;border-radius:15px}
+.task-line>div{flex:1;min-width:0}.task-line b{font-size:13px}.task-line p{font-size:11px;margin:5px 0;color:#ddd}.task-line small{font-size:10px;color:#aaa}
+.task-line button{margin-top:6px;padding:7px 15px}
+.wallet-card-large{padding:24px 20px;min-height:0;background:linear-gradient(120deg,#281078,#6517d9 70%,#321070);border:0;border-radius:20px}
+.wallet-actions{display:flex;gap:10px;margin:12px 0}.wallet-actions button{flex:1;padding:12px}
+.profile-hero{text-align:center;padding:18px 10px}
+.profile-avatar{width:76px;height:76px;margin:0 auto 10px;border-radius:50%;border:3px solid #b84dff;background:#17102c;color:#ffcf36;font-size:34px;display:grid;place-items:center;position:relative}
+.profile-avatar b{font-size:25px;color:#d7a4ff}.profile-hero h2{font-size:17px;margin:4px}.profile-hero p{font-size:11px;margin:3px;color:#c5bddb}
+.support-illustration{text-align:center;font-size:90px;margin:28px auto 12px;filter:drop-shadow(0 8px 20px #7624d966)}.support-title{text-align:center;font-size:18px}.support-copy{text-align:center;color:#aaa;font-size:12px;line-height:1.6;max-width:280px;margin:0 auto 22px}.toggle-pill{width:39px;height:23px;border-radius:20px;background:#38334e;color:#aaa;text-align:left;padding:3px;font-size:14px}.toggle-pill.on{background:#8b27ed;color:white;text-align:right}
+.profile-stats{display:grid;grid-template-columns:repeat(3,1fr);background:#1b1b31;border:1px solid #302b4b;border-radius:14px;padding:13px 5px;text-align:center}
+.profile-stats div{display:grid;gap:4px}.profile-stats b{font-size:15px}.profile-stats small{font-size:10px;color:#aaa}
+.feature-list{margin-top:14px}.feature-row{background:#19192e;border-bottom:1px solid #302b4b;padding:13px;border-radius:11px;margin:5px 0}
+.bottom-nav{background:rgba(12,11,27,.97);border-top:1px solid #32244d;backdrop-filter:blur(16px);padding:8px 3px calc(8px + env(safe-area-inset-bottom))}
+.nav-btn{color:#aaa;background:transparent;border:0;font-size:10px;gap:4px}.nav-btn span{font-size:20px}.nav-btn.active{color:#c77bff}
+.screen-heading h1{font-size:24px}.screen-heading p{color:#aaa}
+@media(max-width:370px){.quick-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}.quick-action b{font-size:9px}.quick-icon{width:34px;height:34px}}
+
+
+/* Splash + onboarding intro, matched to supplied EARNOVA reference */
+.intro-flow{position:fixed;inset:0;z-index:1000;background:#070718;color:#fff;overflow:hidden}
+.intro-page{position:absolute;inset:0;min-height:100dvh;background:radial-gradient(ellipse at 50% 48%,#170d38 0%,#080817 48%,#050510 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 25px}
+.intro-page[hidden]{display:none}
+.intro-splash:before,.intro-splash:after{content:"";position:absolute;width:140vw;height:42vh;border:1px solid rgba(139,55,255,.35);border-radius:50%;transform:rotate(-24deg);filter:drop-shadow(0 0 12px #6d24f4);pointer-events:none}
+.intro-splash:after{transform:rotate(28deg);width:120vw;height:28vh;border-color:rgba(112,45,255,.25)}
+.splash-logo{position:relative;width:126px;height:126px;display:grid;place-items:center;border-radius:36px;transform:skew(-8deg);background:linear-gradient(145deg,#fff 0%,#c99aff 35%,#7622ed 72%,#3b0b94 100%);box-shadow:0 0 50px #7622ed88;color:#130629}
+.splash-logo b{font-size:92px;font-weight:1000;font-style:italic;line-height:1}
+.splash-logo span{position:absolute;top:-22px;left:0;color:#ffca39;font-size:40px;transform:rotate(-12deg)}
+.splash-wordmark{position:relative;margin-top:20px;font-size:39px;font-weight:1000;font-style:italic;letter-spacing:-1px;background:linear-gradient(90deg,#fff,#e5caff,#a94dff);color:transparent;background-clip:text}
+.splash-tagline{position:relative;color:#fff;font-size:16px;letter-spacing:1px;margin:5px 0 48px}
+.splash-loader{position:relative;width:38px;height:38px;border:4px solid #402067;border-top-color:#c34bff;border-right-color:#8128ed;border-radius:50%;animation:splashSpin 1s linear infinite;margin-bottom:13px}
+.intro-splash>small{position:relative;color:#ddd;font-size:11px}
+@keyframes splashSpin{to{transform:rotate(360deg)}}
+.intro-onboarding{justify-content:flex-start;padding-top:54px}
+.intro-skip{position:absolute;right:26px;top:54px;border:0;background:transparent;color:#fff;font-size:13px}
+.rocket-stage{height:43vh;max-height:360px;min-height:240px;width:100%;display:grid;place-items:center;position:relative}
+.rocket{font-size:132px;filter:drop-shadow(0 18px 24px #7c22f488);transform:rotate(-18deg);z-index:2}
+.rocket-flame{position:absolute;top:64%;font-size:48px;color:#ffc24b;filter:drop-shadow(0 0 16px #ff9b25)}
+.coin{position:absolute;font-size:29px;filter:drop-shadow(0 0 10px #ffb52d)}
+.coin-one{left:12%;top:29%}.coin-two{right:12%;top:48%}
+.onboard-copy{text-align:center;margin-top:5px}
+.onboard-copy h1{font-size:29px;line-height:1.35;margin:0 0 10px;letter-spacing:-.5px}
+.onboard-copy h1 span{color:#d29aff}
+.onboard-copy p{font-size:16px;line-height:1.55;color:#fff;margin:0}
+.onboard-dots{display:flex;gap:12px;align-items:center;margin:28px 0 20px}
+.onboard-dots i{width:6px;height:6px;border-radius:50%;background:#8765a8}
+.onboard-dots i.active{width:13px;height:6px;border-radius:10px;background:#e7a4ff}
+.onboard-next{width:100%;max-width:360px;padding:15px;border-radius:24px;font-size:15px;font-weight:800}
+@media(max-height:700px){.intro-onboarding{padding-top:44px}.rocket-stage{height:35vh;min-height:190px}.rocket{font-size:108px}.onboard-copy h1{font-size:25px}.onboard-dots{margin:18px 0}}
+
 </style>
 </head>
 <body>
 
+<div class="intro-flow" id="introFlow">
+ <section class="intro-page intro-splash" id="splashPage">
+  <div class="splash-stars"></div><div class="splash-logo"><span>♛</span><b>E</b></div>
+  <div class="splash-wordmark">EARNOVA</div><p class="splash-tagline">Earn • Play • Grow</p>
+  <div class="splash-loader"></div><small>Loading your rewards...</small>
+ </section>
+ <section class="intro-page intro-onboarding" id="onboardingPage" hidden>
+  <button class="intro-skip" onclick="finishOnboarding()">Skip</button>
+  <div class="rocket-stage"><span class="coin coin-one">🪙</span><span class="coin coin-two">🪙</span><span class="rocket">🚀</span><span class="rocket-flame">✨</span></div>
+  <div class="onboard-copy"><h1 id="onboardTitle">Welcome to<br><span>EARNOVA!</span></h1><p id="onboardText">Complete simple tasks,<br>earn real rewards!</p></div>
+  <div class="onboard-dots"><i class="active" id="onboardDot0"></i><i id="onboardDot1"></i><i id="onboardDot2"></i></div>
+  <button class="primary onboard-next" id="onboardNext" onclick="nextOnboarding()">Next →</button>
+ </section>
+</div>
 <header class="header">
  <div class="brand"><div class="logo">E</div><div class="brand-name">EARNOVA</div></div>
  <div class="profile" id="profile">👤 My Account</div>
@@ -325,63 +422,32 @@ input:focus{border-color:#a78bfa;box-shadow:0 0 0 3px rgba(139,92,246,.16)}
 <main>
 
 <section class="screen active" id="home">
- <div class="home-hero">
-  <div class="home-hero-copy">
-   <div class="eyebrow"><span class="live-dot"></span> EARNOVA MEMBER SPACE</div>
-   <h1>Hi, <span class="gold" id="welcomeName">User</span> 👋</h1>
-   <p>Your dashboard at a glance.</p>
-  </div>
-  <button class="avatar-button" aria-label="Open profile" onclick="goTo('profileScreen')">👤</button>
- </div>
-
- <div class="wallet-card">
-  <div class="wallet-label">💰 TOTAL WALLET BALANCE</div>
-  <div class="balance" id="balance">Loading...</div>
-  <div class="small" id="minimumHome">Minimum withdrawal: ₹20</div><br>
-  <button class="primary" onclick="goTo('wallet')">View My Wallet →</button>
-  <button class="secondary" onclick="refreshBalance()" id="refreshButton">↻ Refresh</button>
-  <div class="status" id="walletStatus">Connecting to EARNOVA...</div>
- </div>
-
- <div class="dashboard-heading row">
-  <div><h2 class="section-title">Quick Actions</h2><p>Jump straight to a section</p></div>
-  <span class="section-kicker">EXPLORE</span>
- </div>
+ <div class="home-top"><button class="menu-button" onclick="goTo('profileScreen')">☰</button><div class="home-brand"><span class="brand-crown">♛</span> EARNOVA</div><button class="notify-button" onclick="goTo('profileScreen')">♟<i>2</i></button></div>
+ <div class="balance-banner"><div><small>Your Balance</small><strong id="balance">Loading...</strong><button class="withdraw-pill" onclick="goTo('wallet')">Withdraw&nbsp; →</button><div class="status" id="walletStatus">Connecting...</div><small id="minimumHome">Minimum withdrawal: ₹20</small></div><div class="wallet-art">👛</div></div>
  <div class="quick-grid">
-  <button class="quick-action" onclick="goTo('earn')"><span class="quick-icon">🎯</span><span><b>Earn</b><small>Tasks & check-in</small></span><span class="quick-arrow">›</span></button>
-  <button class="quick-action" onclick="goTo('wallet')"><span class="quick-icon">💳</span><span><b>Wallet</b><small>Balance & history</small></span><span class="quick-arrow">›</span></button>
-  <button class="quick-action" onclick="goTo('refer')"><span class="quick-icon">👥</span><span><b>Referrals</b><small>Your invite details</small></span><span class="quick-arrow">›</span></button>
-  <button class="quick-action" onclick="loadLeaderboard()"><span class="quick-icon">🏆</span><span><b>Leaderboard</b><small>Member rankings</small></span><span class="quick-arrow">›</span></button>
+  <button class="quick-action" onclick="goTo('earn')"><span class="quick-icon">🗂️</span><b>Tasks</b></button>
+  <button class="quick-action" onclick="goTo('earn')"><span class="quick-icon">🎁</span><b>Rewards</b></button>
+  <button class="quick-action" onclick="goTo('refer')"><span class="quick-icon">👥</span><b>Invite</b></button>
+  <button class="quick-action" onclick="openSupport()"><span class="quick-icon">🎧</span><b>Support</b></button>
  </div>
- <div class="dashboard-heading row"><div><h2 class="section-title">Discover</h2><p>More from EARNOVA</p></div></div>
- <div class="discover-grid">
-  <button class="discover-card" onclick="watchAd()"><span>📺</span><b>Watch Ads</b><small>Open ad task</small></button>
-  <button class="discover-card" onclick="openTaskPopup()"><span>🧩</span><b>Task Center</b><small>View available tasks</small></button>
- </div>
-
- <h2 class="section-title">Official EARNOVA</h2>
- <div class="feature-list">
-  <div class="feature-row" onclick="openChannel()"><div class="emoji">📢</div><div><b>Official Telegram Channel</b><p>Genuine updates and announcements</p></div><div class="arrow">›</div></div>
-  <div class="feature-row" onclick="openGroup()"><div class="emoji">👥</div><div><b>Official Support Group</b><p>Community and support</p></div><div class="arrow">›</div></div>
-  <div class="feature-row" onclick="openSupport()"><div class="emoji">🎧</div><div><b>Help & Support</b><p>Contact EARNOVA support</p></div><div class="arrow">›</div></div>
- </div>
+ <button class="referral-banner" onclick="goTo('refer')"><span><b>Refer & Earn</b><small>Get rewards for every friend!</small></span><span class="gift-art">🎁</span></button>
+ <div class="dashboard-heading"><h2 class="section-title">Hot Tasks 🔥</h2><button class="text-link" onclick="goTo('earn')">View All →</button></div>
+ <div class="hot-task"><span class="task-icon red">▶</span><span><b>Watch Video</b><small>Earn rewards</small></span><button onclick="watchAd()">Start</button></div>
+ <div class="hot-task"><span class="task-icon blue">➤</span><span><b>Join Channel</b><small>Earn rewards</small></span><button onclick="goTo('earn')">Join</button></div>
+ <div class="hot-task"><span class="task-icon green">▣</span><span><b>Complete Tasks</b><small>Earn more rewards</small></span><button onclick="goTo('earn')">View</button></div>
 </section>
 
 <section class="screen" id="earn">
- <div class="screen-heading"><div class="eyebrow">YOUR ACTIVITY</div><h1>Earn Rewards <span class="gold">💎</span></h1><p>Explore available activities and check their status.</p></div>
- <div class="earn-intro"><div class="earn-intro-icon">✨</div><div><b>Task Center</b><p>Choose an activity below. Your task status appears here after verification.</p></div></div>
- <div class="section-label">MEMBERSHIP</div>
- <div class="task-card" id="membershipTasks">
-  <div class="task-card" id="channelMembershipTask"><b>📢 Official Channel</b><p>Join EARNOVA official channel. Membership is checked automatically.</p><button class="secondary full" onclick="openChannel()">Open Channel</button></div>
-  <div class="task-card" id="groupMembershipTask"><b>👥 Official Support Group</b><p>Join our official support group.</p><button class="secondary full" onclick="openGroup()">Open Support Group</button></div>
-  <button class="primary full" onclick="verifyEarnMembership()">Verify Channel & Group</button>
-  <div class="status" id="membershipInfo">Tap verify after joining both.</div>
+ <div class="screen-heading"><div class="eyebrow">EARNOVA TASK CENTER</div><h1>Tasks</h1><p>Complete activities and earn rewards.</p></div>
+ <div class="task-tabs"><button class="active" onclick="filterTasks('all',this)">All</button><button onclick="filterTasks('video',this)">Video</button><button onclick="filterTasks('join',this)">Join</button><button onclick="filterTasks('quiz',this)">Quiz</button></div>
+ <div class="task-card task-list-card" id="membershipTasks">
+  <div class="task-card task-line" data-task-type="join" id="channelMembershipTask"><span class="task-icon blue">➤</span><div><b>Join Our Channel</b><p>Join the official channel and earn rewards.</p><small>Membership task</small><button class="secondary" onclick="openChannel()">Join</button></div></div>
+  <div class="task-card task-line" data-task-type="join" id="groupMembershipTask"><span class="task-icon blue">👥</span><div><b>Join Support Group</b><p>Join our official support group.</p><button class="secondary" onclick="openGroup()">Join</button></div></div>
+  <button class="primary full" onclick="verifyEarnMembership()">Verify Membership</button><div class="status" id="membershipInfo">Tap verify after joining.</div>
  </div>
- <div class="section-label">DAILY ACTIVITIES</div>
- <div class="task-card"><b>📅 Daily Check-in</b><p>Claim your daily reward.</p><div id="earnCheckinInfo" class="status">Checking...</div><button class="primary full" id="earnCheckinButton" onclick="claimEarnCheckin()">Claim Daily Reward</button></div>
- <div class="task-card"><b>🎁 Daily Bonus Code</b><p>Enter the daily code announced by EARNOVA.</p><input id="earnBonusCode" placeholder="Enter daily bonus code" maxlength="64"><button class="primary full" onclick="redeemEarnBonus()">Submit Bonus Code</button><div id="earnBonusStatus" class="status"></div></div>
- <div class="task-card"><b>📺 Watch Ads</b><p>Watch an advertisement. No channel or group join condition is required for this task.</p><button class="primary full" onclick="watchAd()">Watch Ad & Earn</button></div>
- <div class="section-label">AVAILABLE TASKS</div>
+ <div class="task-card task-line" data-task-type="video"><span class="task-icon red">▶</span><div><b>Watch 1 Video</b><p>Watch an advertisement to earn.</p><small>~ 1 min</small><button class="primary" onclick="watchAd()">Start</button></div></div>
+ <div class="task-card task-line" data-task-type="reward"><span class="task-icon green">🎁</span><div><b>Daily Check-in</b><p>Claim your daily reward.</p><div id="earnCheckinInfo" class="status">Checking...</div><button class="primary" id="earnCheckinButton" onclick="claimEarnCheckin()">Claim</button></div></div>
+ <div class="task-card task-line" data-task-type="reward"><b>🎟️ Daily Bonus Code</b><p>Enter the bonus code announced by EARNOVA.</p><input id="earnBonusCode" placeholder="Enter bonus code" maxlength="64"><button class="primary full" onclick="redeemEarnBonus()">Submit</button><div id="earnBonusStatus" class="status"></div></div>
  <div class="task-card"><b>🎯 Partner Tasks</b><p>Complete available partner tasks.</p><div id="earnTasksList">Loading tasks...</div><button class="secondary full" onclick="loadTasks()">↻ Refresh Tasks</button></div>
 </section>
 
@@ -404,21 +470,10 @@ input:focus{border-color:#a78bfa;box-shadow:0 0 0 3px rgba(139,92,246,.16)}
 </section>
 
 <section class="screen" id="wallet">
- <div class="screen-heading"><div class="eyebrow">ACCOUNT OVERVIEW</div><h1>My Wallet <span class="gold">💰</span></h1><p>Review your balance, requests and transaction history.</p></div>
- <div class="wallet-card wallet-card-large">
-  <div class="wallet-label">AVAILABLE BALANCE</div>
-  <div class="balance" id="walletBalance">Loading...</div>
-  <div class="small" id="minimumWallet">Minimum withdrawal: ₹20</div>
-  <button class="secondary full" onclick="refreshBalance()">↻ Refresh Balance</button>
- </div>
- <div class="panel">
-  <h2>Withdraw Money</h2>
-  <p>Submit your UPI ID and amount. Requests remain pending until admin review.</p>
-  <input id="upiInput" placeholder="Your UPI ID (example@upi)">
-  <input id="withdrawAmount" type="number" min="20" step="0.01" placeholder="Withdrawal amount ₹">
-  <button class="primary full" onclick="requestWithdraw()">Submit Withdrawal Request</button>
-  <div class="status" id="withdrawStatus"></div>
- </div>
+ <div class="screen-heading"><h1>Wallet</h1><p>Your balance and transaction history</p></div>
+ <div class="wallet-card wallet-card-large"><div class="wallet-label">AVAILABLE BALANCE</div><div class="balance" id="walletBalance">Loading...</div><div class="small" id="minimumWallet">Minimum withdrawal: ₹20</div><button class="secondary full" onclick="refreshBalance()">↻ Refresh Balance</button></div>
+ <div class="wallet-actions"><button class="primary" onclick="document.getElementById('upiInput').scrollIntoView({behavior:'smooth'})">Withdraw</button><button class="secondary" onclick="document.getElementById('transactions').scrollIntoView({behavior:'smooth'})">History</button></div>
+ <div class="panel"><h2>Withdraw Money</h2><p>Enter your UPI ID and amount. Requests are reviewed by admin.</p><input id="upiInput" placeholder="Your UPI ID (example@upi)"><input id="withdrawAmount" type="number" min="20" step="0.01" placeholder="Withdrawal amount ₹"><button class="primary full" onclick="requestWithdraw()">Submit Withdrawal Request</button><div class="status" id="withdrawStatus"></div></div>
  <div class="panel"><h2>Withdrawal History</h2><div id="withdrawalHistory">Loading...</div></div>
  <div class="panel"><h2>Transaction History</h2><div id="transactions">Loading...</div></div>
 </section>
@@ -433,30 +488,51 @@ input:focus{border-color:#a78bfa;box-shadow:0 0 0 3px rgba(139,92,246,.16)}
 </section>
 
 <section class="screen" id="profileScreen">
- <div class="screen-heading"><div class="eyebrow">ACCOUNT SETTINGS</div><h1>My Profile 👤</h1><p>Your Telegram account details and app support.</p></div>
- <div class="profile-identity"><div class="profile-avatar">👤</div><div><h2 id="profileName">EARNOVA Member</h2><p id="profileUsername">Telegram account</p></div><span class="connected-pill">● Connected</span></div>
- <div class="panel">
-  <h2 id="profileName">EARNOVA Member</h2>
-  <p id="profileUsername">Telegram account</p><hr>
-  <div class="row"><span>Account status</span><b class="gold">Connected</b></div><br>
-  <div class="row"><span>Wallet balance</span><b id="profileBalance">Loading...</b></div>
- </div>
+ <div class="screen-heading"><h1>Profile</h1></div>
+ <div class="profile-hero"><div class="profile-avatar">♛<b>E</b></div><h2 id="profileName">EARNOVA Member</h2><p id="profileUsername">Telegram account</p><span class="connected-pill">Level 1</span></div>
+ <div class="profile-stats"><div><b id="profileTasks">—</b><small>Partner Tasks</small></div><div><b id="profileBalance">Loading...</b><small>Balance</small></div><div><b id="profileReferrals">—</b><small>Referrals</small></div></div>
  <div class="feature-list">
+  <div class="feature-row" onclick="goTo('refer')"><div class="emoji">👥</div><div><b>My Referrals</b><p>View your invited friends</p></div><div class="arrow">›</div></div>
+  <div class="feature-row" onclick="goTo('leaderboard')"><div class="emoji">🏆</div><div><b>Leaderboard</b><p>See member rankings</p></div><div class="arrow">›</div></div>
   <div class="feature-row" onclick="openChannel()"><div class="emoji">📢</div><div><b>Official Channel</b><p>Follow EARNOVA updates</p></div><div class="arrow">›</div></div>
   <div class="feature-row" onclick="openGroup()"><div class="emoji">👥</div><div><b>Support Group</b><p>Join our community</p></div><div class="arrow">›</div></div>
-  <div class="feature-row" onclick="openSupport()"><div class="emoji">🎧</div><div><b>Help & Support</b><p>Contact EARNOVA</p></div><div class="arrow">›</div></div>
+  <div class="feature-row" onclick="goTo('settingsScreen')"><div class="emoji">⚙️</div><div><b>Settings</b><p>App preferences</p></div><div class="arrow">›</div></div>
+  <div class="feature-row" onclick="goTo('helpScreen')"><div class="emoji">🎧</div><div><b>Help & Support</b><p>Get help with EARNOVA</p></div><div class="arrow">›</div></div>
+  <div class="feature-row" onclick="openChannel()"><div class="emoji">📢</div><div><b>Official Telegram Channel</b><p>Latest announcements</p></div><div class="arrow">›</div></div>
+  <div class="feature-row" onclick="openGroup()"><div class="emoji">👥</div><div><b>Official Support Group</b><p>Community support</p></div><div class="arrow">›</div></div>
  </div>
+</section>
+<section class="screen" id="settingsScreen">
+ <div class="screen-heading"><h1>Settings</h1><p>Manage your app preferences</p></div>
+ <div class="feature-list">
+  <div class="feature-row"><div class="emoji">🌙</div><div><b>Dark Mode</b><p>EARNOVA dark appearance</p></div><div class="toggle-pill on">●</div></div>
+  <div class="feature-row"><div class="emoji">🌐</div><div><b>Language</b><p>English (currently supported)</p></div></div>
+  <div class="feature-row"><div class="emoji">🔔</div><div><b>Notifications</b><p>Managed in your Telegram settings</p></div></div>
+  <div class="feature-row" onclick="showMessage('Please contact EARNOVA Support to request current privacy information.','Privacy Information')"><div class="emoji">🛡️</div><div><b>Privacy Information</b><p>Ask support about data and privacy</p></div><div class="arrow">›</div></div>
+  <div class="feature-row" onclick="showMessage('Please contact EARNOVA Support to request current terms information.','Terms Information')"><div class="emoji">📄</div><div><b>Terms Information</b><p>Ask support about app usage terms</p></div><div class="arrow">›</div></div>
+  <div class="feature-row"><div class="emoji">ℹ️</div><div><b>About App</b><p>EARNOVA • Earn Smart</p></div></div>
+ </div>
+ <button class="primary full" onclick="goTo('profileScreen')">Back to Profile</button>
+</section>
+<section class="screen" id="helpScreen">
+ <div class="screen-heading"><h1>Help & Support</h1><p>Our support team is here to help you</p></div>
+ <div class="support-illustration">🎧</div><h2 class="support-title">Need Help?</h2><p class="support-copy">Contact the EARNOVA support team for assistance with your account, tasks or withdrawals.</p>
+ <div class="feature-list">
+  <div class="feature-row" onclick="openSupport()"><div class="emoji">➤</div><div><b>Contact Support</b><p>Talk to our support team</p></div><div class="arrow">›</div></div>
+  <div class="feature-row" onclick="openChannel()"><div class="emoji">📢</div><div><b>Join Our Telegram Channel</b><p>Get latest updates</p></div><div class="arrow">›</div></div>
+  <div class="feature-row" onclick="openGroup()"><div class="emoji">❓</div><div><b>Support Group</b><p>Ask the community</p></div><div class="arrow">›</div></div>
+ </div>
+ <button class="secondary full" onclick="goTo('profileScreen')">Back to Profile</button>
 </section>
 
 <div class="footer">EARNOVA • Earn Smart, Stay Genuine</div>
 </main>
 
 <nav class="bottom-nav">
- <button class="nav-btn active" data-screen="home" onclick="goTo('home',this)"><span>🏠</span>Home</button>
- <button class="nav-btn" data-screen="earn" onclick="goTo('earn',this)"><span>🎯</span>Earn</button>
- <button class="nav-btn" data-screen="refer" onclick="goTo('refer',this)"><span>👥</span>Refer</button>
- <button class="nav-btn" data-screen="wallet" onclick="goTo('wallet',this)"><span>💰</span>Wallet</button>
- <button class="nav-btn" data-screen="profileScreen" onclick="goTo('profileScreen',this)"><span>👤</span>Profile</button>
+ <button class="nav-btn active" data-screen="home" onclick="goTo('home',this)"><span>⌂</span>Home</button>
+ <button class="nav-btn" data-screen="earn" onclick="goTo('earn',this)"><span>▤</span>Tasks</button>
+ <button class="nav-btn" data-screen="wallet" onclick="goTo('wallet',this)"><span>▣</span>Wallet</button>
+ <button class="nav-btn" data-screen="profileScreen" onclick="goTo('profileScreen',this)"><span>♙</span>Profile</button>
 </nav>
 
 <!-- AVAILABLE TASKS POPUP -->
@@ -534,7 +610,7 @@ if(tg){
  if(user){
   const name=user.first_name||user.username||"Member";
   document.getElementById("profile").textContent="👤 "+name;
-  document.getElementById("welcomeName").textContent=name;
+  const welcomeName=document.getElementById("welcomeName");if(welcomeName)welcomeName.textContent=name;
   document.getElementById("profileName").textContent=name;
   document.getElementById("profileUsername").textContent=user.username?"@"+user.username:"Telegram member";
  }
@@ -645,12 +721,17 @@ async function loadTasks(){
  try{
   const r=await apiPost("/api/tasks");
   box.innerHTML="";
+  const profileTasks=document.getElementById("profileTasks");if(profileTasks)profileTasks.textContent=(r.tasks||[]).length;
   if(!r.tasks||!r.tasks.length){
    box.textContent="No additional tasks are active right now. Please check again later.";
+   const activeFilter=document.querySelector("#earn .task-tabs button.active");
+   filterTasks(activeFilter?.textContent.trim().toLowerCase()||"all",activeFilter);
    return;
   }
   r.tasks.forEach(t=>{
-   const d=document.createElement("div");d.className="task-card";
+   const d=document.createElement("div");d.className="task-card task-filter-item";
+   const taskType=String(t.task_type||t.type||t.category||"other").toLowerCase();
+   d.dataset.taskType=taskType.includes("quiz")?"quiz":(taskType.includes("video")?"video":(taskType.includes("join")||taskType.includes("channel")||taskType.includes("group")?"join":"other"));
    const title=document.createElement("b");title.textContent="🎯 "+t.title;
    const desc=document.createElement("p");desc.textContent=t.description||"Read the task instructions and complete it.";
    const reward=document.createElement("p");reward.className="reward";reward.textContent="Reward: "+money(t.reward);
@@ -665,6 +746,8 @@ async function loadTasks(){
    b.onclick=()=>completeTask(t.id,b);
    d.appendChild(b);box.appendChild(d);
   });
+  const activeFilter=document.querySelector("#earn .task-tabs button.active");
+  filterTasks(activeFilter?.textContent.trim().toLowerCase()||"all",activeFilter);
  }catch(e){box.textContent=e.message}
 }
 async function completeTask(id,b){
@@ -743,6 +826,7 @@ async function loadReferral(){
   referralLink=r.referral_link||"";
   box.textContent=referralLink||"Referral link unavailable";
   document.getElementById("refTotal").textContent=r.total??0;
+  const profileReferrals=document.getElementById("profileReferrals");if(profileReferrals)profileReferrals.textContent=r.total??0;
   document.getElementById("refSuccess").textContent=r.successful??0;
   document.getElementById("refPending").textContent=r.pending??0;
   document.getElementById("refEarnings").textContent=money(r.earnings);
@@ -819,7 +903,7 @@ async function requestWithdraw(){
  }catch(e){box.textContent=e.message}
 }
 async function loadLeaderboard(period="monthly"){
- goTo("leaderboard");
+ if(!document.getElementById("leaderboard").classList.contains("active"))goTo("leaderboard");
  const box=document.getElementById("leadersList");box.textContent="Loading...";
  try{
   const r=await apiPost("/api/leaderboard",{period});
@@ -832,6 +916,47 @@ async function loadLeaderboard(period="monthly"){
   });
  }catch(e){box.textContent=e.message}
 }
+let onboardStep=0;
+const onboardingSlides=[
+ {title:'Welcome to<br><span>EARNOVA!</span>',text:'Complete simple tasks,<br>earn real rewards!'},
+ {title:'Earn Rewards<br><span>Every Day!</span>',text:'Discover tasks, collect bonuses<br>and track your earnings.'},
+ {title:'Let’s Get Started<br><span>with EARNOVA!</span>',text:'Invite friends and grow<br>your rewards together.'}
+];
+function renderOnboarding(){
+ const slide=onboardingSlides[onboardStep];
+ document.getElementById("onboardTitle").innerHTML=slide.title;
+ document.getElementById("onboardText").innerHTML=slide.text;
+ for(let i=0;i<3;i++)document.getElementById("onboardDot"+i).classList.toggle("active",i===onboardStep);
+ document.getElementById("onboardNext").innerHTML=onboardStep===2?"Get Started&nbsp; →":"Next&nbsp; →";
+}
+function nextOnboarding(){
+ if(onboardStep<2){onboardStep++;renderOnboarding();return}
+ finishOnboarding();
+}
+function finishOnboarding(){
+ try{localStorage.setItem("earnova_intro_seen_v1","1")}catch(e){}
+ document.getElementById("introFlow").style.display="none";
+}
+function startIntroFlow(){
+ let seen=false;try{seen=localStorage.getItem("earnova_intro_seen_v1")==="1"}catch(e){}
+ if(seen){document.getElementById("introFlow").style.display="none";return}
+ setTimeout(()=>{
+  document.getElementById("splashPage").hidden=true;
+  document.getElementById("onboardingPage").hidden=false;
+  renderOnboarding();
+ },1600);
+}
+
+function filterTasks(type,button){
+ document.querySelectorAll(".task-tabs button").forEach(b=>b.classList.remove("active"));
+ if(button)button.classList.add("active");
+ const cards=[...document.querySelectorAll("#earn .task-line[data-task-type], #earn .task-filter-item[data-task-type]")];
+ let visible=0;
+ cards.forEach(card=>{const match=type==="all"||card.dataset.taskType===type;card.style.display=match?(card.classList.contains("task-line")?"flex":"block"):"none";if(match)visible++;});
+ let empty=document.getElementById("taskFilterEmpty");
+ if(!empty){empty=document.createElement("p");empty.id="taskFilterEmpty";empty.className="status";document.querySelector("#earn .task-tabs").after(empty);}
+ empty.textContent=visible?"":("No "+(type==="all"?"":type+" ")+"tasks are available right now.");
+}
 function goTo(screen,button){
  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
  const target=document.getElementById(screen);if(target)target.classList.add("active");
@@ -843,6 +968,7 @@ function goTo(screen,button){
  if(screen==="earn")loadEarnScreen();
  if(screen==="refer")loadReferral();
  if(screen==="profileScreen")refreshBalance();
+ if(screen==="leaderboard")loadLeaderboard("monthly");
 }
 document.getElementById("tasksModal").addEventListener("click",function(e){if(e.target===this)closeTaskPopup()});
 document.getElementById("messageModal").addEventListener("click",function(e){if(e.target===this)closeMessage()});
@@ -857,6 +983,7 @@ async function initializeApp(){
   status(e.message);
  }
 }
+startIntroFlow();
 initializeApp();
 </script>
 </body>
