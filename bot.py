@@ -729,6 +729,73 @@ def admin_user_transactions():
     except Exception: return admin_error('user transactions')
 
 
+@app.route('/api/admin/user-detail', methods=['POST','OPTIONS'])
+@admin_required
+def admin_user_detail():
+    if request.method == 'OPTIONS': return '', 204
+    try:
+        tid = int(request.admin_body.get('telegram_id'))
+    except (TypeError, ValueError):
+        return jsonify(ok=False, error='Invalid Telegram ID'), 400
+    try:
+        with get_db() as db:
+            create_tables(db)
+            user = db.execute("""SELECT telegram_id,username,first_name,last_name,balance,created_at
+                FROM users WHERE telegram_id=%s""", (tid,)).fetchone()
+            if not user:
+                return jsonify(ok=False, error='User not found'), 404
+            totals = db.execute("""SELECT
+                COALESCE(SUM(amount) FILTER (WHERE status='completed' AND amount>0),0) total_earned,
+                COUNT(*) FILTER (WHERE status='completed' AND amount>0) credited_entries
+                FROM wallet_transactions WHERE telegram_id=%s""", (tid,)).fetchone()
+            task_stats = db.execute("""SELECT
+                COUNT(*) FILTER (WHERE status='completed') completed_tasks,
+                COUNT(*) FILTER (WHERE status='rejected') rejected_tasks,
+                COUNT(*) FILTER (WHERE status='pending') pending_tasks
+                FROM task_completions WHERE telegram_id=%s""", (tid,)).fetchone()
+            referral_count = db.execute("SELECT COUNT(*) total FROM referrals WHERE referrer_id=%s AND status='approved'", (tid,)).fetchone()
+            withdrawn = db.execute("SELECT COALESCE(SUM(amount),0) total FROM withdrawals WHERE telegram_id=%s AND status='approved'", (tid,)).fetchone()
+            transactions = db.execute("""SELECT id,amount,transaction_type,status,created_at
+                FROM wallet_transactions WHERE telegram_id=%s ORDER BY created_at DESC LIMIT 100""", (tid,)).fetchall()
+            tasks = db.execute("""SELECT c.id,c.task_id,c.status,c.reward,c.created_at,t.title
+                FROM task_completions c LEFT JOIN tasks t ON t.id=c.task_id
+                WHERE c.telegram_id=%s ORDER BY c.created_at DESC LIMIT 100""", (tid,)).fetchall()
+            referrals = db.execute("""SELECT id,referrer_id,referred_id,status,created_at FROM referrals
+                WHERE referrer_id=%s OR referred_id=%s ORDER BY created_at DESC LIMIT 100""", (tid,tid)).fetchall()
+            withdrawals = db.execute("""SELECT id,amount,upi_id,status,created_at,reviewed_at
+                FROM withdrawals WHERE telegram_id=%s ORDER BY created_at DESC LIMIT 100""", (tid,)).fetchall()
+        def iso(row, key='created_at'):
+            value = row.get(key)
+            return value.isoformat() if value else None
+        activity = [{
+            'id': r['id'], 'label': str(r['transaction_type']).replace('_',' ').title(),
+            'amount': str(r['amount']), 'status': r['status'], 'created_at': iso(r)
+        } for r in transactions if r['status'] == 'completed']
+        referral_rows = [{
+            'id': r['id'], 'role': 'referrer' if int(r['referrer_id']) == tid else 'referred',
+            'other_user_id': int(r['referred_id'] if int(r['referrer_id']) == tid else r['referrer_id']),
+            'status': r['status'], 'created_at': iso(r)
+        } for r in referrals]
+        return jsonify(ok=True,
+            user={**user,'balance':str(user['balance']),'created_at':iso(user)},
+            summary={
+                'total_earned':str(totals['total_earned']),
+                'completed_tasks':task_stats['completed_tasks'],
+                'rejected_tasks':task_stats['rejected_tasks'],
+                'pending_tasks':task_stats['pending_tasks'],
+                'referrals':referral_count['total'],
+                'withdrawn':str(withdrawn['total'])
+            },
+            activity=activity,
+            transactions=[{**r,'amount':str(r['amount']),'created_at':iso(r)} for r in transactions],
+            tasks=[{**r,'reward':str(r['reward']),'created_at':iso(r)} for r in tasks],
+            referrals=referral_rows,
+            withdrawals=[{**r,'amount':str(r['amount']),'created_at':iso(r),'reviewed_at':iso(r,'reviewed_at')} for r in withdrawals]
+        ), 200
+    except Exception:
+        return admin_error('user detail')
+
+
 @app.route('/api/admin/tasks', methods=['POST','OPTIONS'])
 @admin_required
 def admin_tasks():
