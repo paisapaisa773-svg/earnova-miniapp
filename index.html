@@ -191,6 +191,17 @@ input:focus{border-color:#a78bfa;box-shadow:0 0 0 3px rgba(139,92,246,.16)}
 .connected-pill{margin-left:auto;white-space:nowrap;font-size:9px;color:#c4a7ff;background:#342052;padding:6px 8px;border-radius:20px}
 @media(max-width:370px){.quick-grid{grid-template-columns:1fr}.connected-pill{font-size:8px;padding:5px}}
 
+
+.earn-intro{display:flex;align-items:center;gap:12px;padding:15px;margin:15px 0 19px;border-radius:17px;background:linear-gradient(120deg,#30204d,#1a142b);border:1px solid rgba(167,139,250,.22)}
+.earn-intro-icon{width:42px;height:42px;flex:0 0 42px;display:grid;place-items:center;border-radius:14px;background:#463064;font-size:21px}
+.earn-intro b{font-size:13px}.earn-intro p{font-size:11px;margin:4px 0 0}
+.section-label{font-size:9px;font-weight:800;letter-spacing:1.35px;color:#a995ce;margin:21px 2px 9px}
+#earn .task-card{margin:10px 0;padding:16px}
+#earn .task-card> b{font-size:13px}
+#refer .grid{align-items:stretch}
+#refer .grid .panel{margin:7px 0}
+#refer .grid .panel h2{font-size:21px;margin:7px 0}
+
 </style>
 </head>
 <body>
@@ -248,22 +259,25 @@ input:focus{border-color:#a78bfa;box-shadow:0 0 0 3px rgba(139,92,246,.16)}
 </section>
 
 <section class="screen" id="earn">
- <h1>Earn Rewards <span class="gold">💎</span></h1>
- <p>Complete tasks and earn rewards.</p>
+ <div class="screen-heading"><div class="eyebrow">YOUR ACTIVITY</div><h1>Earn Rewards <span class="gold">💎</span></h1><p>Explore available activities and check their status.</p></div>
+ <div class="earn-intro"><div class="earn-intro-icon">✨</div><div><b>Task Center</b><p>Choose an activity below. Your task status appears here after verification.</p></div></div>
+ <div class="section-label">MEMBERSHIP</div>
  <div class="task-card" id="membershipTasks">
   <div class="task-card" id="channelMembershipTask"><b>📢 Official Channel</b><p>Join EARNOVA official channel. Membership is checked automatically.</p><button class="secondary full" onclick="openChannel()">Open Channel</button></div>
   <div class="task-card" id="groupMembershipTask"><b>👥 Official Support Group</b><p>Join our official support group.</p><button class="secondary full" onclick="openGroup()">Open Support Group</button></div>
   <button class="primary full" onclick="verifyEarnMembership()">Verify Channel & Group</button>
   <div class="status" id="membershipInfo">Tap verify after joining both.</div>
  </div>
+ <div class="section-label">DAILY ACTIVITIES</div>
  <div class="task-card"><b>📅 Daily Check-in</b><p>Claim your daily reward.</p><div id="earnCheckinInfo" class="status">Checking...</div><button class="primary full" id="earnCheckinButton" onclick="claimEarnCheckin()">Claim Daily Reward</button></div>
  <div class="task-card"><b>🎁 Daily Bonus Code</b><p>Enter the daily code announced by EARNOVA.</p><input id="earnBonusCode" placeholder="Enter daily bonus code" maxlength="64"><button class="primary full" onclick="redeemEarnBonus()">Submit Bonus Code</button><div id="earnBonusStatus" class="status"></div></div>
  <div class="task-card"><b>📺 Watch Ads</b><p>Watch an advertisement. No channel or group join condition is required for this task.</p><button class="primary full" onclick="watchAd()">Watch Ad & Earn</button></div>
+ <div class="section-label">AVAILABLE TASKS</div>
  <div class="task-card"><b>🎯 Partner Tasks</b><p>Complete available partner tasks.</p><div id="earnTasksList">Loading tasks...</div><button class="secondary full" onclick="loadTasks()">↻ Refresh Tasks</button></div>
 </section>
 
 <section class="screen" id="refer">
- <h1>Refer & Earn <span class="gold">👥</span></h1>
+ <div class="screen-heading"><div class="eyebrow">INVITATION CENTER</div><h1>Referrals <span class="gold">👥</span></h1><p>View your referral link and invitation activity.</p></div>
  <div class="panel">
   <h2>Invite your friends</h2>
   <p>Share your referral link and track your invitations.</p>
@@ -301,7 +315,7 @@ input:focus{border-color:#a78bfa;box-shadow:0 0 0 3px rgba(139,92,246,.16)}
 </section>
 
 <section class="screen" id="leaderboard">
- <h1>Leaderboard 🏆</h1>
+ <div class="screen-heading"><div class="eyebrow">COMMUNITY</div><h1>Leaderboard 🏆</h1><p>View member rankings by selected period.</p></div>
  <div class="panel">
   <button class="primary" onclick="loadLeaderboard('monthly')">Monthly</button>
   <button class="secondary" onclick="loadLeaderboard('all_time')">All Time</button>
