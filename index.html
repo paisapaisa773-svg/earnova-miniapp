@@ -399,6 +399,20 @@ main{max-width:520px;padding:12px 14px 30px}
 </head>
 <body>
 
+<div class="intro-flow" id="introFlow">
+ <section class="intro-page intro-splash" id="splashPage">
+  <div class="splash-stars"></div><div class="splash-logo"><span>♛</span><b>E</b></div>
+  <div class="splash-wordmark">EARNOVA</div><p class="splash-tagline">Earn • Play • Grow</p>
+  <div class="splash-loader"></div><small>Loading your rewards...</small>
+ </section>
+ <section class="intro-page intro-onboarding" id="onboardingPage" hidden>
+  <button class="intro-skip" onclick="finishOnboarding()">Skip</button>
+  <div class="rocket-stage"><span class="coin coin-one">🪙</span><span class="coin coin-two">🪙</span><span class="rocket">🚀</span><span class="rocket-flame">✨</span></div>
+  <div class="onboard-copy"><h1 id="onboardTitle">Welcome to<br><span>EARNOVA!</span></h1><p id="onboardText">Complete simple tasks,<br>earn real rewards!</p></div>
+  <div class="onboard-dots"><i class="active" id="onboardDot0"></i><i id="onboardDot1"></i><i id="onboardDot2"></i></div>
+  <button class="primary onboard-next" id="onboardNext" onclick="nextOnboarding()">Next →</button>
+ </section>
+</div>
 <header class="header">
  <div class="brand"><div class="logo">E</div><div class="brand-name">EARNOVA</div></div>
  <div class="profile" id="profile">👤 My Account</div>
