@@ -355,6 +355,7 @@ main{max-width:520px;padding:12px 14px 30px}
 .profile-hero{text-align:center;padding:18px 10px}
 .profile-avatar{width:76px;height:76px;margin:0 auto 10px;border-radius:50%;border:3px solid #b84dff;background:#17102c;color:#ffcf36;font-size:34px;display:grid;place-items:center;position:relative}
 .profile-avatar b{font-size:25px;color:#d7a4ff}.profile-hero h2{font-size:17px;margin:4px}.profile-hero p{font-size:11px;margin:3px;color:#c5bddb}
+.support-illustration{text-align:center;font-size:90px;margin:28px auto 12px;filter:drop-shadow(0 8px 20px #7624d966)}.support-title{text-align:center;font-size:18px}.support-copy{text-align:center;color:#aaa;font-size:12px;line-height:1.6;max-width:280px;margin:0 auto 22px}.toggle-pill{width:39px;height:23px;border-radius:20px;background:#38334e;color:#aaa;text-align:left;padding:3px;font-size:14px}.toggle-pill.on{background:#8b27ed;color:white;text-align:right}
 .profile-stats{display:grid;grid-template-columns:repeat(3,1fr);background:#1b1b31;border:1px solid #302b4b;border-radius:14px;padding:13px 5px;text-align:center}
 .profile-stats div{display:grid;gap:4px}.profile-stats b{font-size:15px}.profile-stats small{font-size:10px;color:#aaa}
 .feature-list{margin-top:14px}.feature-row{background:#19192e;border-bottom:1px solid #302b4b;padding:13px;border-radius:11px;margin:5px 0}
@@ -443,14 +444,39 @@ main{max-width:520px;padding:12px 14px 30px}
 <section class="screen" id="profileScreen">
  <div class="screen-heading"><h1>Profile</h1></div>
  <div class="profile-hero"><div class="profile-avatar">♛<b>E</b></div><h2 id="profileName">EARNOVA Member</h2><p id="profileUsername">Telegram account</p><span class="connected-pill">Level 1</span></div>
- <div class="profile-stats"><div><b>—</b><small>Tasks</small></div><div><b id="profileBalance">Loading...</b><small>Balance</small></div><div><b id="refTotal">—</b><small>Referrals</small></div></div>
+ <div class="profile-stats"><div><b>—</b><small>Tasks</small></div><div><b id="profileBalance">Loading...</b><small>Balance</small></div><div><b>—</b><small>Referrals</small></div></div>
  <div class="feature-list">
   <div class="feature-row" onclick="goTo('refer')"><div class="emoji">👥</div><div><b>My Referrals</b><p>View your invited friends</p></div><div class="arrow">›</div></div>
   <div class="feature-row" onclick="goTo('leaderboard')"><div class="emoji">🏆</div><div><b>Leaderboard</b><p>See member rankings</p></div><div class="arrow">›</div></div>
   <div class="feature-row" onclick="openChannel()"><div class="emoji">📢</div><div><b>Official Channel</b><p>Follow EARNOVA updates</p></div><div class="arrow">›</div></div>
   <div class="feature-row" onclick="openGroup()"><div class="emoji">👥</div><div><b>Support Group</b><p>Join our community</p></div><div class="arrow">›</div></div>
-  <div class="feature-row" onclick="openSupport()"><div class="emoji">🎧</div><div><b>Help & Support</b><p>Contact EARNOVA</p></div><div class="arrow">›</div></div>
+  <div class="feature-row" onclick="goTo('settingsScreen')"><div class="emoji">⚙️</div><div><b>Settings</b><p>App preferences</p></div><div class="arrow">›</div></div>
+  <div class="feature-row" onclick="goTo('helpScreen')"><div class="emoji">🎧</div><div><b>Help & Support</b><p>Get help with EARNOVA</p></div><div class="arrow">›</div></div>
+  <div class="feature-row" onclick="openChannel()"><div class="emoji">📢</div><div><b>Official Telegram Channel</b><p>Latest announcements</p></div><div class="arrow">›</div></div>
+  <div class="feature-row" onclick="openGroup()"><div class="emoji">👥</div><div><b>Official Support Group</b><p>Community support</p></div><div class="arrow">›</div></div>
  </div>
+</section>
+<section class="screen" id="settingsScreen">
+ <div class="screen-heading"><h1>Settings</h1><p>Manage your app preferences</p></div>
+ <div class="feature-list">
+  <div class="feature-row"><div class="emoji">🌙</div><div><b>Dark Mode</b><p>EARNOVA dark appearance</p></div><div class="toggle-pill on">●</div></div>
+  <div class="feature-row"><div class="emoji">🌐</div><div><b>Language</b><p>English</p></div><div class="arrow">›</div></div>
+  <div class="feature-row"><div class="emoji">🔔</div><div><b>Notifications</b><p>Reward and task updates</p></div><div class="toggle-pill on">●</div></div>
+  <div class="feature-row" onclick="openSupport()"><div class="emoji">🛡️</div><div><b>Privacy Policy</b><p>Privacy and data information</p></div><div class="arrow">›</div></div>
+  <div class="feature-row" onclick="openSupport()"><div class="emoji">📄</div><div><b>Terms & Conditions</b><p>App usage information</p></div><div class="arrow">›</div></div>
+  <div class="feature-row"><div class="emoji">ℹ️</div><div><b>About App</b><p>EARNOVA • Earn Smart</p></div></div>
+ </div>
+ <button class="primary full" onclick="goTo('profileScreen')">Back to Profile</button>
+</section>
+<section class="screen" id="helpScreen">
+ <div class="screen-heading"><h1>Help & Support</h1><p>Our support team is here to help you</p></div>
+ <div class="support-illustration">🎧</div><h2 class="support-title">Need Help?</h2><p class="support-copy">Contact the EARNOVA support team for assistance with your account, tasks or withdrawals.</p>
+ <div class="feature-list">
+  <div class="feature-row" onclick="openSupport()"><div class="emoji">➤</div><div><b>Contact Support</b><p>Talk to our support team</p></div><div class="arrow">›</div></div>
+  <div class="feature-row" onclick="openChannel()"><div class="emoji">📢</div><div><b>Join Our Telegram Channel</b><p>Get latest updates</p></div><div class="arrow">›</div></div>
+  <div class="feature-row" onclick="openGroup()"><div class="emoji">❓</div><div><b>Support Group</b><p>Ask the community</p></div><div class="arrow">›</div></div>
+ </div>
+ <button class="secondary full" onclick="goTo('profileScreen')">Back to Profile</button>
 </section>
 
 <div class="footer">EARNOVA • Earn Smart, Stay Genuine</div>
