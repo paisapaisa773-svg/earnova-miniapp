@@ -165,6 +165,154 @@ input:focus{border-color:#a78bfa;box-shadow:0 0 0 3px rgba(139,92,246,.16)}
  *,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}
 }
 
+/* EARNOVA professional visual refresh — presentation only */
+:root{
+ --bg:#090714;--card:#151126;--gold:#b99aff;--gold2:#8b5cf6;
+ --text:#f7f4ff;--muted:#aaa3c2;--border:#30264b;
+ --accent:#8b5cf6;--accent2:#c084fc;--surface:#17132a;
+}
+html{background:var(--bg);scroll-behavior:smooth}
+body{
+ background:
+  radial-gradient(ellipse at 12% -8%,rgba(124,58,237,.20),transparent 38%),
+  radial-gradient(ellipse at 100% 24%,rgba(91,33,182,.12),transparent 34%),
+  var(--bg);
+ color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+ padding-bottom:calc(86px + env(safe-area-inset-bottom));
+ -webkit-font-smoothing:antialiased;
+}
+.header{
+ background:rgba(12,9,26,.88);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+ border-bottom:1px solid rgba(192,132,252,.18);padding:14px 16px;
+}
+.logo{
+ background:linear-gradient(145deg,#e9d5ff,#8b5cf6 65%,#6d28d9);color:#160b2b;
+ box-shadow:0 5px 22px rgba(139,92,246,.28);border-radius:13px;
+}
+.brand-name{color:#e9d5ff;letter-spacing:1.25px}
+.profile{background:#1b1630;border:1px solid #40315f;color:#e9ddff}
+main{max-width:720px;padding:18px 15px 24px}
+h1{font-size:26px;letter-spacing:-.6px}
+h2{letter-spacing:-.25px}
+p{color:var(--muted)}
+.gold{color:#c4a7ff}
+.wallet-card{
+ position:relative;overflow:hidden;padding:23px;border-radius:23px;
+ background:linear-gradient(125deg,#4c1d95 0%,#6d28d9 48%,#251044 100%);
+ border:1px solid rgba(216,180,254,.38);
+ box-shadow:0 14px 36px rgba(76,29,149,.28),inset 0 1px rgba(255,255,255,.13);
+}
+.wallet-card:after{
+ content:"";position:absolute;width:190px;height:190px;right:-65px;top:-85px;
+ border:1px solid rgba(255,255,255,.15);border-radius:50%;
+ box-shadow:0 0 0 22px rgba(255,255,255,.035),0 0 0 45px rgba(255,255,255,.025);
+ pointer-events:none;
+}
+.wallet-label{color:#eadcff;font-weight:700;letter-spacing:1.15px}
+.balance{font-size:38px;letter-spacing:-1.2px}
+.small{color:#e3d2ff}
+.primary{
+ background:linear-gradient(135deg,#c4a7ff,#8b5cf6 70%,#7c3aed);
+ color:#170b2b;border:1px solid rgba(255,255,255,.16);
+ box-shadow:0 5px 16px rgba(124,58,237,.2);
+ transition:transform .16s ease,filter .16s ease;
+}
+.secondary{background:#211936;color:#ddc8ff;border:1px solid #49366b}
+button{transition:transform .16s ease,filter .16s ease}
+button:active{transform:scale(.98)}
+.card,.panel,.feature-row,.task-card{
+ background:linear-gradient(155deg,rgba(30,24,51,.96),rgba(19,15,34,.98));
+ border:1px solid rgba(167,139,250,.16);
+ box-shadow:0 7px 20px rgba(0,0,0,.14);
+}
+.card{border-radius:18px;min-height:118px;padding:17px 14px}
+.card .emoji,.feature-row .emoji{filter:drop-shadow(0 3px 8px rgba(167,139,250,.18))}
+.card h3{font-size:14px;letter-spacing:.1px}
+.panel{border-radius:18px;padding:18px}
+.feature-row{border-radius:16px;padding:16px}
+.task-card{border-radius:16px;padding:15px}
+.section-title{margin-top:27px}
+input{
+ background:#100c1e;border:1px solid #49366b;border-radius:12px;
+ color:#fff;outline:none;
+}
+input:focus{border-color:#a78bfa;box-shadow:0 0 0 3px rgba(139,92,246,.16)}
+.bottom-nav{
+ background:rgba(15,11,29,.94);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+ border-top:1px solid rgba(192,132,252,.18);
+ padding:9px 3px calc(9px + env(safe-area-inset-bottom));
+}
+.nav-btn{color:#9288aa;font-weight:600}
+.nav-btn.active{color:#c4a7ff}
+.nav-btn.active span{filter:drop-shadow(0 0 8px rgba(167,139,250,.55))}
+.modal-backdrop{backdrop-filter:blur(5px)}
+.modal{
+ background:#171229;border:1px solid #59417d;border-radius:22px;
+ box-shadow:0 22px 70px rgba(0,0,0,.55);
+}
+.modal-head{background:#171229}
+.close-btn{background:#2a2040;color:#e9d5ff;border-color:#49366b}
+.status{color:#c7b8e8}
+.footer{color:#8f85a8;padding-bottom:6px}
+@media(hover:hover){
+ .card:hover,.feature-row:hover{transform:translateY(-2px);border-color:rgba(192,132,252,.42)}
+ .primary:hover{filter:brightness(1.08)}
+}
+@media(min-width:600px){
+ main{padding:24px 22px 30px}
+ .card{min-height:125px}
+}
+@media(prefers-reduced-motion:reduce){
+ *,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}
+}
+
+
+/* Structural dashboard redesign */
+.home-hero{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:8px 0 19px;padding:5px 1px}
+.home-hero-copy{min-width:0}.home-hero h1{font-size:29px;line-height:1.15;margin:9px 0 5px;letter-spacing:-.9px}
+.home-hero p,.dashboard-heading p,.screen-heading p{margin:4px 0 0;font-size:12px}
+.eyebrow{display:flex;align-items:center;gap:7px;color:#bda8e7;font-size:9px;font-weight:800;letter-spacing:1.5px}
+.live-dot{width:7px;height:7px;border-radius:50%;background:#a78bfa;box-shadow:0 0 10px #a78bfa}
+.avatar-button{flex:0 0 48px;width:48px;height:48px;border-radius:16px;background:linear-gradient(145deg,#342052,#211631);border:1px solid #60478a;color:#fff;font-size:22px}
+.dashboard-heading{align-items:end;margin:25px 0 12px}.dashboard-heading .section-title{margin:0}
+.dashboard-heading p{color:var(--muted)}.section-kicker{font-size:9px;font-weight:800;letter-spacing:1.2px;color:#9d85c6}
+.quick-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.quick-action{min-width:0;display:flex;align-items:center;gap:10px;text-align:left;padding:13px 10px;border-radius:16px;background:linear-gradient(145deg,#211936,#151126);border:1px solid rgba(167,139,250,.2);color:var(--text)}
+.quick-action>span:nth-child(2){display:grid;gap:4px;min-width:0}.quick-action b{font-size:12px}.quick-action small,.discover-card small{font-size:10px;color:var(--muted)}
+.quick-icon{display:grid;place-items:center;width:37px;height:37px;flex:0 0 37px;border-radius:12px;background:#302148;font-size:19px}
+.quick-arrow{margin-left:auto;color:#b99aff;font-size:21px}
+.discover-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.discover-card{display:grid;justify-items:start;gap:7px;padding:15px;border-radius:16px;background:linear-gradient(145deg,#1c1730,#131022);border:1px solid rgba(167,139,250,.17);color:var(--text);text-align:left}
+.discover-card>span{font-size:23px}.discover-card b{font-size:12px}
+.screen-heading{margin:8px 0 18px}.screen-heading h1{margin:8px 0 4px}
+.wallet-card-large{padding:25px 22px;min-height:190px}
+.profile-identity{display:flex;align-items:center;gap:12px;padding:17px;margin:12px 0;background:linear-gradient(145deg,#211936,#151126);border:1px solid rgba(167,139,250,.2);border-radius:18px}
+.profile-avatar{width:49px;height:49px;flex:0 0 49px;display:grid;place-items:center;border-radius:16px;background:#342052;font-size:24px}
+.profile-identity h2{font-size:15px;margin:0 0 4px}.profile-identity p{margin:0;font-size:11px}
+.connected-pill{margin-left:auto;white-space:nowrap;font-size:9px;color:#c4a7ff;background:#342052;padding:6px 8px;border-radius:20px}
+@media(max-width:370px){.quick-grid{grid-template-columns:1fr}.connected-pill{font-size:8px;padding:5px}}
+
+
+.earn-intro{display:flex;align-items:center;gap:12px;padding:15px;margin:15px 0 19px;border-radius:17px;background:linear-gradient(120deg,#30204d,#1a142b);border:1px solid rgba(167,139,250,.22)}
+.earn-intro-icon{width:42px;height:42px;flex:0 0 42px;display:grid;place-items:center;border-radius:14px;background:#463064;font-size:21px}
+.earn-intro b{font-size:13px}.earn-intro p{font-size:11px;margin:4px 0 0}
+.section-label{font-size:9px;font-weight:800;letter-spacing:1.35px;color:#a995ce;margin:21px 2px 9px}
+#earn .task-card{margin:10px 0;padding:16px}
+#earn .task-card> b{font-size:13px}
+#refer .grid{align-items:stretch}
+#refer .grid .panel{margin:7px 0}
+#refer .grid .panel h2{font-size:21px;margin:7px 0}
+
+
+.earn-intro{display:flex;align-items:center;gap:12px;padding:15px;margin:15px 0 19px;border-radius:17px;background:linear-gradient(120deg,#30204d,#1a142b);border:1px solid rgba(167,139,250,.22)}
+.earn-intro-icon{width:42px;height:42px;flex:0 0 42px;display:grid;place-items:center;border-radius:14px;background:#463064;font-size:21px}
+.earn-intro b{font-size:13px}.earn-intro p{font-size:11px;margin:4px 0 0}
+.section-label{font-size:9px;font-weight:800;letter-spacing:1.35px;color:#a995ce;margin:21px 2px 9px}
+#earn .task-card{margin:10px 0;padding:16px}
+#earn .task-card>b{font-size:13px}
+#refer .grid{align-items:stretch}
+#refer .grid .panel{margin:7px 0}
+#refer .grid .panel h2{font-size:21px;margin:7px 0}
 </style>
 </head>
 <body>
@@ -177,9 +325,13 @@ input:focus{border-color:#a78bfa;box-shadow:0 0 0 3px rgba(139,92,246,.16)}
 <main>
 
 <section class="screen active" id="home">
- <div class="welcome">
-  <h1>Welcome, <span class="gold" id="welcomeName">User</span> 👋</h1>
-  <p>Earn smart. Stay genuine. Explore EARNOVA rewards.</p>
+ <div class="home-hero">
+  <div class="home-hero-copy">
+   <div class="eyebrow"><span class="live-dot"></span> EARNOVA MEMBER SPACE</div>
+   <h1>Hi, <span class="gold" id="welcomeName">User</span> 👋</h1>
+   <p>Your dashboard at a glance.</p>
+  </div>
+  <button class="avatar-button" aria-label="Open profile" onclick="goTo('profileScreen')">👤</button>
  </div>
 
  <div class="wallet-card">
@@ -191,13 +343,20 @@ input:focus{border-color:#a78bfa;box-shadow:0 0 0 3px rgba(139,92,246,.16)}
   <div class="status" id="walletStatus">Connecting to EARNOVA...</div>
  </div>
 
- <h2 class="section-title">Explore EARNOVA</h2>
- <div class="grid">
-  <div class="card" onclick="watchAd()"><div class="emoji">📺</div><h3>Watch Ads</h3><p>Watch advertisements and earn</p></div>
-  <div class="card" onclick="openTaskPopup()"><div class="emoji">🎯</div><h3>Available Tasks</h3><p>Open tasks and earn rewards</p></div>
-  <div class="card" onclick="goTo('refer')"><div class="emoji">👥</div><h3>Refer & Earn</h3><p>Invite your friends</p></div>
-  <div class="card" onclick="loadLeaderboard()"><div class="emoji">🏆</div><h3>Leaderboard</h3><p>Top earning members</p></div>
-  <div class="card" onclick="goTo('wallet')"><div class="emoji">💰</div><h3>My Wallet</h3><p>Check your wallet balance</p></div>
+ <div class="dashboard-heading row">
+  <div><h2 class="section-title">Quick Actions</h2><p>Jump straight to a section</p></div>
+  <span class="section-kicker">EXPLORE</span>
+ </div>
+ <div class="quick-grid">
+  <button class="quick-action" onclick="goTo('earn')"><span class="quick-icon">🎯</span><span><b>Earn</b><small>Tasks & check-in</small></span><span class="quick-arrow">›</span></button>
+  <button class="quick-action" onclick="goTo('wallet')"><span class="quick-icon">💳</span><span><b>Wallet</b><small>Balance & history</small></span><span class="quick-arrow">›</span></button>
+  <button class="quick-action" onclick="goTo('refer')"><span class="quick-icon">👥</span><span><b>Referrals</b><small>Your invite details</small></span><span class="quick-arrow">›</span></button>
+  <button class="quick-action" onclick="loadLeaderboard()"><span class="quick-icon">🏆</span><span><b>Leaderboard</b><small>Member rankings</small></span><span class="quick-arrow">›</span></button>
+ </div>
+ <div class="dashboard-heading row"><div><h2 class="section-title">Discover</h2><p>More from EARNOVA</p></div></div>
+ <div class="discover-grid">
+  <button class="discover-card" onclick="watchAd()"><span>📺</span><b>Watch Ads</b><small>Open ad task</small></button>
+  <button class="discover-card" onclick="openTaskPopup()"><span>🧩</span><b>Task Center</b><small>View available tasks</small></button>
  </div>
 
  <h2 class="section-title">Official EARNOVA</h2>
@@ -209,22 +368,25 @@ input:focus{border-color:#a78bfa;box-shadow:0 0 0 3px rgba(139,92,246,.16)}
 </section>
 
 <section class="screen" id="earn">
- <h1>Earn Rewards <span class="gold">💎</span></h1>
- <p>Complete tasks and earn rewards.</p>
+ <div class="screen-heading"><div class="eyebrow">YOUR ACTIVITY</div><h1>Earn Rewards <span class="gold">💎</span></h1><p>Explore available activities and check their status.</p></div>
+ <div class="earn-intro"><div class="earn-intro-icon">✨</div><div><b>Task Center</b><p>Choose an activity below. Your task status appears here after verification.</p></div></div>
+ <div class="section-label">MEMBERSHIP</div>
  <div class="task-card" id="membershipTasks">
   <div class="task-card" id="channelMembershipTask"><b>📢 Official Channel</b><p>Join EARNOVA official channel. Membership is checked automatically.</p><button class="secondary full" onclick="openChannel()">Open Channel</button></div>
   <div class="task-card" id="groupMembershipTask"><b>👥 Official Support Group</b><p>Join our official support group.</p><button class="secondary full" onclick="openGroup()">Open Support Group</button></div>
   <button class="primary full" onclick="verifyEarnMembership()">Verify Channel & Group</button>
   <div class="status" id="membershipInfo">Tap verify after joining both.</div>
  </div>
+ <div class="section-label">DAILY ACTIVITIES</div>
  <div class="task-card"><b>📅 Daily Check-in</b><p>Claim your daily reward.</p><div id="earnCheckinInfo" class="status">Checking...</div><button class="primary full" id="earnCheckinButton" onclick="claimEarnCheckin()">Claim Daily Reward</button></div>
  <div class="task-card"><b>🎁 Daily Bonus Code</b><p>Enter the daily code announced by EARNOVA.</p><input id="earnBonusCode" placeholder="Enter daily bonus code" maxlength="64"><button class="primary full" onclick="redeemEarnBonus()">Submit Bonus Code</button><div id="earnBonusStatus" class="status"></div></div>
  <div class="task-card"><b>📺 Watch Ads</b><p>Watch an advertisement. No channel or group join condition is required for this task.</p><button class="primary full" onclick="watchAd()">Watch Ad & Earn</button></div>
+ <div class="section-label">AVAILABLE TASKS</div>
  <div class="task-card"><b>🎯 Partner Tasks</b><p>Complete available partner tasks.</p><div id="earnTasksList">Loading tasks...</div><button class="secondary full" onclick="loadTasks()">↻ Refresh Tasks</button></div>
 </section>
 
 <section class="screen" id="refer">
- <h1>Refer & Earn <span class="gold">👥</span></h1>
+ <div class="screen-heading"><div class="eyebrow">INVITATION CENTER</div><h1>Referrals <span class="gold">👥</span></h1><p>View your referral link and invitation activity.</p></div>
  <div class="panel">
   <h2>Invite your friends</h2>
   <p>Share your referral link and track your invitations.</p>
@@ -242,8 +404,8 @@ input:focus{border-color:#a78bfa;box-shadow:0 0 0 3px rgba(139,92,246,.16)}
 </section>
 
 <section class="screen" id="wallet">
- <h1>My Wallet <span class="gold">💰</span></h1>
- <div class="wallet-card">
+ <div class="screen-heading"><div class="eyebrow">ACCOUNT OVERVIEW</div><h1>My Wallet <span class="gold">💰</span></h1><p>Review your balance, requests and transaction history.</p></div>
+ <div class="wallet-card wallet-card-large">
   <div class="wallet-label">AVAILABLE BALANCE</div>
   <div class="balance" id="walletBalance">Loading...</div>
   <div class="small" id="minimumWallet">Minimum withdrawal: ₹20</div>
@@ -262,7 +424,7 @@ input:focus{border-color:#a78bfa;box-shadow:0 0 0 3px rgba(139,92,246,.16)}
 </section>
 
 <section class="screen" id="leaderboard">
- <h1>Leaderboard 🏆</h1>
+ <div class="screen-heading"><div class="eyebrow">COMMUNITY</div><h1>Leaderboard 🏆</h1><p>View member rankings by selected period.</p></div>
  <div class="panel">
   <button class="primary" onclick="loadLeaderboard('monthly')">Monthly</button>
   <button class="secondary" onclick="loadLeaderboard('all_time')">All Time</button>
@@ -271,7 +433,8 @@ input:focus{border-color:#a78bfa;box-shadow:0 0 0 3px rgba(139,92,246,.16)}
 </section>
 
 <section class="screen" id="profileScreen">
- <h1>My Profile 👤</h1>
+ <div class="screen-heading"><div class="eyebrow">ACCOUNT SETTINGS</div><h1>My Profile 👤</h1><p>Your Telegram account details and app support.</p></div>
+ <div class="profile-identity"><div class="profile-avatar">👤</div><div><h2 id="profileName">EARNOVA Member</h2><p id="profileUsername">Telegram account</p></div><span class="connected-pill">● Connected</span></div>
  <div class="panel">
   <h2 id="profileName">EARNOVA Member</h2>
   <p id="profileUsername">Telegram account</p><hr>
