@@ -364,7 +364,38 @@ main{max-width:520px;padding:12px 14px 30px}
 .screen-heading h1{font-size:24px}.screen-heading p{color:#aaa}
 @media(max-width:370px){.quick-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}.quick-action b{font-size:9px}.quick-icon{width:34px;height:34px}}
 
-</style>
+
+/* Splash + onboarding intro, matched to supplied EARNOVA reference */
+.intro-flow{position:fixed;inset:0;z-index:1000;background:#070718;color:#fff;overflow:hidden}
+.intro-page{position:absolute;inset:0;min-height:100dvh;background:radial-gradient(ellipse at 50% 48%,#170d38 0%,#080817 48%,#050510 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 25px}
+.intro-page[hidden]{display:none}
+.intro-splash:before,.intro-splash:after{content:"";position:absolute;width:140vw;height:42vh;border:1px solid rgba(139,55,255,.35);border-radius:50%;transform:rotate(-24deg);filter:drop-shadow(0 0 12px #6d24f4);pointer-events:none}
+.intro-splash:after{transform:rotate(28deg);width:120vw;height:28vh;border-color:rgba(112,45,255,.25)}
+.splash-logo{position:relative;width:126px;height:126px;display:grid;place-items:center;border-radius:36px;transform:skew(-8deg);background:linear-gradient(145deg,#fff 0%,#c99aff 35%,#7622ed 72%,#3b0b94 100%);box-shadow:0 0 50px #7622ed88;color:#130629}
+.splash-logo b{font-size:92px;font-weight:1000;font-style:italic;line-height:1}
+.splash-logo span{position:absolute;top:-22px;left:0;color:#ffca39;font-size:40px;transform:rotate(-12deg)}
+.splash-wordmark{position:relative;margin-top:20px;font-size:39px;font-weight:1000;font-style:italic;letter-spacing:-1px;background:linear-gradient(90deg,#fff,#e5caff,#a94dff);color:transparent;background-clip:text}
+.splash-tagline{position:relative;color:#fff;font-size:16px;letter-spacing:1px;margin:5px 0 48px}
+.splash-loader{position:relative;width:38px;height:38px;border:4px solid #402067;border-top-color:#c34bff;border-right-color:#8128ed;border-radius:50%;animation:splashSpin 1s linear infinite;margin-bottom:13px}
+.intro-splash>small{position:relative;color:#ddd;font-size:11px}
+@keyframes splashSpin{to{transform:rotate(360deg)}}
+.intro-onboarding{justify-content:flex-start;padding-top:54px}
+.intro-skip{position:absolute;right:26px;top:54px;border:0;background:transparent;color:#fff;font-size:13px}
+.rocket-stage{height:43vh;max-height:360px;min-height:240px;width:100%;display:grid;place-items:center;position:relative}
+.rocket{font-size:132px;filter:drop-shadow(0 18px 24px #7c22f488);transform:rotate(-18deg);z-index:2}
+.rocket-flame{position:absolute;top:64%;font-size:48px;color:#ffc24b;filter:drop-shadow(0 0 16px #ff9b25)}
+.coin{position:absolute;font-size:29px;filter:drop-shadow(0 0 10px #ffb52d)}
+.coin-one{left:12%;top:29%}.coin-two{right:12%;top:48%}
+.onboard-copy{text-align:center;margin-top:5px}
+.onboard-copy h1{font-size:29px;line-height:1.35;margin:0 0 10px;letter-spacing:-.5px}
+.onboard-copy h1 span{color:#d29aff}
+.onboard-copy p{font-size:16px;line-height:1.55;color:#fff;margin:0}
+.onboard-dots{display:flex;gap:12px;align-items:center;margin:28px 0 20px}
+.onboard-dots i{width:6px;height:6px;border-radius:50%;background:#8765a8}
+.onboard-dots i.active{width:13px;height:6px;border-radius:10px;background:#e7a4ff}
+.onboard-next{width:100%;max-width:360px;padding:15px;border-radius:24px;font-size:15px;font-weight:800}
+@media(max-height:700px){.intro-onboarding{padding-top:44px}.rocket-stage{height:35vh;min-height:190px}.rocket{font-size:108px}.onboard-copy h1{font-size:25px}.onboard-dots{margin:18px 0}}
+\n</style>
 </head>
 <body>
 
@@ -862,7 +893,37 @@ async function loadLeaderboard(period="monthly"){
   });
  }catch(e){box.textContent=e.message}
 }
-function filterTasks(type,button){
+let onboardStep=0;
+const onboardingSlides=[
+ {title:'Welcome to<br><span>EARNOVA!</span>',text:'Complete simple tasks,<br>earn real rewards!'},
+ {title:'Earn Rewards<br><span>Every Day!</span>',text:'Discover tasks, collect bonuses<br>and track your earnings.'},
+ {title:'Let’s Get Started<br><span>with EARNOVA!</span>',text:'Invite friends and grow<br>your rewards together.'}
+];
+function renderOnboarding(){
+ const slide=onboardingSlides[onboardStep];
+ document.getElementById("onboardTitle").innerHTML=slide.title;
+ document.getElementById("onboardText").innerHTML=slide.text;
+ for(let i=0;i<3;i++)document.getElementById("onboardDot"+i).classList.toggle("active",i===onboardStep);
+ document.getElementById("onboardNext").innerHTML=onboardStep===2?"Get Started&nbsp; →":"Next&nbsp; →";
+}
+function nextOnboarding(){
+ if(onboardStep<2){onboardStep++;renderOnboarding();return}
+ finishOnboarding();
+}
+function finishOnboarding(){
+ try{localStorage.setItem("earnova_intro_seen_v1","1")}catch(e){}
+ document.getElementById("introFlow").style.display="none";
+}
+function startIntroFlow(){
+ let seen=false;try{seen=localStorage.getItem("earnova_intro_seen_v1")==="1"}catch(e){}
+ if(seen){document.getElementById("introFlow").style.display="none";return}
+ setTimeout(()=>{
+  document.getElementById("splashPage").hidden=true;
+  document.getElementById("onboardingPage").hidden=false;
+  renderOnboarding();
+ },1600);
+}
+\nfunction filterTasks(type,button){
  document.querySelectorAll(".task-tabs button").forEach(b=>b.classList.remove("active"));
  if(button)button.classList.add("active");
  document.querySelectorAll("#earn .task-line[data-task-type]").forEach(card=>{
@@ -894,7 +955,7 @@ async function initializeApp(){
   status(e.message);
  }
 }
-initializeApp();
+startIntroFlow();\ninitializeApp();
 </script>
 </body>
 </html>
