@@ -1,0 +1,36 @@
+name: EARNOVA Admin User Tab Checks
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "admin.html"
+      - "bot.py"
+      - ".github/workflows/user-tab-checks.yml"
+  workflow_dispatch:
+
+jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Compile backend
+        run: python -m py_compile bot.py
+      - name: Check inline admin JavaScript
+        run: |
+          python - <<'PY'
+          import re
+          from pathlib import Path
+          html = Path("admin.html").read_text(encoding="utf-8")
+          scripts = re.findall(r"<script\\b[^>]*>([\\s\\S]*?)</script>", html, re.I)
+          if not scripts:
+              raise SystemExit("No inline script found in admin.html")
+          Path("/tmp/admin-inline.js").write_text("\\n".join(scripts), encoding="utf-8")
+          PY
+          node --check /tmp/admin-inline.js
