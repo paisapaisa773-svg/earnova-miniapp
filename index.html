@@ -968,6 +968,7 @@ function goTo(screen,button){
  if(screen==="earn")loadEarnScreen();
  if(screen==="refer")loadReferral();
  if(screen==="profileScreen")refreshBalance();
+ if(screen==="leaderboard")loadLeaderboard("monthly");
 }
 document.getElementById("tasksModal").addEventListener("click",function(e){if(e.target===this)closeTaskPopup()});
 document.getElementById("messageModal").addEventListener("click",function(e){if(e.target===this)closeMessage()});
