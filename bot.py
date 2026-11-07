@@ -379,10 +379,8 @@ def complete_task():
             prior=db.execute('SELECT status FROM task_completions WHERE task_id=%s AND telegram_id=%s',(task_id,tid)).fetchone()
             if prior: return jsonify(ok=False,error='Task already submitted',status=prior['status']),409
             # Link-visit tasks are recorded as pending/manual review unless explicitly configured otherwise.
-            status='pending' if task['verification']=='manual' else 'completed'
+            status='pending'
             db.execute('INSERT INTO task_completions(task_id,telegram_id,status,reward) VALUES(%s,%s,%s,%s)',(task_id,tid,status,task['reward']))
-            if status=='completed':
-                credit_wallet(db,tid,task['reward'],'task_reward',f'task:{task_id}:{tid}')
         return jsonify(ok=True,status=status,message='Task submitted for review' if status=='pending' else 'Task completed'),200
     except Exception:
         app.logger.exception('Task completion failed'); return jsonify(ok=False,error='Server error'),500
@@ -676,18 +674,19 @@ def admin_review_withdrawal():
             w=db.execute("SELECT * FROM withdrawals WHERE id=%s FOR UPDATE",(wid,)).fetchone()
             if not w: return jsonify(ok=False,error='Withdrawal not found'),404
             if w['status'] != 'pending': return jsonify(ok=False,error='Withdrawal already reviewed'),409
+            ledger = db.execute("""SELECT id FROM wallet_transactions
+                WHERE telegram_id=%s AND transaction_type='withdrawal' AND status='pending'
+                AND amount=%s ORDER BY created_at DESC LIMIT 1 FOR UPDATE""",
+                (w['telegram_id'], -w['amount'])).fetchone()
+            if not ledger: return jsonify(ok=False,error='Matching withdrawal ledger entry not found'),409
             if action=='approve':
                 db.execute("UPDATE withdrawals SET status='approved',reviewed_at=NOW() WHERE id=%s",(wid,))
-                db.execute("""UPDATE wallet_transactions SET status='completed'
-                    WHERE telegram_id=%s AND transaction_type='withdrawal' AND status='pending'
-                    AND idempotency_key LIKE %s""",(w['telegram_id'], 'withdrawal-request:%'))
+                db.execute("UPDATE wallet_transactions SET status='completed' WHERE id=%s",(ledger['id'],))
                 db.execute('UPDATE user_settings SET first_paid_withdrawal=TRUE WHERE telegram_id=%s',(w['telegram_id'],))
             else:
                 if not reason: return jsonify(ok=False,error='Rejection reason required'),400
                 db.execute("UPDATE withdrawals SET status='rejected',rejection_reason=%s,reviewed_at=NOW() WHERE id=%s",(reason,wid))
-                db.execute("""UPDATE wallet_transactions SET status='rejected'
-                    WHERE telegram_id=%s AND transaction_type='withdrawal' AND status='pending'
-                    AND idempotency_key LIKE 'withdrawal-request:%'""",(w['telegram_id'],))
+                db.execute("UPDATE wallet_transactions SET status='rejected' WHERE id=%s",(ledger['id'],))
                 credit_wallet(db,int(w['telegram_id']),w['amount'],'withdrawal_refund',f'withdrawal-refund:{wid}')
         return jsonify(ok=True,status='approved' if action=='approve' else 'rejected')
     except Exception: return admin_error('withdrawal review')
@@ -747,8 +746,8 @@ def admin_create_task():
     try: reward=Decimal(str(b.get('reward',''))).quantize(Decimal('0.01'))
     except (InvalidOperation,ValueError): return jsonify(ok=False,error='Invalid reward'),400
     verification=str(b.get('verification','manual'))
-    if not title or not reward.is_finite() or reward<=0 or verification not in ('manual','automatic'):
-        return jsonify(ok=False,error='Valid title, positive reward and verification type required'),400
+    if not title or not reward.is_finite() or reward<=0 or verification != 'manual':
+        return jsonify(ok=False,error='Only manual review tasks are supported; enter a title and positive reward'),400
     try:
         with get_db() as db:
             create_tables(db)
