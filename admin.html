@@ -41,6 +41,16 @@
     .withdrawal-foot{border-top:1px solid var(--line);padding-top:11px;display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}
     .timezone-note{font-size:11px;color:var(--muted);margin:0 0 10px}
     @media(max-width:420px){.withdrawal-summary{gap:6px}.withdrawal-stat{padding:10px}.withdrawal-stat strong{font-size:19px}.withdrawal-details{grid-template-columns:1fr 1fr}.withdrawal-tools{grid-template-columns:1fr}}
+    /* EARNOVA User Management redesign */
+    .user-search{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px;margin:12px 0 16px}
+    .user-results{display:grid;gap:9px}.user-result{display:flex;align-items:center;justify-content:space-between;gap:12px;background:linear-gradient(145deg,#19102f,#111827);border:1px solid #493078;border-radius:15px;padding:14px}
+    .user-result strong{display:block;font-size:15px}.user-result small{display:block;color:var(--muted);margin-top:4px;overflow-wrap:anywhere}
+    .user-hero{background:linear-gradient(130deg,#1b1034,#111b31);border:1px solid #51318a;border-radius:18px;padding:16px;margin:12px 0}
+    .user-hero-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}.user-name{font-size:21px;font-weight:800}.user-handle{color:#c2b0e8;margin-top:3px}.user-meta{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:16px}
+    .user-meta div{min-width:0}.user-meta small,.user-stat small{display:block;color:var(--muted);font-size:11px}.user-meta strong{display:block;font-size:12px;margin-top:4px;overflow-wrap:anywhere}
+    .user-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:12px 0}.user-stat{background:linear-gradient(145deg,#17112a,#121d30);border:1px solid #3c2b64;border-radius:14px;padding:12px;min-width:0}.user-stat strong{display:block;font-size:20px;margin-top:7px;overflow-wrap:anywhere}
+    .user-panels{display:grid;grid-template-columns:1.2fr 1fr;gap:10px;margin:12px 0}.user-panel{background:linear-gradient(145deg,#17112a,#111b2c);border:1px solid #3d2a66;border-radius:15px;padding:14px;min-width:0}.user-panel h3{margin:0 0 12px;font-size:15px}.user-activity{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:9px;align-items:center;padding:9px 0;border-bottom:1px solid #2b2440;font-size:12px}.user-activity:last-child{border-bottom:0}.user-activity span:first-child{overflow-wrap:anywhere}.user-activity time{color:var(--muted);font-size:11px}.user-positive{color:#39d98a;font-weight:700}.user-risk{border-color:#3b465d}.user-history{display:grid;gap:8px}.user-history-row{background:#111b2b;border:1px solid #293a55;border-radius:11px;padding:11px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;font-size:12px}.user-history-row p{margin:4px 0 0;color:var(--muted);overflow-wrap:anywhere}.user-section-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:18px 0 10px}.user-section-head h3{margin:0;font-size:16px}
+    @media(max-width:620px){.user-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.user-panels{grid-template-columns:1fr}.user-meta{grid-template-columns:1fr 1fr}.user-activity{grid-template-columns:minmax(0,1fr) auto}.user-activity time{grid-column:1/-1}.user-search{grid-template-columns:1fr}}
     #toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#243650;padding:11px 16px;border-radius:10px;max-width:90%;z-index:20;display:none}
     .empty{padding:24px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:12px}
     .danger-text{color:#ff9aa2}.small{font-size:12px}
@@ -148,11 +158,60 @@
   window.copyWithdrawalUpi=async(value)=>{try{await navigator.clipboard.writeText(value);toast('UPI ID copied')}catch(e){toast('UPI ID: '+value)}};
   window.reviewWithdrawal=async(id,action)=>{let reason='';if(action==='reject'){reason=prompt('Rejection reason लिखें:');if(reason===null)return;if(!reason.trim()){toast('Reason जरूरी है');return} }if(action==='approve'&&!confirm('क्या आपने UPI payment वास्तव में कर दिया है?'))return;if(action==='reject'&&!confirm('Request reject करके balance refund करना है?'))return;try{await api('/api/admin/withdrawals/review','POST',{withdrawal_id:id,action,reason});toast('Request updated');withdrawals()}catch(e){toast(e.message)}};
   async function users(){
-    $('content').innerHTML=`<h2 class="section-title">User Management</h2><div class="row"><input id="userQuery" placeholder="Telegram ID या username से खोजें"><button class="primary" onclick="searchUsers()">Search</button></div><div id="userResults" style="margin-top:12px"></div>`;
+    $('content').innerHTML=`<div class="row"><div><h2 class="section-title">User Management</h2><p class="muted small">User profile, verified earnings, tasks, referrals और account activity</p></div><span class="pill">Admin view</span></div>
+      <div class="user-search"><input id="userQuery" placeholder="Telegram ID, username या नाम से खोजें"><button class="primary" onclick="searchUsers()">Search</button></div>
+      <div id="userResults" class="user-results"></div><div id="userDetail"></div>`;
     await searchUsers();
   }
-  window.searchUsers=async()=>{try{const q=$('userQuery')?.value||'';const d=await api('/api/admin/users','POST',{q});$('userResults').innerHTML=list((d.users||[]).map(u=>`<article class="item"><h3>${esc(u.first_name||u.username||'User')} ${pill('user')}</h3><p>Telegram ID: ${esc(u.telegram_id)} · Username: @${esc(u.username||'—')}</p><p>Balance: ${money(u.balance)} · Joined: ${esc(formatIndiaDateTime(u.created_at))}</p><button onclick="userTransactions(${Number(u.telegram_id)})">Transactions</button><div id="tx-${Number(u.telegram_id)}"></div></article>`))}catch(e){$('userResults').innerHTML=`<p class="danger-text">${esc(e.message)}</p>`}};
-  window.userTransactions=async(id)=>{try{const d=await api('/api/admin/user-transactions','POST',{telegram_id:id});$('tx-'+id).innerHTML=list((d.transactions||[]).map(t=>`<p>${esc(t.transaction_type)} · ${money(t.amount)} · ${esc(t.status)} · ${esc(formatIndiaDateTime(t.created_at))}</p>`),'No transactions')}catch(e){toast(e.message)}};
+  window.searchUsers=async()=>{
+    try{
+      const q=$('userQuery')?.value||'';
+      const d=await api('/api/admin/users','POST',{q});
+      $('userResults').innerHTML=(d.users||[]).length?(d.users||[]).map(u=>`<article class="user-result"><div><strong>${esc([u.first_name,u.last_name].filter(Boolean).join(' ')||u.username||'EARNOVA User')}</strong><small>@${esc(u.username||'—')} · ID: ${esc(u.telegram_id)} · Balance: ${money(u.balance)}</small><small>Joined: ${esc(formatIndiaDateTime(u.created_at))}</small></div><button class="primary" onclick="viewUser(${Number(u.telegram_id)})">View Details</button></article>`).join(''):'<div class="empty">कोई User नहीं मिला</div>';
+      $('userDetail').innerHTML='';
+    }catch(e){$('userResults').innerHTML=`<p class="danger-text">${esc(e.message)}</p>`}
+  };
+  window.viewUser=async(id)=>{
+    const target=$('userDetail');target.innerHTML='<div class="empty">Loading verified user records…</div>';
+    try{
+      const d=await api('/api/admin/user-detail','POST',{telegram_id:id});
+      const u=d.user||{}, s=d.summary||{}, events=d.activity||[];
+      const fullName=[u.first_name,u.last_name].filter(Boolean).join(' ')||u.username||'EARNOVA User';
+      const history=(items,render,empty)=>items?.length?items.map(render).join(''):`<div class="empty">${empty}</div>`;
+      target.innerHTML=`
+        <div class="user-section-head"><h3>User Profile &amp; Audit</h3><button onclick="viewUser(${Number(id)})">↻ Refresh</button></div>
+        <section class="user-hero"><div class="user-hero-top"><div><div class="user-name">${esc(fullName)}</div><div class="user-handle">@${esc(u.username||'no_username')} · <span class="pill">Registered User</span></div></div><span class="pill approved">Database record found</span></div>
+          <div class="user-meta"><div><small>TELEGRAM ID</small><strong>${esc(u.telegram_id)}</strong></div><div><small>JOINED (IST)</small><strong>${esc(formatIndiaDateTime(u.created_at))}</strong></div><div><small>CURRENT BALANCE</small><strong>${money(u.balance)}</strong></div></div></section>
+        <div class="user-stats">
+          <div class="user-stat"><small>Total Earned*</small><strong>${money(s.total_earned)}</strong></div>
+          <div class="user-stat"><small>Completed Tasks</small><strong>${esc(s.completed_tasks||0)}</strong></div>
+          <div class="user-stat"><small>Referrals</small><strong>${esc(s.referrals||0)}</strong></div>
+          <div class="user-stat"><small>Withdrawn (Approved)</small><strong>${money(s.withdrawn)}</strong></div>
+        </div>
+        <div class="user-panels">
+          <section class="user-panel"><h3>📊 Verified Wallet Activity</h3>
+            ${history(events.slice(0,8),e=>`<div class="user-activity"><span>${esc(e.label)}</span><time>${esc(formatIndiaDateTime(e.created_at))}</time><b class="${Number(e.amount)>=0?'user-positive':''}">${money(e.amount)}</b></div>`,'अभी कोई earning activity नहीं है')}
+            <p class="muted small">*Total Earned = completed positive wallet ledger entries; pending/rejected entries शामिल नहीं हैं।</p>
+          </section>
+          <section class="user-panel user-risk"><h3>🛡️ Account Review</h3>
+            <div class="user-activity"><span>Completed task records</span><b>${esc(s.completed_tasks||0)}</b></div>
+            <div class="user-activity"><span>Rejected task records</span><b>${esc(s.rejected_tasks||0)}</b></div>
+            <div class="user-activity"><span>Pending task records</span><b>${esc(s.pending_tasks||0)}</b></div>
+            <p class="muted small">यह रिकॉर्ड-आधारित समीक्षा है। Device/IP data उपलब्ध नहीं है, इसलिए इसे automatic fraud verdict न समझें।</p>
+          </section>
+        </div>
+        <div class="user-section-head"><h3>Task History</h3><span class="pill">${(d.tasks||[]).length} records</span></div>
+        <div class="user-history">${history(d.tasks,t=>`<article class="user-history-row"><div><b>${esc(t.title||('Task #'+t.task_id))}</b><p>Task #${esc(t.task_id)} · ${esc(formatIndiaDateTime(t.created_at))}</p></div><div>${pill(t.status)}<p>${money(t.reward)}</p></div></article>`,'कोई Task History नहीं मिली')}</div>
+        <div class="user-section-head"><h3>Referral History</h3><span class="pill">${(d.referrals||[]).length} records</span></div>
+        <div class="user-history">${history(d.referrals,r=>`<article class="user-history-row"><div><b>${r.role==='referrer'?'Referred User':'Referred By'}</b><p>Telegram ID: ${esc(r.other_user_id)} · ${esc(formatIndiaDateTime(r.created_at))}</p></div><div>${pill(r.status)}</div></article>`,'कोई Referral Record नहीं मिला')}</div>
+        <div class="user-section-head"><h3>Withdrawal History</h3><span class="pill">${(d.withdrawals||[]).length} records</span></div>
+        <div class="user-history">${history(d.withdrawals,w=>`<article class="user-history-row"><div><b>Withdrawal #${esc(w.id)}</b><p>${esc(formatIndiaDateTime(w.created_at))} · ${esc(w.upi_id||'UPI unavailable')}</p></div><div>${pill(w.status)}<p>${money(w.amount)}</p></div></article>`,'कोई Withdrawal Record नहीं मिला')}</div>
+        <div class="user-section-head"><h3>Wallet Transactions</h3><span class="pill">${(d.transactions||[]).length} records</span></div>
+        <div class="user-history">${history(d.transactions,t=>`<article class="user-history-row"><div><b>${esc(t.transaction_type)}</b><p>${esc(formatIndiaDateTime(t.created_at))} · Ref #${esc(t.id)}</p></div><div>${pill(t.status)}<p>${money(t.amount)}</p></div></article>`,'कोई Wallet Transaction नहीं मिला')}</div>`;
+      target.scrollIntoView({behavior:'smooth',block:'start'});
+    }catch(e){target.innerHTML=`<div class="notice danger-text">${esc(e.message)}</div>`}
+  };
+  window.userTransactions=async(id)=>viewUser(id);
   async function tasks(){
     const d=await api('/api/admin/tasks','POST',{});
     $('content').innerHTML=`<h2 class="section-title">Create / Manage Tasks</h2><div class="card"><div class="form-grid">
