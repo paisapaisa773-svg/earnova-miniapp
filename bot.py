@@ -213,7 +213,7 @@ def membership_error(telegram_id):
 @app.after_request
 def add_cors(response):
     response.headers['Access-Control-Allow-Origin'] = FRONTEND_ORIGIN
-    response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type, X-Telegram-Init-Data'
     response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
     response.headers['Vary'] = 'Origin'
     return response
@@ -606,6 +606,8 @@ def admin_required(fn):
     from functools import wraps
     @wraps(fn)
     def wrapped(*args, **kwargs):
+        if request.method == 'OPTIONS':
+            return '', 204
         user, body = admin_body()
         if not user:
             return jsonify(ok=False, error='Unauthorized admin session'), 401
@@ -990,3 +992,238 @@ def setup_admin_webhook():
 
 if __name__=='__main__':
     app.run(host='0.0.0.0',port=int(os.environ.get('PORT',5001)))
+
+
+# Remaining Admin Panel endpoints. All are protected by signed Admin Bot initData.
+def _admin_dt(value):
+    if not value: return None
+    try:
+        return datetime.fromisoformat(str(value).replace('Z', '+00:00'))
+    except ValueError:
+        raise ValueError('Invalid date/time')
+
+
+@app.route('/api/admin/withdrawals/review', methods=['POST','OPTIONS'])
+@admin_required
+def admin_review_withdrawal():
+    b=request.admin_body
+    try: wid=int(b.get('withdrawal_id')); action=str(b.get('action','')).lower()
+    except (TypeError,ValueError): return jsonify(ok=False,error='Invalid withdrawal ID'),400
+    if action not in ('approve','reject'): return jsonify(ok=False,error='Invalid action'),400
+    reason=str(b.get('reason','')).strip()[:500]
+    try:
+        with get_db() as db:
+            create_tables(db)
+            w=db.execute('SELECT id,telegram_id,amount,status FROM withdrawals WHERE id=%s FOR UPDATE',(wid,)).fetchone()
+            if not w: return jsonify(ok=False,error='Withdrawal not found'),404
+            if w['status']!='pending': return jsonify(ok=False,error='Withdrawal already reviewed'),409
+            if action=='approve':
+                db.execute("UPDATE withdrawals SET status='approved',reviewed_at=NOW() WHERE id=%s",(wid,))
+                db.execute('UPDATE user_settings SET first_paid_withdrawal=TRUE WHERE telegram_id=%s',(w['telegram_id'],))
+            else:
+                if not reason: return jsonify(ok=False,error='Rejection reason required'),400
+                db.execute("UPDATE withdrawals SET status='rejected',rejection_reason=%s,reviewed_at=NOW() WHERE id=%s",(reason,wid))
+                credit_wallet(db,int(w['telegram_id']),w['amount'],'withdrawal_refund',f'withdrawal-refund:{wid}')
+                db.execute("UPDATE wallet_transactions SET status='rejected' WHERE telegram_id=%s AND transaction_type='withdrawal' AND status='pending' AND created_at >= (SELECT created_at FROM withdrawals WHERE id=%s) AND amount=-%s",(w['telegram_id'],wid,w['amount']))
+        return jsonify(ok=True,status='approved' if action=='approve' else 'rejected'),200
+    except Exception:
+        app.logger.exception('Admin withdrawal review failed'); return jsonify(ok=False,error='Could not review withdrawal'),500
+
+
+@app.route('/api/admin/users', methods=['POST','OPTIONS'])
+@admin_required
+def admin_users():
+    try:
+        q=str(request.admin_body.get('q','')).strip()[:100]
+        with get_db() as db:
+            create_tables(db)
+            if q.isdigit():
+                rows=db.execute('''SELECT telegram_id,username,first_name,balance,created_at FROM users
+                    WHERE telegram_id=%s ORDER BY created_at DESC LIMIT 100''',(int(q),)).fetchall()
+            elif q:
+                rows=db.execute('''SELECT telegram_id,username,first_name,balance,created_at FROM users
+                    WHERE username ILIKE %s OR first_name ILIKE %s ORDER BY created_at DESC LIMIT 100''',(f'%{q}%',f'%{q}%')).fetchall()
+            else:
+                rows=db.execute('SELECT telegram_id,username,first_name,balance,created_at FROM users ORDER BY created_at DESC LIMIT 100').fetchall()
+        return jsonify(ok=True,users=[{**r,'balance':str(r['balance']),'created_at':r['created_at'].isoformat() if r['created_at'] else None} for r in rows])
+    except Exception:
+        app.logger.exception('Admin user search failed'); return jsonify(ok=False,error='Could not load users'),500
+
+
+@app.route('/api/admin/user-transactions', methods=['POST','OPTIONS'])
+@admin_required
+def admin_user_transactions():
+    try: tid=int(request.admin_body.get('telegram_id'))
+    except (TypeError,ValueError): return jsonify(ok=False,error='Invalid Telegram ID'),400
+    try:
+        with get_db() as db:
+            rows=db.execute('SELECT amount,transaction_type,status,created_at FROM wallet_transactions WHERE telegram_id=%s ORDER BY created_at DESC LIMIT 100',(tid,)).fetchall()
+        return jsonify(ok=True,transactions=[{**r,'amount':str(r['amount']),'created_at':r['created_at'].isoformat() if r['created_at'] else None} for r in rows])
+    except Exception:
+        app.logger.exception('Admin transactions failed'); return jsonify(ok=False,error='Could not load transactions'),500
+
+
+@app.route('/api/admin/tasks', methods=['POST','OPTIONS'])
+@admin_required
+def admin_tasks():
+    try:
+        with get_db() as db:
+            rows=db.execute('SELECT id,title,description,task_type,reward,target_url,active,verification,created_at FROM tasks ORDER BY id DESC LIMIT 300').fetchall()
+        return jsonify(ok=True,tasks=[{**r,'reward':str(r['reward']),'created_at':r['created_at'].isoformat() if r['created_at'] else None} for r in rows])
+    except Exception:
+        app.logger.exception('Admin tasks failed'); return jsonify(ok=False,error='Could not load tasks'),500
+
+
+@app.route('/api/admin/tasks/create', methods=['POST','OPTIONS'])
+@admin_required
+def admin_create_task():
+    b=request.admin_body
+    title=str(b.get('title','')).strip()[:150]; description=str(b.get('description','')).strip()[:2000]
+    task_type=str(b.get('task_type','custom')).strip()[:50] or 'custom'
+    verification=str(b.get('verification','manual')).lower()
+    target=str(b.get('target_url','')).strip()[:1000] or None
+    try: reward=Decimal(str(b.get('reward',''))).quantize(Decimal('0.01'))
+    except (InvalidOperation,ValueError): return jsonify(ok=False,error='Invalid reward'),400
+    if not title or reward<=0 or verification not in ('manual','automatic'): return jsonify(ok=False,error='Enter valid title, reward and verification'),400
+    if target and not target.startswith(('https://','http://')): return jsonify(ok=False,error='Target URL must use HTTP or HTTPS'),400
+    try:
+        with get_db() as db:
+            row=db.execute('INSERT INTO tasks(title,description,task_type,reward,target_url,verification) VALUES(%s,%s,%s,%s,%s,%s) RETURNING id',(title,description,task_type,reward,target,verification)).fetchone()
+        return jsonify(ok=True,task_id=row['id']),200
+    except Exception:
+        app.logger.exception('Admin create task failed'); return jsonify(ok=False,error='Could not create task'),500
+
+
+@app.route('/api/admin/tasks/update', methods=['POST','OPTIONS'])
+@admin_required
+def admin_update_task():
+    try: task_id=int(request.admin_body.get('task_id')); active=request.admin_body.get('active')
+    except (TypeError,ValueError): return jsonify(ok=False,error='Invalid task'),400
+    if not isinstance(active,bool): return jsonify(ok=False,error='Active must be true or false'),400
+    try:
+        with get_db() as db:
+            row=db.execute('UPDATE tasks SET active=%s WHERE id=%s RETURNING id',(active,task_id)).fetchone()
+        if not row: return jsonify(ok=False,error='Task not found'),404
+        return jsonify(ok=True),200
+    except Exception:
+        app.logger.exception('Admin task update failed'); return jsonify(ok=False,error='Could not update task'),500
+
+
+@app.route('/api/admin/task-submissions', methods=['POST','OPTIONS'])
+@admin_required
+def admin_task_submissions():
+    status=str(request.admin_body.get('status','pending'))
+    if status not in ('pending','completed','rejected','all'): return jsonify(ok=False,error='Invalid status'),400
+    try:
+        with get_db() as db:
+            sql='''SELECT c.id,c.task_id,c.telegram_id,c.status,c.reward,c.created_at,t.title
+                FROM task_completions c JOIN tasks t ON t.id=c.task_id'''
+            rows=db.execute(sql+(' WHERE c.status=%s' if status!='all' else '')+' ORDER BY c.created_at DESC LIMIT 300', (status,) if status!='all' else ()).fetchall()
+        return jsonify(ok=True,submissions=[{**r,'reward':str(r['reward']),'created_at':r['created_at'].isoformat() if r['created_at'] else None} for r in rows])
+    except Exception:
+        app.logger.exception('Admin submissions failed'); return jsonify(ok=False,error='Could not load submissions'),500
+
+
+@app.route('/api/admin/task-submissions/review', methods=['POST','OPTIONS'])
+@admin_required
+def admin_review_task_submission():
+    b=request.admin_body
+    try: sid=int(b.get('submission_id')); action=str(b.get('action','')).lower()
+    except (TypeError,ValueError): return jsonify(ok=False,error='Invalid submission'),400
+    if action not in ('approve','reject'): return jsonify(ok=False,error='Invalid action'),400
+    try:
+        with get_db() as db:
+            sub=db.execute('''SELECT c.id,c.task_id,c.telegram_id,c.status,c.reward,t.reward task_reward
+                FROM task_completions c JOIN tasks t ON t.id=c.task_id WHERE c.id=%s FOR UPDATE OF c''',(sid,)).fetchone()
+            if not sub: return jsonify(ok=False,error='Submission not found'),404
+            if sub['status']!='pending': return jsonify(ok=False,error='Submission already reviewed'),409
+            if action=='approve':
+                db.execute("UPDATE task_completions SET status='completed',reward=%s,reviewed_at=NOW() WHERE id=%s",(sub['task_reward'],sid))
+                credit_wallet(db,int(sub['telegram_id']),sub['task_reward'],'task_reward',f'task:{sub["task_id"]}:{sub["telegram_id"]}')
+            else:
+                db.execute("UPDATE task_completions SET status='rejected',reviewed_at=NOW() WHERE id=%s",(sid,))
+        return jsonify(ok=True,status='completed' if action=='approve' else 'rejected'),200
+    except Exception:
+        app.logger.exception('Admin task review failed'); return jsonify(ok=False,error='Could not review submission'),500
+
+
+@app.route('/api/admin/bonus-codes', methods=['POST','OPTIONS'])
+@admin_required
+def admin_bonus_codes():
+    try:
+        with get_db() as db:
+            rows=db.execute('SELECT id,code,reward,max_claims,claims,expires_at,release_at,active FROM bonus_codes ORDER BY id DESC LIMIT 300').fetchall()
+        return jsonify(ok=True,codes=[{**r,'reward':str(r['reward']),'expires_at':r['expires_at'].isoformat() if r['expires_at'] else None,'release_at':r['release_at'].isoformat() if r['release_at'] else None} for r in rows])
+    except Exception:
+        app.logger.exception('Admin bonus list failed'); return jsonify(ok=False,error='Could not load bonus codes'),500
+
+
+@app.route('/api/admin/bonus-codes/create', methods=['POST','OPTIONS'])
+@admin_required
+def admin_create_bonus_code():
+    b=request.admin_body
+    code=str(b.get('code','')).strip().upper()[:64]
+    try:
+        reward=Decimal(str(b.get('reward',''))).quantize(Decimal('0.01')); maximum=int(b.get('max_claims',100))
+        release=_admin_dt(b.get('release_at')); expiry=_admin_dt(b.get('expires_at'))
+    except (InvalidOperation,ValueError,TypeError): return jsonify(ok=False,error='Invalid reward, claim count or date'),400
+    if not code or reward<=0 or maximum<1: return jsonify(ok=False,error='Enter valid code, reward and max claims'),400
+    if release and expiry and expiry<=release: return jsonify(ok=False,error='Expiry must be after release'),400
+    try:
+        with get_db() as db:
+            db.execute('INSERT INTO bonus_codes(code,reward,max_claims,release_at,expires_at) VALUES(%s,%s,%s,%s,%s)',(code,reward,maximum,release,expiry))
+        return jsonify(ok=True),200
+    except psycopg.errors.UniqueViolation:
+        return jsonify(ok=False,error='Bonus code already exists'),409
+    except Exception:
+        app.logger.exception('Admin create bonus failed'); return jsonify(ok=False,error='Could not create bonus code'),500
+
+
+@app.route('/api/admin/bonus-codes/update', methods=['POST','OPTIONS'])
+@admin_required
+def admin_update_bonus_code():
+    try: bid=int(request.admin_body.get('bonus_id')); active=request.admin_body.get('active')
+    except (TypeError,ValueError): return jsonify(ok=False,error='Invalid bonus code'),400
+    if not isinstance(active,bool): return jsonify(ok=False,error='Active must be true or false'),400
+    try:
+        with get_db() as db:
+            row=db.execute('UPDATE bonus_codes SET active=%s WHERE id=%s RETURNING id',(active,bid)).fetchone()
+        if not row: return jsonify(ok=False,error='Bonus code not found'),404
+        return jsonify(ok=True),200
+    except Exception:
+        app.logger.exception('Admin bonus update failed'); return jsonify(ok=False,error='Could not update bonus code'),500
+
+
+@app.route('/api/admin/referrals', methods=['POST','OPTIONS'])
+@admin_required
+def admin_referrals():
+    status=str(request.admin_body.get('status','all'))
+    if status not in ('all','pending','approved','rejected'): return jsonify(ok=False,error='Invalid status'),400
+    try:
+        with get_db() as db:
+            sql='SELECT id,referrer_id,referred_id,status,created_at,approved_at FROM referrals'
+            rows=db.execute(sql+(' WHERE status=%s' if status!='all' else '')+' ORDER BY created_at DESC LIMIT 300',(status,) if status!='all' else ()).fetchall()
+        return jsonify(ok=True,referrals=[{**r,'created_at':r['created_at'].isoformat() if r['created_at'] else None,'approved_at':r['approved_at'].isoformat() if r['approved_at'] else None} for r in rows])
+    except Exception:
+        app.logger.exception('Admin referrals failed'); return jsonify(ok=False,error='Could not load referrals'),500
+
+
+@app.route('/api/admin/referrals/review', methods=['POST','OPTIONS'])
+@admin_required
+def admin_review_referral():
+    b=request.admin_body
+    try: rid=int(b.get('referral_id')); action=str(b.get('action','')).lower()
+    except (TypeError,ValueError): return jsonify(ok=False,error='Invalid referral'),400
+    if action not in ('approve','reject'): return jsonify(ok=False,error='Invalid action'),400
+    try:
+        with get_db() as db:
+            r=db.execute('SELECT id,status FROM referrals WHERE id=%s FOR UPDATE',(rid,)).fetchone()
+            if not r: return jsonify(ok=False,error='Referral not found'),404
+            if r['status']!='pending': return jsonify(ok=False,error='Referral already reviewed'),409
+            if action=='approve':
+                db.execute("UPDATE referrals SET status='approved',approved_at=NOW() WHERE id=%s",(rid,))
+            else:
+                db.execute("UPDATE referrals SET status='rejected' WHERE id=%s",(rid,))
+        return jsonify(ok=True,status='approved' if action=='approve' else 'rejected'),200
+    except Exception:
+        app.logger.exception('Admin referral review failed'); return jsonify(ok=False,error='Could not review referral'),500
