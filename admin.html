@@ -28,6 +28,19 @@
     .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px}.form-actions{margin-top:12px}
     .pill{display:inline-block;border-radius:20px;padding:3px 8px;background:#263852;color:#cfe0ff;font-size:11px}
     .pill.pending{background:#59451e;color:#ffe0a0}.pill.approved,.pill.completed{background:#124b3b;color:#a7f3d0}.pill.rejected{background:#592b35;color:#ffc0c5}
+    .withdrawal-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:12px 0 16px}
+    .withdrawal-stat{background:linear-gradient(145deg,#17263e,#111d30);border:1px solid var(--line);border-radius:14px;padding:13px}
+    .withdrawal-stat small{display:block;color:var(--muted);font-size:11px}.withdrawal-stat strong{display:block;font-size:23px;margin-top:5px}
+    .withdrawal-tools{display:grid;grid-template-columns:minmax(0,1fr) minmax(130px,190px);gap:8px;margin:12px 0 14px}
+    .withdrawal-card{background:linear-gradient(145deg,#17263e,#111b2d);border:1px solid #30425f;border-radius:15px;padding:15px;box-shadow:0 8px 24px rgba(0,0,0,.12)}
+    .withdrawal-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+    .withdrawal-id{font-size:12px;color:var(--muted);font-weight:700;letter-spacing:.04em}.withdrawal-amount{font-size:25px;font-weight:800;margin-top:4px;color:#f5f8ff}
+    .withdrawal-details{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 14px;padding:14px 0}
+    .withdrawal-field{min-width:0}.withdrawal-field small{display:block;color:var(--muted);font-size:11px;margin-bottom:4px}.withdrawal-field strong{display:block;font-size:13px;overflow-wrap:anywhere;line-height:1.45}
+    .withdrawal-field.full{grid-column:1/-1}.upi-line{display:flex;align-items:center;gap:8px}.upi-line strong{flex:1}.copy-upi{padding:6px 9px;font-size:11px;white-space:nowrap}
+    .withdrawal-foot{border-top:1px solid var(--line);padding-top:11px;display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}
+    .timezone-note{font-size:11px;color:var(--muted);margin:0 0 10px}
+    @media(max-width:420px){.withdrawal-summary{gap:6px}.withdrawal-stat{padding:10px}.withdrawal-stat strong{font-size:19px}.withdrawal-details{grid-template-columns:1fr 1fr}.withdrawal-tools{grid-template-columns:1fr}}
     #toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#243650;padding:11px 16px;border-radius:10px;max-width:90%;z-index:20;display:none}
     .empty{padding:24px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:12px}
     .danger-text{color:#ff9aa2}.small{font-size:12px}
@@ -105,10 +118,34 @@
       ${card('Total Referrals',d.total_referrals)}${card('Ad Rewards',money(d.ad_rewards))}
     </div><p class="muted small">आँकड़े backend database से प्राप्त होते हैं।</p>`;
   }
+  let withdrawalRows=[];
   async function withdrawals(){
     const d=await api('/api/admin/withdrawals','POST',{status:'all'});
-    $('content').innerHTML=`<h2 class="section-title">Withdrawal Requests</h2>${list((d.withdrawals||[]).map(w=>`<article class="item"><div class="row"><h3>#${esc(w.id)} · ${money(w.amount)}</h3>${pill(w.status)}</div><p>User ID: ${esc(w.telegram_id)} · UPI: ${esc(w.upi_id)}</p><p>Requested: ${esc(w.created_at||'')}</p>${w.rejection_reason?`<p>Reason: ${esc(w.rejection_reason)}</p>`:''}<div class="actions">${w.status==='pending'?`<button class="good" onclick="reviewWithdrawal(${Number(w.id)},'approve')">Approve paid</button><button class="danger" onclick="reviewWithdrawal(${Number(w.id)},'reject')">Reject & refund</button>`:''}</div></article>`))}`;
+    withdrawalRows=d.withdrawals||[];
+    const counts={pending:0,approved:0,rejected:0};
+    withdrawalRows.forEach(w=>{const s=String(w.status||'').toLowerCase();if(counts[s]!==undefined)counts[s]++;});
+    $('content').innerHTML=`<div class="row"><div><h2 class="section-title">Withdrawal Management</h2><p class="muted small">सभी रिक्वेस्ट, UPI विवरण और भुगतान का रिकॉर्ड</p></div><span class="pill">${withdrawalRows.length} records</span></div>
+      <div class="withdrawal-summary"><div class="withdrawal-stat"><small>Pending</small><strong style="color:#f2bd55">${counts.pending}</strong></div><div class="withdrawal-stat"><small>Approved</small><strong style="color:#25c58a">${counts.approved}</strong></div><div class="withdrawal-stat"><small>Rejected</small><strong style="color:#f16b75">${counts.rejected}</strong></div></div>
+      <div class="withdrawal-tools"><input id="withdrawalSearch" placeholder="Request ID, User ID या UPI से खोजें" oninput="filterWithdrawals()"><select id="withdrawalFilter" onchange="filterWithdrawals()"><option value="all">All Requests</option><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select></div>
+      <p class="timezone-note">सभी तारीखें और समय भारतीय समय (IST · Asia/Kolkata) में दिखाए जाते हैं।</p><div id="withdrawalList"></div>`;
+    window.filterWithdrawals();
   }
+  window.filterWithdrawals=()=>{
+    const q=($('withdrawalSearch')?.value||'').trim().toLowerCase();
+    const filter=$('withdrawalFilter')?.value||'all';
+    const rows=withdrawalRows.filter(w=>{const status=String(w.status||'').toLowerCase();const hay=[w.id,w.telegram_id,w.upi_id,w.amount].join(' ').toLowerCase();return (filter==='all'||status===filter)&&(!q||hay.includes(q));});
+    $('withdrawalList').innerHTML=list(rows.map(w=>{
+      const date=formatIndiaDate(w.created_at);const time=formatIndiaTime(w.created_at);
+      return `<article class="withdrawal-card"><div class="withdrawal-top"><div><div class="withdrawal-id">WITHDRAWAL REQUEST #${esc(w.id)}</div><div class="withdrawal-amount">${money(w.amount)}</div></div>${pill(String(w.status||'unknown').toLowerCase())}</div>
+        <div class="withdrawal-details"><div class="withdrawal-field"><small>USER TELEGRAM ID</small><strong>${esc(w.telegram_id)}</strong></div>
+        <div class="withdrawal-field"><small>WITHDRAWAL AMOUNT</small><strong>${money(w.amount)}</strong></div>
+        <div class="withdrawal-field full"><small>USER UPI ID</small><div class="upi-line"><strong>${esc(w.upi_id||'Not provided')}</strong>${w.upi_id?`<button class="copy-upi" onclick="copyWithdrawalUpi('${esc(w.upi_id)}')">Copy UPI</button>`:''}</div></div>
+        <div class="withdrawal-field"><small>REQUEST DATE</small><strong>${esc(date)}</strong></div><div class="withdrawal-field"><small>REQUEST TIME</small><strong>${esc(time)}</strong></div>
+        ${w.rejection_reason?`<div class="withdrawal-field full"><small>REJECTION REASON</small><strong class="danger-text">${esc(w.rejection_reason)}</strong></div>`:''}</div>
+        <div class="withdrawal-foot"><span class="muted small">Time zone: IST (UTC+05:30)</span><div class="actions" style="margin:0">${String(w.status).toLowerCase()==='pending'?`<button class="good" onclick="reviewWithdrawal(${Number(w.id)},'approve')">Approve Paid</button><button class="danger" onclick="reviewWithdrawal(${Number(w.id)},'reject')">Reject & Refund</button>`:''}</div></div></article>`;
+    }), 'कोई Withdrawal Request नहीं मिली');
+  };
+  window.copyWithdrawalUpi=async(value)=>{try{await navigator.clipboard.writeText(value);toast('UPI ID copied')}catch(e){toast('UPI ID: '+value)}};
   window.reviewWithdrawal=async(id,action)=>{let reason='';if(action==='reject'){reason=prompt('Rejection reason लिखें:');if(reason===null)return;if(!reason.trim()){toast('Reason जरूरी है');return} }if(action==='approve'&&!confirm('क्या आपने UPI payment वास्तव में कर दिया है?'))return;if(action==='reject'&&!confirm('Request reject करके balance refund करना है?'))return;try{await api('/api/admin/withdrawals/review','POST',{withdrawal_id:id,action,reason});toast('Request updated');withdrawals()}catch(e){toast(e.message)}};
   async function users(){
     $('content').innerHTML=`<h2 class="section-title">User Management</h2><div class="row"><input id="userQuery" placeholder="Telegram ID या username से खोजें"><button class="primary" onclick="searchUsers()">Search</button></div><div id="userResults" style="margin-top:12px"></div>`;
@@ -132,12 +169,14 @@
     $('content').innerHTML=`<h2 class="section-title">Pending Task Submissions</h2>${list((d.submissions||[]).map(s=>`<article class="item"><h3>Task #${esc(s.task_id)} · ${esc(s.title||'')}</h3><p>User: ${esc(s.telegram_id)} · Reward: ${money(s.reward)}</p><p>Submitted: ${esc(s.created_at||'')}</p><div class="actions"><button class="good" onclick="reviewTask(${Number(s.id)},'approve')">Approve</button><button class="danger" onclick="reviewTask(${Number(s.id)},'reject')">Reject</button></div></article>`))}`;
   }
   window.reviewTask=async(id,action)=>{let reason='';if(action==='reject'){reason=prompt('Reject करने का कारण:');if(reason===null)return}try{await api('/api/admin/task-submissions/review','POST',{submission_id:id,action,reason});toast('Submission reviewed');submissions()}catch(e){toast(e.message)}};
-  function formatLocalDateTime(value){if(!value)return '—';const d=new Date(value);return Number.isNaN(d.getTime())?String(value):d.toLocaleString();}
+  function formatIndiaDate(value){if(!value)return '—';const d=new Date(value);return Number.isNaN(d.getTime())?String(value):new Intl.DateTimeFormat('en-IN',{timeZone:'Asia/Kolkata',day:'2-digit',month:'short',year:'numeric'}).format(d);}
+  function formatIndiaTime(value){if(!value)return '—';const d=new Date(value);return Number.isNaN(d.getTime())?String(value):new Intl.DateTimeFormat('en-IN',{timeZone:'Asia/Kolkata',hour:'2-digit',minute:'2-digit',hour12:true}).format(d)+' IST';}
+  function formatLocalDateTime(value){if(!value)return '—';const d=new Date(value);return Number.isNaN(d.getTime())?String(value):new Intl.DateTimeFormat('en-IN',{timeZone:'Asia/Kolkata',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:true}).format(d)+' IST';}
   async function bonuses(){
     const d=await api('/api/admin/bonus-codes','POST',{});
-    $('content').innerHTML=`<h2 class="section-title">Create Bonus Code</h2><div class="card"><div class="form-grid"><div><label>Code</label><input id="bonusCode"></div><div><label>Reward (₹)</label><input id="bonusReward" type="number" step="0.01" min="0.01"></div><div><label>Max Claims</label><input id="bonusMax" type="number" min="1" value="100"></div><div><label>Release Date</label><input id="bonusRelease" type="datetime-local"></div><div><label>Expiry Date</label><input id="bonusExpiry" type="datetime-local"></div></div><div class="form-actions"><button class="primary" onclick="createBonus()">Create Code</button></div></div><h3 class="section-title">Bonus Codes</h3>${list((d.codes||[]).map(c=>`<article class="item"><div class="row"><h3>${esc(c.code)}</h3>${pill(c.active?'active':'inactive')}</div><p>Reward ${money(c.reward)} · Claims ${esc(c.claims)}/${esc(c.max_claims)}</p><p>Release: ${esc(formatLocalDateTime(c.release_at))} · Expiry: ${esc(formatLocalDateTime(c.expires_at))}</p><button onclick="toggleBonus(${Number(c.id)},${!c.active})">${c.active?'Deactivate':'Activate'}</button></article>`))}`;
+    $('content').innerHTML=`<h2 class="section-title">Create Bonus Code</h2><div class="card"><div class="form-grid"><div><label>Code</label><input id="bonusCode"></div><div><label>Reward (₹)</label><input id="bonusReward" type="number" step="0.01" min="0.01"></div><div><label>Max Claims</label><input id="bonusMax" type="number" min="1" value="100"></div><div><label>Release Date &amp; Time (IST)</label><input id="bonusRelease" type="datetime-local"></div><div><label>Expiry Date &amp; Time (IST)</label><input id="bonusExpiry" type="datetime-local"></div></div><div class="form-actions"><button class="primary" onclick="createBonus()">Create Code</button></div></div><h3 class="section-title">Bonus Codes</h3>${list((d.codes||[]).map(c=>`<article class="item"><div class="row"><h3>${esc(c.code)}</h3>${pill(c.active?'active':'inactive')}</div><p>Reward ${money(c.reward)} · Claims ${esc(c.claims)}/${esc(c.max_claims)}</p><p>Release: ${esc(formatLocalDateTime(c.release_at))} · Expiry: ${esc(formatLocalDateTime(c.expires_at))}</p><button onclick="toggleBonus(${Number(c.id)},${!c.active})">${c.active?'Deactivate':'Activate'}</button></article>`))}`;
   }
-  window.createBonus=async()=>{try{await api('/api/admin/bonus-codes/create','POST',{code:$('bonusCode').value,reward:$('bonusReward').value,max_claims:$('bonusMax').value,release_at:$('bonusRelease').value?new Date($('bonusRelease').value).toISOString():null,expires_at:$('bonusExpiry').value?new Date($('bonusExpiry').value).toISOString():null});toast('Bonus code created');bonuses()}catch(e){toast(e.message)}};
+  window.createBonus=async()=>{try{await api('/api/admin/bonus-codes/create','POST',{code:$('bonusCode').value,reward:$('bonusReward').value,max_claims:$('bonusMax').value,release_at:$('bonusRelease').value?new Date($('bonusRelease').value+'+05:30').toISOString():null,expires_at:$('bonusExpiry').value?new Date($('bonusExpiry').value+'+05:30').toISOString():null});toast('Bonus code created');bonuses()}catch(e){toast(e.message)}};
   window.toggleBonus=async(id,active)=>{try{await api('/api/admin/bonus-codes/update','POST',{bonus_id:id,active});toast('Updated');bonuses()}catch(e){toast(e.message)}};
   async function referrals(){
     const d=await api('/api/admin/referrals','POST',{status:'all'});
