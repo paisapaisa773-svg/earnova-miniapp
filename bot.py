@@ -478,8 +478,10 @@ def wallet_details():
             create_tables(db)
             u=db.execute('SELECT balance,upi_id FROM users WHERE telegram_id=%s',(tid,)).fetchone()
             tx=db.execute('SELECT amount,transaction_type,status,created_at FROM wallet_transactions WHERE telegram_id=%s ORDER BY created_at DESC LIMIT 20',(tid,)).fetchall()
+            withdrawals=db.execute("""SELECT id,amount,status,rejection_reason,created_at,reviewed_at
+                FROM withdrawals WHERE telegram_id=%s ORDER BY created_at DESC LIMIT 20""",(tid,)).fetchall()
             settings=db.execute('SELECT first_paid_withdrawal FROM user_settings WHERE telegram_id=%s',(tid,)).fetchone()
-        return jsonify(ok=True,balance=str(u['balance']),upi_id=u['upi_id'],minimum_withdrawal=str(MIN_WITHDRAWAL_AFTER_PAID if settings and settings['first_paid_withdrawal'] else MIN_WITHDRAWAL_FIRST),transactions=[{**r,'amount':str(r['amount']),'created_at':r['created_at'].isoformat()} for r in tx]),200
+        return jsonify(ok=True,balance=str(u['balance']),upi_id=u['upi_id'],minimum_withdrawal=str(MIN_WITHDRAWAL_AFTER_PAID if settings and settings['first_paid_withdrawal'] else MIN_WITHDRAWAL_FIRST),transactions=[{**r,'amount':str(r['amount']),'created_at':r['created_at'].isoformat()} for r in tx],withdrawals=[{**r,'amount':str(r['amount']),'created_at':r['created_at'].isoformat() if r['created_at'] else None,'reviewed_at':r['reviewed_at'].isoformat() if r['reviewed_at'] else None} for r in withdrawals]),200
     except Exception:
         app.logger.exception('Wallet details failed'); return jsonify(ok=False,error='Server error'),500
 
