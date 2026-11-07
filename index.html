@@ -155,6 +155,7 @@ hr{border:0;border-top:1px solid #30291c;margin:16px 0}
   <button class="primary full" onclick="requestWithdraw()">Submit Withdrawal Request</button>
   <div class="status" id="withdrawStatus"></div>
  </div>
+ <div class="panel"><h2>Withdrawal History</h2><div id="withdrawalHistory">Loading...</div></div>
  <div class="panel"><h2>Transaction History</h2><div id="transactions">Loading...</div></div>
 </section>
 
@@ -300,6 +301,13 @@ async function apiPost(path,data={}){
  const result=await response.json();
  if(!response.ok||!result.ok)throw new Error(result.error||"Server request failed");
  return result;
+}
+
+function formatIndiaDateTime(value){
+ if(!value)return "—";
+ const date=new Date(value);
+ if(Number.isNaN(date.getTime()))return "—";
+ return new Intl.DateTimeFormat("en-IN",{timeZone:"Asia/Kolkata",day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit",hour12:true}).format(date)+" IST";
 }
 
 function updateBalance(v){
@@ -499,9 +507,35 @@ async function loadWalletDetails(){
  document.getElementById("minimumWallet").textContent="Minimum withdrawal: "+min;
  document.getElementById("minimumHome").textContent="Minimum withdrawal: "+min;
  if(r.upi_id)document.getElementById("upiInput").value=r.upi_id;
+ const history=document.getElementById("withdrawalHistory");history.innerHTML="";
+ if(!r.withdrawals||!r.withdrawals.length){history.textContent="No withdrawal requests yet."}
+ else{
+  r.withdrawals.forEach(w=>{
+   const d=document.createElement("div");d.className="task-card";
+   const title=document.createElement("b");
+   title.textContent="Request #"+w.id+" • "+money(w.amount);
+   d.appendChild(title);
+   const status=document.createElement("p");
+   status.textContent="Status: "+(w.status||"pending").toUpperCase();
+   d.appendChild(status);
+   const requested=document.createElement("p");
+   requested.textContent="Requested: "+formatIndiaDateTime(w.created_at);
+   d.appendChild(requested);
+   if(w.reviewed_at){
+    const reviewed=document.createElement("p");
+    reviewed.textContent="Reviewed: "+formatIndiaDateTime(w.reviewed_at);
+    d.appendChild(reviewed);
+   }
+   if(w.status==="rejected"){
+    const refund=document.createElement("p");refund.textContent="Refund credited: "+money(w.amount);d.appendChild(refund);
+    const reason=document.createElement("p");reason.textContent="Admin reason: "+(w.rejection_reason||"No reason provided.");d.appendChild(reason);
+   }
+   history.appendChild(d);
+  });
+ }
  const el=document.getElementById("transactions");el.innerHTML="";
- if(!r.transactions||!r.transactions.length){el.textContent="No transactions yet.";return}
- r.transactions.forEach(t=>{
+ if(!r.transactions||!r.transactions.length){el.textContent="No transactions yet."}
+ else r.transactions.forEach(t=>{
   const d=document.createElement("div");d.className="task-card";
   d.textContent=(t.transaction_type||"Transaction")+" • "+money(t.amount)+" • "+(t.status||"");
   el.appendChild(d);
