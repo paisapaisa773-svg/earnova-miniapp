@@ -395,7 +395,8 @@ main{max-width:520px;padding:12px 14px 30px}
 .onboard-dots i.active{width:13px;height:6px;border-radius:10px;background:#e7a4ff}
 .onboard-next{width:100%;max-width:360px;padding:15px;border-radius:24px;font-size:15px;font-weight:800}
 @media(max-height:700px){.intro-onboarding{padding-top:44px}.rocket-stage{height:35vh;min-height:190px}.rocket{font-size:108px}.onboard-copy h1{font-size:25px}.onboard-dots{margin:18px 0}}
-\n</style>
+
+</style>
 </head>
 <body>
 
@@ -937,7 +938,8 @@ function startIntroFlow(){
   renderOnboarding();
  },1600);
 }
-\nfunction filterTasks(type,button){
+
+function filterTasks(type,button){
  document.querySelectorAll(".task-tabs button").forEach(b=>b.classList.remove("active"));
  if(button)button.classList.add("active");
  document.querySelectorAll("#earn .task-line[data-task-type]").forEach(card=>{
