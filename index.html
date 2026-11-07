@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#080808">
+<meta name="theme-color" content="#090714">
 <title>EARNOVA - Earn Smart</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="https://libtl.com/sdk.js" data-zone="12183521" data-sdk="show_12183521"></script>
@@ -63,6 +63,108 @@ input{width:100%;padding:13px;background:#101010;border:1px solid #514126;border
 .footer{text-align:center;color:#777;font-size:11px;margin:28px 0 12px}
 hr{border:0;border-top:1px solid #30291c;margin:16px 0}
 @media(min-width:600px){main{padding:24px}.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+/* EARNOVA professional visual refresh — presentation only */
+:root{
+ --bg:#090714;--card:#151126;--gold:#b99aff;--gold2:#8b5cf6;
+ --text:#f7f4ff;--muted:#aaa3c2;--border:#30264b;
+ --accent:#8b5cf6;--accent2:#c084fc;--surface:#17132a;
+}
+html{background:var(--bg);scroll-behavior:smooth}
+body{
+ background:
+  radial-gradient(ellipse at 12% -8%,rgba(124,58,237,.20),transparent 38%),
+  radial-gradient(ellipse at 100% 24%,rgba(91,33,182,.12),transparent 34%),
+  var(--bg);
+ color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+ padding-bottom:calc(86px + env(safe-area-inset-bottom));
+ -webkit-font-smoothing:antialiased;
+}
+.header{
+ background:rgba(12,9,26,.88);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+ border-bottom:1px solid rgba(192,132,252,.18);padding:14px 16px;
+}
+.logo{
+ background:linear-gradient(145deg,#e9d5ff,#8b5cf6 65%,#6d28d9);color:#160b2b;
+ box-shadow:0 5px 22px rgba(139,92,246,.28);border-radius:13px;
+}
+.brand-name{color:#e9d5ff;letter-spacing:1.25px}
+.profile{background:#1b1630;border:1px solid #40315f;color:#e9ddff}
+main{max-width:720px;padding:18px 15px 24px}
+h1{font-size:26px;letter-spacing:-.6px}
+h2{letter-spacing:-.25px}
+p{color:var(--muted)}
+.gold{color:#c4a7ff}
+.wallet-card{
+ position:relative;overflow:hidden;padding:23px;border-radius:23px;
+ background:linear-gradient(125deg,#4c1d95 0%,#6d28d9 48%,#251044 100%);
+ border:1px solid rgba(216,180,254,.38);
+ box-shadow:0 14px 36px rgba(76,29,149,.28),inset 0 1px rgba(255,255,255,.13);
+}
+.wallet-card:after{
+ content:"";position:absolute;width:190px;height:190px;right:-65px;top:-85px;
+ border:1px solid rgba(255,255,255,.15);border-radius:50%;
+ box-shadow:0 0 0 22px rgba(255,255,255,.035),0 0 0 45px rgba(255,255,255,.025);
+ pointer-events:none;
+}
+.wallet-label{color:#eadcff;font-weight:700;letter-spacing:1.15px}
+.balance{font-size:38px;letter-spacing:-1.2px}
+.small{color:#e3d2ff}
+.primary{
+ background:linear-gradient(135deg,#c4a7ff,#8b5cf6 70%,#7c3aed);
+ color:#170b2b;border:1px solid rgba(255,255,255,.16);
+ box-shadow:0 5px 16px rgba(124,58,237,.2);
+ transition:transform .16s ease,filter .16s ease;
+}
+.secondary{background:#211936;color:#ddc8ff;border:1px solid #49366b}
+button{transition:transform .16s ease,filter .16s ease}
+button:active{transform:scale(.98)}
+.card,.panel,.feature-row,.task-card{
+ background:linear-gradient(155deg,rgba(30,24,51,.96),rgba(19,15,34,.98));
+ border:1px solid rgba(167,139,250,.16);
+ box-shadow:0 7px 20px rgba(0,0,0,.14);
+}
+.card{border-radius:18px;min-height:118px;padding:17px 14px}
+.card .emoji,.feature-row .emoji{filter:drop-shadow(0 3px 8px rgba(167,139,250,.18))}
+.card h3{font-size:14px;letter-spacing:.1px}
+.panel{border-radius:18px;padding:18px}
+.feature-row{border-radius:16px;padding:16px}
+.task-card{border-radius:16px;padding:15px}
+.section-title{margin-top:27px}
+input{
+ background:#100c1e;border:1px solid #49366b;border-radius:12px;
+ color:#fff;outline:none;
+}
+input:focus{border-color:#a78bfa;box-shadow:0 0 0 3px rgba(139,92,246,.16)}
+.bottom-nav{
+ background:rgba(15,11,29,.94);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+ border-top:1px solid rgba(192,132,252,.18);
+ padding:9px 3px calc(9px + env(safe-area-inset-bottom));
+}
+.nav-btn{color:#9288aa;font-weight:600}
+.nav-btn.active{color:#c4a7ff}
+.nav-btn.active span{filter:drop-shadow(0 0 8px rgba(167,139,250,.55))}
+.modal-backdrop{backdrop-filter:blur(5px)}
+.modal{
+ background:#171229;border:1px solid #59417d;border-radius:22px;
+ box-shadow:0 22px 70px rgba(0,0,0,.55);
+}
+.modal-head{background:#171229}
+.close-btn{background:#2a2040;color:#e9d5ff;border-color:#49366b}
+.status{color:#c7b8e8}
+.footer{color:#8f85a8;padding-bottom:6px}
+@media(hover:hover){
+ .card:hover,.feature-row:hover{transform:translateY(-2px);border-color:rgba(192,132,252,.42)}
+ .primary:hover{filter:brightness(1.08)}
+}
+@media(min-width:600px){
+ main{padding:24px 22px 30px}
+ .card{min-height:125px}
+}
+@media(prefers-reduced-motion:reduce){
+ *,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}
+}
+
 </style>
 </head>
 <body>
