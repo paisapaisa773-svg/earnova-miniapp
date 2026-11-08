@@ -133,6 +133,23 @@
 <header><div class="row"><div><h1>⚡ EARNOVA <span style="color:#a78bfa">Admin</span></h1><p>Premium control center · Telegram Admin only</p></div><span class="live-chip">● System Online</span></div></header>
 <main>
   <div class="notice" id="statusBox">Telegram Mini App authentication verify हो रही है…</div>
+  <script>
+  (() => {
+    const box = document.getElementById('statusBox');
+    const showError = message => {
+      if (!box) return;
+      box.textContent = 'Admin page JavaScript error: ' + String(message || 'Unknown script error').slice(0, 240);
+      box.style.color = '#ff9aa2';
+    };
+    window.addEventListener('error', event => {
+      showError(event.message || 'Script failed to load or parse');
+    });
+    window.addEventListener('unhandledrejection', event => {
+      showError(event.reason?.message || event.reason || 'Unhandled promise error');
+    });
+    if (box) box.textContent = 'Admin page JavaScript शुरू हो रहा है…';
+  })();
+  </script>
   <section id="setup" class="card hidden">
     <h2 class="section-title">Backend URL सेट करें</h2>
     <p class="muted">अपना Render Flask backend URL डालें। उदाहरण: https://your-service.onrender.com</p>
@@ -166,7 +183,7 @@
 <script>
 (() => {
   const tg = window.Telegram?.WebApp;
-  if (tg) { tg.ready(); tg.expand(); }
+  if (tg) { try { tg.ready(); tg.expand(); } catch (e) { console.warn('Telegram WebApp initialization:', e); } }
   const ADMIN_ID = 7691713278;
   // Always use the production Render backend; replace stale URLs saved by older builds.
   const API_BASE = 'https://earnova-miniapp.onrender.com';
