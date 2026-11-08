@@ -168,7 +168,9 @@
   const tg = window.Telegram?.WebApp;
   if (tg) { tg.ready(); tg.expand(); }
   const ADMIN_ID = 7691713278;
-  let API_BASE = (localStorage.getItem('earnova_admin_api') || 'https://earnova-miniapp.onrender.com').replace(/\/+$/,'');
+  // Always use the production Render backend; replace stale URLs saved by older builds.
+  const API_BASE = 'https://earnova-miniapp.onrender.com';
+  try { localStorage.setItem('earnova_admin_api', API_BASE); } catch (_) {}
   let current = 'dashboard';
   const initData = tg?.initData || '';
   const $ = id => document.getElementById(id);
@@ -184,6 +186,7 @@
     const opts={method,signal:controller.signal,headers:{'Content-Type':'application/json','X-Telegram-Init-Data':initData}};
     if(data) opts.body=JSON.stringify({...data,initData});
     try{
+      opts.mode='cors'; opts.cache='no-store';
       const res=await fetch(API_BASE+path,opts);
       let out={};try{out=await res.json()}catch{}
       if(!res.ok||out.ok===false) throw new Error(out.error||('Request failed: '+res.status));
