@@ -417,7 +417,7 @@
       $('content').innerHTML='<div class="empty">Loading dashboard…</div>';
       await dashboard(initialDashboard);
     }
-    catch(e){status('Backend verification failed: '+e.message,true);if(/connection\\/CORS|Render URL/i.test(e.message))changeApi()}
+    catch(e){status('Backend verification failed: '+e.message,true);if(e.message.includes('connection/CORS') || e.message.includes('Render URL'))changeApi()}
   }
   boot();
 })();
