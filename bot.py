@@ -543,7 +543,7 @@ def monetag_postback():
 # Telegram /start webhook: configure Telegram webhook URL to /telegram/webhook and set WEBHOOK_SECRET.
 @app.route('/telegram/webhook', methods=['POST'])
 def telegram_webhook():
-    secret=os.environ.get('WEBHOOK_SECRET','')
+    secret=os.environ.get('WEBHOOK_SECRET') or os.environ.get('ADMIN_WEBHOOK_SECRET','')
     if secret and request.headers.get('X-Telegram-Bot-Api-Secret-Token','')!=secret:
         return jsonify(ok=False),403
     update=request.get_json(silent=True) or {}; msg=update.get('message') or {}; chat=msg.get('chat') or {}; tguser=msg.get('from') or {}
@@ -1041,6 +1041,37 @@ def admin_telegram_webhook():
     elif text_in.startswith('/help'):
         send_admin_telegram_message(chat['id'], 'Admin Panel खोलने के लिए /start भेजें।')
     return jsonify(ok=True), 200
+
+
+@app.route('/setup-user-webhook', methods=['GET'])
+def setup_user_webhook():
+    # One-time setup helper, protected by the existing admin webhook secret.
+    supplied = request.args.get('key', '')
+    setup_secret = os.environ.get('ADMIN_WEBHOOK_SECRET', '')
+    if not setup_secret or not hmac.compare_digest(supplied, setup_secret):
+        return jsonify(ok=False, error='Unauthorized'), 403
+    if not BOT_TOKEN:
+        return jsonify(ok=False, error='BOT_TOKEN is not configured'), 503
+    try:
+        import urllib.request
+        webhook_url = request.url_root.rstrip('/') + '/telegram/webhook'
+        payload = __import__('urllib.parse', fromlist=['urlencode']).urlencode({
+            'url': webhook_url,
+            'secret_token': setup_secret,
+            'allowed_updates': json.dumps(['message'])
+        }).encode()
+        req = urllib.request.Request(
+            f'https://api.telegram.org/bot{BOT_TOKEN}/setWebhook', data=payload
+        )
+        with urllib.request.urlopen(req, timeout=20) as response:
+            result = json.loads(response.read().decode())
+        if not result.get('ok'):
+            app.logger.error('User webhook setup rejected by Telegram')
+            return jsonify(ok=False, error='Telegram rejected webhook setup'), 502
+        return jsonify(ok=True, message='User bot webhook configured'), 200
+    except Exception:
+        app.logger.exception('User webhook setup failed')
+        return jsonify(ok=False, error='Could not configure user webhook'), 502
 
 
 @app.route('/admin/setup-webhook', methods=['GET'])
