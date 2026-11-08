@@ -112,7 +112,7 @@
     <div class="form-actions"><button class="primary" onclick="saveApiBase()">Save & Reload</button></div>
   </section>
   <section id="app" class="hidden">
-    <div class="toolbar"><button class="primary" onclick="loadSection(current)">↻ Refresh</button><button onclick="changeApi()">Backend URL</button><span class="live-chip">● Live service</span><span class="muted small" id="adminIdentity"></span><a href="https://t.me/EarnovaAdminBot" target="_blank" rel="noopener" style="color:#bba9ff;margin-left:auto">✈ Telegram Bot</a></div>
+    <div class="toolbar"><button class="primary" onclick="refreshCurrent()">↻ Refresh</button><button onclick="changeApi()">Backend URL</button><span class="live-chip">● Live service</span><span class="muted small" id="adminIdentity"></span><a href="https://t.me/EarnovaAdminBot" target="_blank" rel="noopener" style="color:#bba9ff;margin-left:auto">✈ Telegram Bot</a></div>
     <div class="admin-shell">
       <nav class="tabs" id="tabs" aria-label="Admin navigation">
         <button class="tab active" data-tab="dashboard" onclick="loadSection('dashboard')">▦ &nbsp; Dashboard</button>
@@ -171,6 +171,7 @@
   function pill(s){return `<span class="pill ${esc(s)}">${esc(s||'unknown')}</span>`}
   function list(items,empty='कोई रिकॉर्ड नहीं मिला'){return items?.length?`<div class="stack">${items.map(x=>x).join('')}</div>`:`<div class="empty">${empty}</div>`}
   function setTab(tab){current=tab;document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab))}
+  window.refreshCurrent=()=>window.loadSection(current);
   window.loadSection=async(tab)=>{setTab(tab);$('content').innerHTML='<div class="empty">Loading…</div>';try{
     if(tab==='dashboard') await dashboard();
     if(tab==='withdrawals') await withdrawals();
