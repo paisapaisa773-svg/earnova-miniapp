@@ -551,9 +551,21 @@ def telegram_webhook():
         try:
             with get_db() as db:
                 create_tables(db); ensure_user(db,tguser)
-            send_telegram_message(chat.get('id'), 'Welcome to EARNOVA!\nOpen the EARNOVA Mini App to start.',
-                {'inline_keyboard':[[{'text':'Open EARNOVA','web_app':{'url':'https://paisapaisa773-svg.github.io/earnova-miniapp/'}}],
-                                    [{'text':'Official Channel','url':CHANNEL_URL},{'text':'Support Group','url':GROUP_URL}]]})
+            first_name=(tguser.get('first_name') or 'there').strip()
+            welcome=(
+                f"⚡ EARNOVA REWARD\\n"
+                f"Welcome, {first_name}! 🎉\\n\\n"
+                "Your rewards journey starts here.\\n"
+                "🎯 Explore available tasks\\n"
+                "💰 Track your points and wallet\\n"
+                "👥 Invite friends with your referral link\\n"
+                "📋 Check your task and withdrawal status\\n\\n"
+                "Tap the button below to open EARNOVA.\\n"
+                "Good luck and enjoy! 🚀"
+            )
+            send_telegram_message(chat.get('id'), welcome,
+                {'inline_keyboard':[[{'text':'🚀 Open EARNOVA','web_app':{'url':'https://paisapaisa773-svg.github.io/earnova-miniapp/'}}],
+                                    [{'text':'📢 Official Channel','url':CHANNEL_URL},{'text':'💬 Support Group','url':GROUP_URL}]]})
         except Exception: app.logger.exception('Telegram start handler failed')
     return jsonify(ok=True),200
 
