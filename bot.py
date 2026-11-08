@@ -553,14 +553,14 @@ def telegram_webhook():
                 create_tables(db); ensure_user(db,tguser)
             first_name=(tguser.get('first_name') or 'there').strip()
             welcome=(
-                f"⚡ EARNOVA REWARD\\n"
-                f"Welcome, {first_name}! 🎉\\n\\n"
-                "Your rewards journey starts here.\\n"
-                "🎯 Explore available tasks\\n"
-                "💰 Track your points and wallet\\n"
-                "👥 Invite friends with your referral link\\n"
-                "📋 Check your task and withdrawal status\\n\\n"
-                "Tap the button below to open EARNOVA.\\n"
+                f"⚡ EARNOVA REWARD\n"
+                f"Welcome, {first_name}! 🎉\n\n"
+                "Your rewards journey starts here.\n"
+                "🎯 Explore available tasks\n"
+                "💰 Track your points and wallet\n"
+                "👥 Invite friends with your referral link\n"
+                "📋 Check your task and withdrawal status\n\n"
+                "Tap the button below to open EARNOVA.\n"
                 "Good luck and enjoy! 🚀"
             )
             send_telegram_message(chat.get('id'), welcome,
