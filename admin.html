@@ -98,12 +98,20 @@
   window.changeApi=()=>{$('setup').classList.remove('hidden');$('apiBaseInput').value=API_BASE};
   async function api(path,method='GET',data=null){
     if(!API_BASE) throw new Error('Render backend URL सेट करें');
-    const opts={method,headers:{'Content-Type':'application/json','X-Telegram-Init-Data':initData}};
+    const controller=new AbortController();
+    const timeout=setTimeout(()=>controller.abort(),90000);
+    const opts={method,signal:controller.signal,headers:{'Content-Type':'application/json','X-Telegram-Init-Data':initData}};
     if(data) opts.body=JSON.stringify({...data,initData});
-    const res=await fetch(API_BASE+path,opts);
-    let out={};try{out=await res.json()}catch{}
-    if(!res.ok||out.ok===false) throw new Error(out.error||('Request failed: '+res.status));
-    return out;
+    try{
+      const res=await fetch(API_BASE+path,opts);
+      let out={};try{out=await res.json()}catch{}
+      if(!res.ok||out.ok===false) throw new Error(out.error||('Request failed: '+res.status));
+      return out;
+    }catch(e){
+      if(e.name==='AbortError') throw new Error('Backend ने 90 सेकंड में जवाब नहीं दिया। Render Logs में database/worker status जाँचें और फिर Retry करें।');
+      if(e instanceof TypeError) throw new Error('Backend से connection/CORS error। Render service और FRONTEND_ORIGIN जाँचें।');
+      throw e;
+    }finally{clearTimeout(timeout)}
   }
   function card(title,value){return `<div class="stat"><small>${esc(title)}</small><strong>${esc(value??0)}</strong></div>`}
   function money(v){return '₹'+Number(v||0).toFixed(2)}
@@ -248,8 +256,9 @@
     let tgUser;try{tgUser=JSON.parse(new URLSearchParams(initData).get('user')||'{}')}catch{}
     if(Number(tgUser?.id)!==ADMIN_ID){status('Access denied: यह Telegram account Admin नहीं है।',true);return}
     $('adminIdentity').textContent='Admin ID: '+ADMIN_ID;
+    status('Admin verified. Render backend से connection बनाया जा रहा है…');
     try{await api('/api/admin/dashboard','POST');status('Admin identity और backend access verified.');$('app').classList.remove('hidden');await loadSection('dashboard')}
-    catch(e){status('Backend verification failed: '+e.message,true);if(/Failed to fetch|NetworkError/i.test(e.message))changeApi()}
+    catch(e){status('Backend verification failed: '+e.message,true);if(/connection\/CORS|Render URL/i.test(e.message))changeApi()}
   }
   boot();
 })();
