@@ -181,21 +181,31 @@
   window.changeApi=()=>{$('setup').classList.remove('hidden');$('apiBaseInput').value=API_BASE};
   async function api(path,method='GET',data=null){
     if(!API_BASE) throw new Error('Render backend URL सेट करें');
-    const controller=new AbortController();
-    const timeout=setTimeout(()=>controller.abort(),90000);
-    const opts={method,signal:controller.signal,headers:{'Content-Type':'application/json','X-Telegram-Init-Data':initData}};
-    if(data) opts.body=JSON.stringify({...data,initData});
-    try{
-      opts.mode='cors'; opts.cache='no-store';
-      const res=await fetch(API_BASE+path,opts);
-      let out={};try{out=await res.json()}catch{}
-      if(!res.ok||out.ok===false) throw new Error(out.error||('Request failed: '+res.status));
-      return out;
-    }catch(e){
-      if(e.name==='AbortError') throw new Error('Backend ने 90 सेकंड में जवाब नहीं दिया। Render Logs में database/worker status जाँचें और फिर Retry करें।');
-      if(e instanceof TypeError) throw new Error('Backend से connection/CORS error। Render service और FRONTEND_ORIGIN जाँचें।');
-      throw e;
-    }finally{clearTimeout(timeout)}
+    // Retry only the read-only dashboard check after a sleeping service wakes.
+    const retryable=path==='/api/admin/dashboard'&&method==='POST';
+    const attempts=retryable?2:1;
+    for(let attempt=0;attempt<attempts;attempt++){
+      const controller=new AbortController();
+      const timeout=setTimeout(()=>controller.abort(),120000);
+      const opts={method,signal:controller.signal,headers:{'Content-Type':'application/json','X-Telegram-Init-Data':initData}};
+      if(data) opts.body=JSON.stringify({...data,initData});
+      try{
+        opts.mode='cors'; opts.cache='no-store';
+        const res=await fetch(API_BASE+path,opts);
+        let out={};try{out=await res.json()}catch{}
+        if(!res.ok||out.ok===false) throw new Error(out.error||('Request failed: '+res.status));
+        return out;
+      }catch(e){
+        if(e.name==='AbortError'&&retryable&&attempt===0){
+          await new Promise(resolve=>setTimeout(resolve,3000));
+          continue;
+        }
+        if(e.name==='AbortError') throw new Error('Backend ने 120 सेकंड में जवाब नहीं दिया। Render Free service को जागने या database से जुड़ने में समस्या हो सकती है।');
+        if(e instanceof TypeError) throw new Error('Backend से connection/CORS error। Render service और FRONTEND_ORIGIN जाँचें।');
+        throw e;
+      }finally{clearTimeout(timeout)}
+    }
+    throw new Error('Backend verification failed. Please retry.');
   }
   function card(title,value){return `<div class="stat"><small>${esc(title)}</small><strong>${esc(value??0)}</strong></div>`}
   function money(v){return '₹'+Number(v||0).toFixed(2)}
@@ -216,8 +226,8 @@
     if(tab==='support') featurePage('Support Center','Support tools and user assistance.','A support-ticket endpoint and workflow are not present in the current backend yet.');
     if(tab==='settings') featurePage('Settings & Security','Admin preferences and service configuration.','Sensitive configuration stays in Render environment variables; this page does not expose secrets or change server settings.');
   }catch(e){$('content').innerHTML=`<div class="notice danger-text">${esc(e.message)}</div>`}};
-  async function dashboard(){
-    const d=await api('/api/admin/dashboard','POST');
+  async function dashboard(initialData=null){
+    const d=initialData||await api('/api/admin/dashboard','POST');
     const [wr,tr,rr]=await Promise.allSettled([
       api('/api/admin/withdrawals','POST',{status:'all'}),
       api('/api/admin/task-submissions','POST',{status:'pending'}),
@@ -382,8 +392,15 @@
     if(Number(tgUser?.id)!==ADMIN_ID){status('Access denied: यह Telegram account Admin नहीं है।',true);return}
     $('adminIdentity').textContent='Admin ID: '+ADMIN_ID;
     status('Admin verified. Render backend से connection बनाया जा रहा है…');
-    try{await api('/api/admin/dashboard','POST');status('Admin identity और backend access verified.');$('app').classList.remove('hidden');await loadSection('dashboard')}
-    catch(e){status('Backend verification failed: '+e.message,true);if(/connection\/CORS|Render URL/i.test(e.message))changeApi()}
+    try{
+      const initialDashboard=await api('/api/admin/dashboard','POST');
+      status('Admin identity और backend access verified.');
+      $('app').classList.remove('hidden');
+      setTab('dashboard');
+      $('content').innerHTML='<div class="empty">Loading dashboard…</div>';
+      await dashboard(initialDashboard);
+    }
+    catch(e){status('Backend verification failed: '+e.message,true);if(/connection\\/CORS|Render URL/i.test(e.message))changeApi()}
   }
   boot();
 })();
