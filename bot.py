@@ -547,10 +547,17 @@ def telegram_webhook():
     if secret and request.headers.get('X-Telegram-Bot-Api-Secret-Token','')!=secret:
         return jsonify(ok=False),403
     update=request.get_json(silent=True) or {}; msg=update.get('message') or {}; chat=msg.get('chat') or {}; tguser=msg.get('from') or {}
-    if msg.get('text','').startswith('/start') and tguser.get('id'):
+    text_in=(msg.get('text') or '').strip()
+    if text_in.startswith('/start') and tguser.get('id'):
         try:
+            # Telegram referral links use /start <referrer_telegram_id>.
+            # Accept only a numeric ID; ensure_user rejects self-referrals and unknown referrers.
+            parts=text_in.split(maxsplit=1)
+            referrer_id=None
+            if len(parts)>1 and parts[1].strip().isdigit():
+                referrer_id=int(parts[1].strip())
             with get_db() as db:
-                create_tables(db); ensure_user(db,tguser)
+                create_tables(db); ensure_user(db,tguser,referrer_id)
             first_name=(tguser.get('first_name') or 'there').strip()
             welcome=(
                 f"⚡ EARNOVA REWARD\n"
@@ -959,10 +966,33 @@ def admin_referrals():
         with get_db() as db:
             create_tables(db)
             if status=='all':
-                rows=db.execute("SELECT id,referrer_id,referred_id,status,created_at FROM referrals ORDER BY created_at DESC LIMIT 300").fetchall()
+                rows=db.execute("""SELECT r.id,r.referrer_id,r.referred_id,r.status,r.created_at,
+                    ru.username AS referrer_username,ru.first_name AS referrer_first_name,
+                    du.username AS referred_username,du.first_name AS referred_first_name
+                    FROM referrals r
+                    LEFT JOIN users ru ON ru.telegram_id=r.referrer_id
+                    LEFT JOIN users du ON du.telegram_id=r.referred_id
+                    ORDER BY r.created_at DESC LIMIT 500""").fetchall()
             else:
-                rows=db.execute("SELECT id,referrer_id,referred_id,status,created_at FROM referrals WHERE status=%s ORDER BY created_at DESC LIMIT 300",(status,)).fetchall()
-        return jsonify(ok=True,referrals=[{**r,'created_at':r['created_at'].isoformat() if r['created_at'] else None} for r in rows])
+                rows=db.execute("""SELECT r.id,r.referrer_id,r.referred_id,r.status,r.created_at,
+                    ru.username AS referrer_username,ru.first_name AS referrer_first_name,
+                    du.username AS referred_username,du.first_name AS referred_first_name
+                    FROM referrals r
+                    LEFT JOIN users ru ON ru.telegram_id=r.referrer_id
+                    LEFT JOIN users du ON du.telegram_id=r.referred_id
+                    WHERE r.status=%s ORDER BY r.created_at DESC LIMIT 500""",(status,)).fetchall()
+            summary=db.execute("""SELECT r.referrer_id,
+                COALESCE(u.first_name,'') AS first_name,COALESCE(u.username,'') AS username,
+                COUNT(*) AS total,
+                COUNT(*) FILTER(WHERE r.status='approved') AS approved,
+                COUNT(*) FILTER(WHERE r.status='pending') AS pending,
+                COUNT(*) FILTER(WHERE r.status='rejected') AS rejected
+                FROM referrals r LEFT JOIN users u ON u.telegram_id=r.referrer_id
+                GROUP BY r.referrer_id,u.first_name,u.username
+                ORDER BY COUNT(*) DESC,r.referrer_id ASC LIMIT 500""").fetchall()
+        return jsonify(ok=True,
+            referrals=[{**r,'created_at':r['created_at'].isoformat() if r['created_at'] else None} for r in rows],
+            summary=summary)
     except Exception: return admin_error('referrals')
 
 
