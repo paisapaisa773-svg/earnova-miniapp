@@ -621,11 +621,19 @@ html[data-theme="light"] .mission-copy b{color:#241a35}
 </section>
 
 <section class="screen" id="leaderboard">
- <div class="screen-heading"><div class="eyebrow">COMMUNITY</div><h1>Leaderboard 🏆</h1><p>View member rankings by selected period.</p></div>
+ <div class="screen-heading"><div class="eyebrow">COMMUNITY • TOP REFERRERS</div><h1>Leaderboard 🏆</h1><p>Climb the rankings with verified, approved referrals.</p></div>
+ <div class="panel" style="background:linear-gradient(135deg,#24104b,#6d28d9);color:#fff;border:0">
+  <div style="font-size:12px;opacity:.85;font-weight:700;letter-spacing:1px">MONTHLY WINNER REWARDS</div>
+  <div style="display:flex;gap:8px;margin-top:12px">
+   <div style="flex:1;text-align:center;background:#ffffff20;border-radius:14px;padding:12px 4px"><div style="font-size:25px">🥇</div><b style="font-size:20px">₹500</b><div style="font-size:11px">1st Place</div></div>
+   <div style="flex:1;text-align:center;background:#ffffff20;border-radius:14px;padding:12px 4px"><div style="font-size:25px">🥈</div><b style="font-size:20px">₹300</b><div style="font-size:11px">2nd Place</div></div>
+   <div style="flex:1;text-align:center;background:#ffffff20;border-radius:14px;padding:12px 4px"><div style="font-size:25px">🥉</div><b style="font-size:20px">₹200</b><div style="font-size:11px">3rd Place</div></div>
+  </div><div style="font-size:11px;opacity:.8;margin-top:10px">Total monthly prize pool: ₹1,000 • Admin verification required</div>
+ </div>
  <div class="panel">
-  <button class="primary" onclick="loadLeaderboard('monthly')">Monthly</button>
-  <button class="secondary" onclick="loadLeaderboard('all_time')">All Time</button>
+  <div style="display:flex;gap:8px;margin-bottom:14px"><button id="leaderMonthly" class="primary" style="flex:1" onclick="loadLeaderboard('monthly')">Monthly</button><button id="leaderAllTime" class="secondary" style="flex:1" onclick="loadLeaderboard('all_time')">All Time</button></div>
   <div id="leadersList">Loading...</div>
+  <div style="font-size:11px;color:var(--muted);margin-top:12px">Only approved referrals count. Monthly prizes are confirmed by admin after the month closes.</div>
  </div>
 </section>
 
@@ -1082,20 +1090,28 @@ async function requestWithdraw(){
  }catch(e){box.textContent=e.message}
 }
 async function loadLeaderboard(period="monthly"){
- if(!document.getElementById("leaderboard").classList.contains("active"))goTo("leaderboard");
- const box=document.getElementById("leadersList");box.textContent="Loading...";
- try{
-  const r=await apiPost("/api/leaderboard",{period});
-  box.innerHTML="";
-  if(!r.leaders||!r.leaders.length){box.textContent="No leaderboard data yet.";return}
-  r.leaders.forEach((x,i)=>{
-   const d=document.createElement("div");d.className="task-card";
-   d.textContent=(i+1)+". "+(x.first_name||x.username||"Member")+" • "+x.successful_referrals+" successful referrals";
-   box.appendChild(d);
-  });
- }catch(e){box.textContent=e.message}
-}
-let onboardStep=0;
+  if(!document.getElementById("leaderboard").classList.contains("active"))goTo("leaderboard");
+  const box=document.getElementById("leadersList");box.textContent="Loading rankings...";
+  document.getElementById("leaderMonthly").className=period==="monthly"?"primary":"secondary";
+  document.getElementById("leaderAllTime").className=period==="all_time"?"primary":"secondary";
+  try{
+   const r=await apiPost("/api/leaderboard",{period});box.innerHTML="";
+   if(!r.leaders||!r.leaders.length){box.innerHTML='<div class="task-card" style="text-align:center;padding:24px">🏆<br><b>No rankings yet</b><br><small>Approved referrals will appear here.</small></div>';return}
+   const medals=["🥇","🥈","🥉"];
+   r.leaders.forEach((x,i)=>{
+    const d=document.createElement("div");d.className="task-card";d.style.display="flex";d.style.alignItems="center";d.style.gap="12px";
+    if(i<3)d.style.border="1px solid "+(i===0?"#eab308":i===1?"#94a3b8":"#c08457");
+    const medal=document.createElement("div");medal.style.fontSize="25px";medal.textContent=medals[i]||("#"+(i+1));
+    const info=document.createElement("div");info.style.flex="1";
+    const name=document.createElement("b");name.textContent=x.first_name||x.username||"EARNOVA Member";
+    const sub=document.createElement("div");sub.style.fontSize="12px";sub.style.color="var(--muted)";sub.textContent="Verified approved referrals";
+    info.append(name,sub);
+    const count=document.createElement("b");count.style.color="var(--primary)";count.textContent=String(x.successful_referrals)+" referrals";
+    d.append(medal,info,count);box.appendChild(d);
+   });
+  }catch(e){box.textContent="Leaderboard temporarily unavailable. Please try again."}
+ }
+ let onboardStep=0;
 const onboardingSlides=[
  {title:'Welcome to<br><span>EARNOVA!</span>',text:'Complete simple tasks,<br>earn real rewards!'},
  {title:'Earn Rewards<br><span>Every Day!</span>',text:'Discover tasks, collect bonuses<br>and track your earnings.'},
