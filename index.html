@@ -816,7 +816,7 @@ async function loadTasks(){
   r.tasks.forEach(t=>{
    const d=document.createElement("div");d.className="task-card task-filter-item";
    const taskType=String(t.task_type||t.type||t.category||"other").toLowerCase();
-   d.dataset.taskType=taskType.includes("quiz")?"quiz":(taskType.includes("video")?"video":(taskType.includes("join")||taskType.includes("channel")||taskType.includes("group")?"join":"other"));
+   d.dataset.taskType=taskType.includes("quiz")?"quiz":(taskType.includes("video")?"video":(taskType.includes("join")||taskType.includes("channel")||taskType.includes("group")?"join":(taskType.includes("partner")||taskType.includes("website")||taskType.includes("survey")?"partner":"other")));
    const title=document.createElement("b");title.textContent="🎯 "+t.title;
    const desc=document.createElement("p");desc.textContent=t.description||"Read the task instructions and complete it.";
    const reward=document.createElement("p");reward.className="reward";reward.textContent="Reward: "+money(t.reward);
