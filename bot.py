@@ -565,7 +565,8 @@ def telegram_webhook():
             # Supports /start <id> and /start@BotName <id> deep links.
             # ensure_user validates the referrer, prevents self-referrals and attributes once.
             import re
-            match = re.match(r'^/start(?:@[A-Za-z0-9_]+)?(?:\s+(\d+))?
+            match = re.match(r'^/start(?:@[A-Za-z0-9_]+)?(?:\\s+(\\d+))?$', text_in)
+            referrer_id = match.group(1) if match else None
             with get_db() as db:
                 create_tables(db); ensure_user(db,tguser,referrer_id)
             first_name=(tguser.get('first_name') or 'there').strip()
