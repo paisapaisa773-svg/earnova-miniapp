@@ -337,7 +337,7 @@ main{max-width:520px;padding:12px 14px 30px}
 .quick-action{min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:11px 2px;border-radius:15px;background:linear-gradient(145deg,#211936,#141326);border:1px solid #382858;color:#fff}
 .quick-icon{display:grid;place-items:center;width:40px;height:40px;border-radius:13px;background:#30204d;font-size:21px}
 .quick-action b{font-size:11px;white-space:nowrap}
-.referral-banner{width:100%;display:flex;justify-content:space-between;align-items:center;text-align:left;padding:14px 18px;border:1px solid #63318c;border-radius:17px;background:linear-gradient(110deg,#43117d,#9b27d5 75%,#401070);color:#fff}
+.referral-mission{margin:13px 0;padding:15px;border-radius:17px;background:linear-gradient(120deg,#25134e,#5620a0);border:1px solid #9856df;color:#fff}.referral-mission-head{display:flex;justify-content:space-between;align-items:center;font-size:10px;letter-spacing:.6px;color:#e9d5ff;margin-bottom:9px}.referral-mission-head b{background:#ffffff22;padding:5px 9px;border-radius:15px}.referral-mission>strong{display:block;font-size:14px;margin-bottom:10px}.referral-mission-steps{display:grid;gap:7px;margin:10px 0 13px}.referral-mission-step{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:10px;background:#ffffff12;font-size:12px}.referral-mission-step i{font-style:normal;font-size:15px}.referral-mission-step.done{color:#bbf7d0;background:#14532d66}html[data-theme="light"] .referral-mission{background:linear-gradient(120deg,#ede9fe,#ddd6fe);color:#2e1555;border-color:#a78bfa}html[data-theme="light"] .referral-mission-head{color:#5b21b6}.referral-banner{width:100%;display:flex;justify-content:space-between;align-items:center;text-align:left;padding:14px 18px;border:1px solid #63318c;border-radius:17px;background:linear-gradient(110deg,#43117d,#9b27d5 75%,#401070);color:#fff}
 .referral-banner b{display:block;font-size:17px}.referral-banner small{display:block;margin-top:4px;font-size:12px}.gift-art{font-size:42px}
 .dashboard-heading{display:flex;justify-content:space-between;align-items:center;margin:21px 2px 10px}.section-title{font-size:16px;margin:0}.text-link{background:none;border:0;color:#d4a0ff;font-size:12px}
 .hot-task{display:flex;align-items:center;gap:10px;padding:10px;margin:8px 0;border-radius:15px;background:#17172b;border:1px solid #292541}
@@ -512,6 +512,12 @@ html[data-theme="light"] .mission-copy b{color:#241a35}
 <section class="screen active" id="home">
  <div class="home-top"><button class="menu-button" onclick="goTo('profileScreen')">☰</button><div class="home-brand"><span class="brand-crown">♛</span> EARNOVA</div><button class="notify-button" onclick="goTo('profileScreen')">♟<i>2</i></button></div>
  <div class="balance-banner"><div><small>Your Balance</small><strong id="balance">Loading...</strong><button class="withdraw-pill" onclick="goTo('wallet')">Withdraw&nbsp; →</button><div class="status" id="walletStatus">Connecting...</div><small id="minimumHome">Minimum withdrawal: ₹20</small></div><div class="wallet-art">👛</div></div>
+ <div id="referralMissionCard" class="referral-mission" style="display:none">
+  <div class="referral-mission-head"><span>🎁 NEW USER REFERRAL BONUS</span><b id="refMissionCount">0/3</b></div>
+  <strong>Complete these 3 steps to unlock ₹5 bonus</strong>
+  <div id="refMissionSteps" class="referral-mission-steps"></div>
+  <button class="primary full" onclick="goTo('earn')">Complete Tasks →</button>
+ </div>
  <div class="quick-grid">
   <button class="quick-action" onclick="goTo('earn')"><span class="quick-icon">🗂️</span><b>Tasks</b></button>
   <button class="quick-action" onclick="goTo('earn')"><span class="quick-icon">🎁</span><b>Rewards</b></button>
@@ -972,6 +978,26 @@ async function watchAd(){
  finally{isWatchingAd=false}
 }
 
+async function loadReferralMission(){
+ const card=document.getElementById("referralMissionCard");
+ if(!card)return;
+ try{
+  const r=await apiPost("/api/referral/progress");
+  if(!r.is_referred){card.style.display="none";return}
+  card.style.display="";
+  document.getElementById("refMissionCount").textContent=(r.completed||0)+"/3";
+  const list=document.getElementById("refMissionSteps");list.innerHTML="";
+  (r.steps||[]).forEach(s=>{
+   const d=document.createElement("div");d.className="referral-mission-step"+(s.done?" done":"");
+   const icon=document.createElement("i");icon.textContent=s.done?"✓":"○";
+   const label=document.createElement("span");label.textContent=s.title;
+   d.append(icon,label);list.appendChild(d);
+  });
+  const heading=card.querySelector("strong");
+  if(heading)heading.textContent=r.bonus_unlocked?"🎉 Referral bonus unlocked! ₹5 credited.":"Complete these 3 steps to unlock ₹5 bonus";
+ }catch(e){card.style.display="none";console.warn("Referral mission unavailable",e)}
+}
+
 async function loadReferral(){
  const box=document.getElementById("refLink");
  try{
@@ -1128,7 +1154,7 @@ document.getElementById("messageModal").addEventListener("click",function(e){if(
 
 async function initializeApp(){
  try{
-  await registerUser();await refreshBalance();
+  await registerUser();await refreshBalance();await loadReferralMission();
  }catch(e){
   document.getElementById("balance").textContent="Unavailable";
   document.getElementById("walletBalance").textContent="Unavailable";
