@@ -164,8 +164,11 @@ def ensure_user(db, user, referrer_id=None):
         if not existing and referrer_exists:
             db.execute('UPDATE users SET referred_by=%s WHERE telegram_id=%s AND referred_by IS NULL',
                        (referrer_id, tid))
-            db.execute('INSERT INTO referrals(referrer_id,referred_id) VALUES(%s,%s) ON CONFLICT DO NOTHING',
-                       (referrer_id, tid))
+            inserted = db.execute('INSERT INTO referrals(referrer_id,referred_id) VALUES(%s,%s) ON CONFLICT DO NOTHING RETURNING referred_id',
+                       (referrer_id, tid)).fetchone()
+            if inserted:
+                return referrer_id
+    return None
 
 
 def reward_for_ad(ad_number):
@@ -414,6 +417,30 @@ def referral_summary():
         app.logger.exception('Referral summary failed'); return jsonify(ok=False,error='Server error'),500
 
 
+@app.route('/api/referral/progress', methods=['POST','OPTIONS'])
+def referral_progress():
+    if request.method=='OPTIONS': return '',204
+    user,_=body_user()
+    if not user: return jsonify(ok=False,error='Invalid Telegram data'),401
+    tid=int(user['id'])
+    try:
+        channel,group=verify_required_memberships(tid)
+        with get_db() as db:
+            create_tables(db); ensure_user(db,user)
+            ref=db.execute("SELECT status FROM referrals WHERE referred_id=%s",(tid,)).fetchone()
+            checks=db.execute("SELECT bonus_code_entered FROM user_checks WHERE telegram_id=%s",(tid,)).fetchone()
+        steps=[
+            {'id':'channel','title':'Join Official Channel','done':channel is True},
+            {'id':'group','title':'Join Support Group','done':group is True},
+            {'id':'code','title':'Enter Daily Bonus Code','done':bool(checks and checks['bonus_code_entered'])}
+        ]
+        return jsonify(ok=True,is_referred=bool(ref),referral_status=ref['status'] if ref else None,
+            steps=steps,completed=sum(1 for x in steps if x['done']),total=3,
+            bonus_unlocked=bool(ref and ref['status']=='approved')),200
+    except Exception:
+        app.logger.exception('Referral progress failed'); return jsonify(ok=False,error='Server error'),500
+
+
 @app.route('/api/bonus-code', methods=['POST','OPTIONS'])
 def redeem_bonus_code():
     if request.method=='OPTIONS': return '',204
@@ -568,7 +595,12 @@ def telegram_webhook():
             match = re.match(r'^/start(?:@[A-Za-z0-9_]+)?(?:\s+(\d+))?$', text_in)
             referrer_id = match.group(1) if match else None
             with get_db() as db:
-                create_tables(db); ensure_user(db,tguser,referrer_id)
+                create_tables(db); newly_referred_by=ensure_user(db,tguser,referrer_id)
+            if newly_referred_by:
+                joined_name=(tguser.get('first_name') or tguser.get('username') or 'New member').strip()
+                joined_username=(' @'+tguser['username']) if tguser.get('username') else ''
+                send_telegram_message(newly_referred_by,
+                    f"🎉 New referral joined EARNOVA!\\n\\n👤 {joined_name}{joined_username} joined using your referral link.\\n⏳ Referral bonus: ₹5 after all 3 steps are completed.")
             first_name=(tguser.get('first_name') or 'there').strip()
             welcome=(
                 f"⚡ EARNOVA REWARD\n"
