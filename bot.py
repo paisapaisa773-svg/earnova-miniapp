@@ -883,6 +883,74 @@ def admin_user_detail():
         return admin_error('user detail')
 
 
+@app.route('/api/admin/ads', methods=['POST','OPTIONS'])
+@admin_required
+def admin_ads_monitor():
+    if request.method == 'OPTIONS': return '', 204
+    raw_tid = request.admin_body.get('telegram_id')
+    try:
+        tid = int(raw_tid) if raw_tid not in (None, '') else None
+        if tid is not None and tid <= 0: raise ValueError()
+    except (TypeError, ValueError):
+        return jsonify(ok=False, error='Invalid Telegram ID'), 400
+    try:
+        with get_db() as db:
+            create_tables(db)
+            user = None
+            if tid is not None:
+                user = db.execute("""SELECT telegram_id,username,first_name,last_name
+                    FROM users WHERE telegram_id=%s""", (tid,)).fetchone()
+                session_filter = " WHERE telegram_id=%s"
+                event_filter = " WHERE telegram_id=%s"
+                params = (tid,)
+            else:
+                session_filter = event_filter = ""
+                params = ()
+            summary = db.execute("""
+                SELECT COUNT(*) AS sessions_total,
+                    COUNT(*) FILTER (WHERE status='credited') AS credited_sessions,
+                    COUNT(*) FILTER (WHERE status='pending') AS pending_sessions,
+                    COALESCE(SUM(reward),0) AS session_reward_sum
+                FROM ad_history""" + session_filter, params).fetchone()
+            event_summary = db.execute("""
+                SELECT COUNT(*) FILTER (WHERE event_type='impression' AND reward_event_type='valued') AS valued_impressions,
+                    COUNT(*) FILTER (WHERE event_type='click' AND reward_event_type='valued') AS valued_clicks,
+                    COUNT(*) FILTER (WHERE reward_event_type='non_valued') AS nonvalued_events
+                FROM network_events""" + event_filter, params).fetchone()
+            wallet_sql = """SELECT COUNT(*) AS wallet_credit_count, COALESCE(SUM(amount),0) AS wallet_credit_amount
+                FROM wallet_transactions WHERE transaction_type='ad_reward' AND status='completed'"""
+            wallet_params = (tid,) if tid is not None else ()
+            if tid is not None: wallet_sql += " AND telegram_id=%s"
+            wallet_summary = db.execute(wallet_sql, wallet_params).fetchone()
+            sessions = db.execute("""SELECT id,network,event_id,reward,status,created_at
+                FROM ad_history""" + session_filter + " ORDER BY created_at DESC LIMIT 100", params).fetchall()
+            events = db.execute("""SELECT id,network,ymid,event_type,reward_event_type,estimated_price,created_at
+                FROM network_events""" + event_filter + " ORDER BY created_at DESC LIMIT 100", params).fetchall()
+        def as_iso(value):
+            return value.isoformat() if value else None
+        activity = []
+        for row in sessions:
+            activity.append({'source':'ad_history','id':row['id'],'network':row['network'],
+                'event_id':row['event_id'],'reward':str(row['reward']),'status':row['status'],
+                'created_at':as_iso(row['created_at'])})
+        for row in events:
+            activity.append({'source':'network_events','id':row['id'],'network':row['network'],
+                'event_id':row['ymid'],'event_type':row['event_type'],
+                'reward_event_type':row['reward_event_type'],'reward':str(row['estimated_price']),
+                'status':row['reward_event_type'],'created_at':as_iso(row['created_at'])})
+        activity.sort(key=lambda item:item.get('created_at') or '', reverse=True)
+        return jsonify(ok=True,user=({**user} if user else None),summary={
+            'sessions_total':summary['sessions_total'],'credited_sessions':summary['credited_sessions'],
+            'pending_sessions':summary['pending_sessions'],'session_reward_sum':str(summary['session_reward_sum']),
+            'valued_impressions':event_summary['valued_impressions'],'valued_clicks':event_summary['valued_clicks'],
+            'nonvalued_events':event_summary['nonvalued_events'],
+            'wallet_credit_count':wallet_summary['wallet_credit_count'],
+            'wallet_credit_amount':str(wallet_summary['wallet_credit_amount'])
+        },activity=activity[:150]), 200
+    except Exception:
+        return admin_error('ads monitor')
+
+
 @app.route('/api/admin/tasks', methods=['POST','OPTIONS'])
 @admin_required
 def admin_tasks():
