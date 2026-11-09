@@ -747,6 +747,22 @@ def admin_withdrawals():
     except Exception: return admin_error('withdrawals')
 
 
+def send_user_telegram_message(chat_id, text):
+    if not BOT_TOKEN or not chat_id:
+        raise RuntimeError('BOT_TOKEN is not configured')
+    import urllib.request
+    payload = __import__('urllib.parse', fromlist=['urlencode']).urlencode({
+        'chat_id': chat_id, 'text': text
+    }).encode()
+    req = urllib.request.Request(
+        f'https://api.telegram.org/bot{BOT_TOKEN}/sendMessage', data=payload
+    )
+    with urllib.request.urlopen(req, timeout=15) as response:
+        result = json.loads(response.read().decode())
+    if not result.get('ok'):
+        raise RuntimeError('Telegram sendMessage failed')
+
+
 @app.route('/api/admin/withdrawals/review', methods=['POST','OPTIONS'])
 @admin_required
 def admin_review_withdrawal():
@@ -777,7 +793,19 @@ def admin_review_withdrawal():
                 db.execute("UPDATE withdrawals SET status='rejected',rejection_reason=%s,reviewed_at=NOW() WHERE id=%s",(reason,wid))
                 db.execute("UPDATE wallet_transactions SET status='rejected' WHERE id=%s",(ledger['id'],))
                 credit_wallet(db,int(w['telegram_id']),w['amount'],'withdrawal_refund',f'withdrawal-refund:{wid}')
-        return jsonify(ok=True,status='approved' if action=='approve' else 'rejected')
+        notification_sent = False
+        if action == 'approve':
+            try:
+                amount_text = f"{Decimal(str(w['amount'])):.2f}"
+                send_user_telegram_message(
+                    int(w['telegram_id']),
+                    f"🎉 Withdrawal Approved!\\n\\nAapka ₹{amount_text} withdrawal request approve ho gaya hai.\\nPayment process ki ja rahi hai.\\n\\nDhanyavaad! ❤️"
+                )
+                notification_sent = True
+            except Exception:
+                app.logger.exception('Withdrawal approved but user notification failed')
+        return jsonify(ok=True,status='approved' if action=='approve' else 'rejected',
+                       notification_sent=notification_sent if action=='approve' else None)
     except Exception: return admin_error('withdrawal review')
 
 
