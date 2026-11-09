@@ -608,6 +608,11 @@ def telegram_webhook():
                     already_referred_by_other = bool(
                         original_referrer and int(original_referrer) != int(referrer_id)
                     )
+            if already_referred_by_other:
+                send_telegram_message(int(referrer_id),
+                    "⚠️ Referral Not Successful!\\n\\n"
+                    "This user has already been referred by someone else.\\n"
+                    "No referral credit was added.")
             if newly_referred_by:
                 joined_name=(tguser.get('first_name') or tguser.get('username') or 'New member').strip()
                 joined_username=(' @'+tguser['username']) if tguser.get('username') else ''
