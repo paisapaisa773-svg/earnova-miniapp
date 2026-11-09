@@ -400,7 +400,23 @@
   window.toggleBonus=async(id,active)=>{try{await api('/api/admin/bonus-codes/update','POST',{bonus_id:id,active});toast('Updated');bonuses()}catch(e){toast(e.message)}};
   async function referrals(){
     const d=await api('/api/admin/referrals','POST',{status:'all'});
-    $('content').innerHTML=`<h2 class="section-title">Referral Review</h2>${list((d.referrals||[]).map(r=>`<article class="item"><div class="row"><h3>Referral #${esc(r.id)}</h3>${pill(r.status)}</div><p>Referrer: ${esc(r.referrer_id)} · Referred user: ${esc(r.referred_id)}</p><p>${esc(formatIndiaDateTime(r.created_at))}</p><div class="actions">${r.status==='pending'?`<button class="good" onclick="reviewReferral(${Number(r.id)},'approve')">Approve</button><button class="danger" onclick="reviewReferral(${Number(r.id)},'reject')">Reject</button>`:''}</div></article>`))}`;
+    const summary=d.summary||[];
+    const stats=summary.length?summary.map(u=>`<article class="item">
+      <div class="row"><h3>${esc(u.first_name||u.username||'EARNOVA User')}</h3><span class="pill">${Number(u.total||0)} referrals</span></div>
+      <p>@${esc(u.username||'—')} · Telegram ID: ${esc(u.referrer_id)}</p>
+      <p>Approved: <b>${Number(u.approved||0)}</b> · Pending: <b>${Number(u.pending||0)}</b> · Rejected: <b>${Number(u.rejected||0)}</b></p>
+    </article>`).join(''):'<div class="empty">अभी कोई referral record नहीं है। Referral link से नया user bot में /start करेगा, तभी उसका referral यहाँ दर्ज होगा।</div>';
+    const entries=(d.referrals||[]).map(r=>`<article class="item">
+      <div class="row"><h3>Referral #${esc(r.id)}</h3>${pill(r.status)}</div>
+      <p>Referrer: ${esc(r.referrer_first_name||r.referrer_username||'User')} (@${esc(r.referrer_username||'—')}) · ID: ${esc(r.referrer_id)}</p>
+      <p>Joined user: ${esc(r.referred_first_name||r.referred_username||'User')} (@${esc(r.referred_username||'—')}) · ID: ${esc(r.referred_id)}</p>
+      <p>${esc(formatIndiaDateTime(r.created_at))}</p>
+      <div class="actions">${r.status==='pending'?`<button class="good" onclick="reviewReferral(${Number(r.id)},'approve')">Approve</button><button class="danger" onclick="reviewReferral(${Number(r.id)},'reject')">Reject</button>`:''}</div>
+    </article>`).join('');
+    $('content').innerHTML=`<h2 class="section-title">Referral Performance</h2>
+      <p class="muted small">Har user ne kitne referrals kiye — sabse zyada referrals wale users pehle.</p>
+      <div class="metrics-grid">${stats}</div>
+      <h2 class="section-title">All Referral Entries</h2>${list(entries)}`;
   }
   window.reviewReferral=async(id,action)=>{if(!confirm(`Referral ${action} करना है?`))return;try{await api('/api/admin/referrals/review','POST',{referral_id:id,action});toast('Referral updated');referrals()}catch(e){toast(e.message)}};
   async function boot(){
