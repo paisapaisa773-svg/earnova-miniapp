@@ -462,21 +462,65 @@ html[data-theme="light"] .status{color:#655778}
 </section>
 
 <section class="screen" id="earn">
-  <div class="screen-heading"><div class="eyebrow">EARNOVA TASK CENTER</div><h1>Complete Tasks &amp; Earn</h1><p>Choose a task, check its reward, follow the steps and submit it.</p></div>
-  <div class="task-overview"><div><strong>🎯 Your earning tasks</strong><small>Rewards are shown on each task before you submit.</small></div><span>₹</span></div>
-  <div class="task-tabs"><button class="active" onclick="filterTasks('all',this)">All Tasks</button><button onclick="filterTasks('video',this)">Video</button><button onclick="filterTasks('join',this)">Join</button><button onclick="filterTasks('quiz',this)">Quiz</button></div>
-  <div class="task-section-title"><b>📢 Community tasks</b><small>Join both official chats to unlock tasks</small></div>
+  <div class="screen-heading"><div class="eyebrow">EARNOVA TASK CENTER</div><h1>Tasks &amp; Rewards</h1><p>Complete genuine tasks, track your progress and earn ₹ rewards.</p></div>
+
+  <div class="earn-streak-card">
+   <div class="streak-top"><span>🔥 DAILY CHECK-IN</span><span class="streak-tag">EVERY DAY</span></div>
+   <div class="streak-main"><div><b>Keep your daily routine</b><small>Claim your configured daily reward below.</small></div><span class="streak-fire">🔥</span></div>
+   <div id="earnCheckinInfo" class="streak-status">Checking today's reward...</div>
+   <button class="primary full" id="earnCheckinButton" onclick="claimEarnCheckin()">Claim Daily Reward</button>
+  </div>
+
+  <div class="watch-feature-card">
+   <div class="watch-feature-head"><span class="watch-feature-label">★ FEATURED TASK</span><span class="watch-feature-chip">TOP PICK</span></div>
+   <div class="watch-feature-body">
+    <div class="watch-play-icon">▶</div>
+    <div class="watch-feature-copy"><h2>WATCH ADS</h2><b>WATCH &amp; EARN</b><p>Watch an available advertisement and wait for server verification.</p></div>
+   </div>
+   <div class="watch-feature-bottom"><div><small>REWARD</small><strong>Verified by ad network</strong></div><button type="button" onclick="watchAd()">▶&nbsp; Watch Now</button></div>
+   <div class="watch-feature-note">Rewards are credited only after successful verification.</div>
+  </div>
+
+  <div class="mission-card">
+   <div class="mission-icon">🎯</div><div class="mission-copy"><b>Your task mission</b><small>Explore the categories below and complete available tasks.</small></div><span class="mission-arrow">›</span>
+  </div>
+
+  <div class="task-category-heading"><b>Explore Categories</b><small>Choose the tasks you want to complete</small></div>
+  <div class="task-tabs">
+   <button class="active" onclick="filterTasks('all',this)">All</button>
+   <button onclick="filterTasks('video',this)">Watch Ads</button>
+   <button onclick="filterTasks('join',this)">Social</button>
+   <button onclick="filterTasks('daily',this)">Daily</button>
+   <button onclick="filterTasks('partner',this)">Partner</button>
+  </div>
+
+  <div class="task-section-title"><b>📢 Community Tasks</b><small>Join both official chats to unlock membership tasks</small></div>
   <div class="task-card task-list-card" id="membershipTasks">
    <div class="task-card task-line" data-task-type="join" id="channelMembershipTask"><span class="task-icon blue">➤</span><div><b>Join Our Channel</b><p>Open and join the official EARNOVA channel.</p><small>Required membership check</small><button class="secondary" onclick="openChannel()">Join Channel</button></div></div>
    <div class="task-card task-line" data-task-type="join" id="groupMembershipTask"><span class="task-icon blue">👥</span><div><b>Join Support Group</b><p>Join the official EARNOVA support group.</p><small>Required membership check</small><button class="secondary" onclick="openGroup()">Join Group</button></div></div>
    <button class="primary full" onclick="verifyEarnMembership()">✓ Verify Membership</button><div class="status" id="membershipInfo">After joining both chats, tap Verify Membership.</div>
   </div>
-  <div class="task-section-title"><b>⚡ Quick earning tasks</b><small>Rewards are verified before being added to your wallet</small></div>
-  <div class="task-card task-line" data-task-type="video"><span class="task-icon red">▶</span><div><b>Watch 1 Video</b><p>Watch the advertisement and wait for reward verification.</p><small>Reward is displayed after network verification</small><button class="primary" onclick="watchAd()">Start Video</button></div></div>
-  <div class="task-card task-line" data-task-type="reward"><span class="task-icon green">🎁</span><div><b>Daily Check-in</b><p>Claim your daily reward once every day.</p><div id="earnCheckinInfo" class="status">Checking today's reward...</div><button class="primary" id="earnCheckinButton" onclick="claimEarnCheckin()">Claim Daily Reward</button></div></div>
-  <div class="task-card task-line" data-task-type="reward"><b>🎟️ Daily Bonus Code</b><p>Enter the bonus code shared by EARNOVA to claim its configured reward.</p><input id="earnBonusCode" placeholder="Enter bonus code" maxlength="64"><button class="primary full" onclick="redeemEarnBonus()">Redeem Bonus Code</button><div id="earnBonusStatus" class="status"></div></div>
-  <div class="task-section-title"><b>🧩 Available partner tasks</b><small>Each task displays its exact reward amount</small></div>
+
+  <div class="task-section-title"><b>🎁 Daily Bonus Code</b><small>Redeem a code announced by EARNOVA</small></div>
+  <div class="task-card task-line" data-task-type="daily">
+   <div class="bonus-code-icon">🎟️</div><div><b>Daily Bonus Code</b><p>Enter the bonus code shared by EARNOVA to claim its configured reward.</p><input id="earnBonusCode" placeholder="Enter bonus code" maxlength="64"><button class="primary full" onclick="redeemEarnBonus()">Redeem Bonus Code</button><div id="earnBonusStatus" class="status"></div></div>
+  </div>
+
+  <div class="task-section-title"><b>🧩 Available Partner Tasks</b><small>Each active task displays its exact configured reward</small></div>
   <div class="task-card"><div id="earnTasksList">Loading available tasks...</div><button class="secondary full" onclick="loadTasks()">↻ Refresh Tasks</button></div>
+
+  <div class="locked-features">
+   <div class="locked-heading"><b>🏆 Achievements</b><span>COMING SOON</span></div>
+   <div class="achievement-preview">
+    <div><i>🌟</i><b>First Task</b><small>Milestone badge</small></div>
+    <div><i>🥈</i><b>10 Tasks</b><small>Milestone badge</small></div>
+    <div><i>🏆</i><b>50 Tasks</b><small>Milestone badge</small></div>
+   </div>
+   <p>Achievement tracking will appear here when milestone rewards are enabled.</p>
+  </div>
+
+  <div class="task-section-title"><b>📋 My Task Activity</b><small>Current task verification status</small></div>
+  <div class="task-activity-card"><div class="activity-icon">🕒</div><div><b>Task submissions</b><small>Check each task above for Pending Review or Completed status.</small></div></div>
  </section>
 
 <section class="screen" id="refer">
