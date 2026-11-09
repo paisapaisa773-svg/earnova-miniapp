@@ -736,6 +736,7 @@ const GROUP="https://t.me/+ncm5joi6ZzMxY2M1";
 const SUPPORT="https://t.me/Earn0vaSupportBot";
 const tg=window.Telegram?.WebApp;
 let initData="";
+let referralStartParam="";
 let isRegistered=false;
 let isWatchingAd=false;
 let referralLink="";
@@ -755,6 +756,8 @@ loadSavedTheme();
 
 if(tg){
  tg.ready();tg.expand();initData=tg.initData||"";
+ // Telegram Mini App startapp payload, when opened through a Mini App link.
+ referralStartParam=String(tg.initDataUnsafe?.start_param||"").trim();
  const user=tg.initDataUnsafe?.user;
  if(user){
   const name=user.first_name||user.username||"Member";
@@ -807,7 +810,8 @@ function updateBalance(v){
  });
 }
 async function registerUser(){
- const r=await apiPost("/api/register");
+ const referrerId=/^\d+$/.test(referralStartParam)?referralStartParam:null;
+ const r=await apiPost("/api/register",referrerId?{referrer_id:referrerId}:{});
  isRegistered=true;
  if(r.balance!==undefined)updateBalance(r.balance);
  return r;
