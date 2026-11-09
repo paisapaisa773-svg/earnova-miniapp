@@ -1732,3 +1732,1171 @@ if __name__=='__main__':
     app.run(host='0.0.0.0',port=int(os.environ.get('PORT',5001)))
 
 
+, text_in)
+            referrer_id = match.group(1) if match else None
+            with get_db() as db:
+                create_tables(db); ensure_user(db,tguser,referrer_id)
+            first_name=(tguser.get('first_name') or 'there').strip()
+            welcome=(
+                f"⚡ EARNOVA REWARD\n"
+                f"Welcome, {first_name}! 🎉\n\n"
+                "Your rewards journey starts here.\n"
+                "🎯 Explore available tasks\n"
+                "💰 Track your points and wallet\n"
+                "👥 Invite friends with your referral link\n"
+                "📋 Check your task and withdrawal status\n\n"
+                "Tap the button below to open EARNOVA.\n"
+                "Good luck and enjoy! 🚀"
+            )
+            send_telegram_message(chat.get('id'), welcome,
+                {'inline_keyboard':[[{'text':'🚀 Open EARNOVA','web_app':{'url':'https://paisapaisa773-svg.github.io/earnova-miniapp/'}}],
+                                    [{'text':'📢 Official Channel','url':CHANNEL_URL},{'text':'💬 Support Group','url':GROUP_URL}]]})
+        except Exception: app.logger.exception('Telegram start handler failed')
+    return jsonify(ok=True),200
+
+
+def send_telegram_message(chat_id,text,reply_markup=None):
+    if not BOT_TOKEN or not chat_id: return
+    import urllib.request
+    payload={'chat_id':chat_id,'text':text}
+    if reply_markup: payload['reply_markup']=json.dumps(reply_markup)
+    data=__import__('urllib.parse',fromlist=['urlencode']).urlencode(payload).encode()
+    req=urllib.request.Request(f'https://api.telegram.org/bot{BOT_TOKEN}/sendMessage',data=data)
+    with urllib.request.urlopen(req,timeout=10) as response: response.read()
+
+
+
+
+# ---------------- Secure Admin API ----------------
+def verify_admin_init_data(init_data):
+    """Validate Telegram Mini App initData using the separate Admin Bot token."""
+    if not ADMIN_BOT_TOKEN or not init_data:
+        return None
+    try:
+        data = dict(parse_qsl(init_data, keep_blank_values=True))
+        received_hash = data.pop('hash', None)
+        if not received_hash:
+            return None
+        auth_date = int(data.get('auth_date', '0'))
+        now = int(time.time())
+        if auth_date <= 0 or now - auth_date > 86400 or auth_date > now + 60:
+            return None
+        check_string = '\n'.join(f'{k}={v}' for k, v in sorted(data.items()))
+        secret_key = hmac.new(b'WebAppData', ADMIN_BOT_TOKEN.encode(), hashlib.sha256).digest()
+        calculated = hmac.new(secret_key, check_string.encode(), hashlib.sha256).hexdigest()
+        if not hmac.compare_digest(calculated, received_hash):
+            return None
+        user = json.loads(data.get('user', '{}'))
+        if not isinstance(user, dict) or int(user.get('id', 0)) != ADMIN_ID:
+            return None
+        return user
+    except (ValueError, TypeError, json.JSONDecodeError):
+        return None
+
+
+def admin_body():
+    body = request.get_json(silent=True) or {}
+    init_data = request.headers.get('X-Telegram-Init-Data', '') or body.get('initData', '')
+    user = verify_admin_init_data(init_data)
+    return (user, body) if user else (None, body)
+
+
+def admin_required(fn):
+    from functools import wraps
+    @wraps(fn)
+    def wrapped(*args, **kwargs):
+        if request.method == 'OPTIONS':
+            return '', 204
+        user, body = admin_body()
+        if not user:
+            return jsonify(ok=False, error='Unauthorized admin session'), 401
+        request.admin_user = user
+        request.admin_body = body
+        return fn(*args, **kwargs)
+    return wrapped
+
+
+def admin_error(label):
+    app.logger.exception('Admin API failed: %s', label)
+    return jsonify(ok=False, error='Admin operation failed; check server logs'), 500
+
+
+@app.route('/api/admin/dashboard', methods=['POST','OPTIONS'])
+@admin_required
+def admin_dashboard():
+    if request.method == 'OPTIONS': return '', 204
+    try:
+        with get_db() as db:
+            create_tables(db)
+            d = db.execute("""SELECT
+                (SELECT COUNT(*) FROM users) total_users,
+                (SELECT COALESCE(SUM(balance),0) FROM users) total_balance,
+                (SELECT COUNT(*) FROM withdrawals WHERE status='pending') pending_withdrawals,
+                (SELECT COUNT(*) FROM withdrawals) total_withdrawals,
+                (SELECT COUNT(*) FROM task_completions WHERE status='pending') pending_tasks,
+                (SELECT COUNT(*) FROM task_completions WHERE status='completed') completed_tasks,
+                (SELECT COUNT(*) FROM referrals) total_referrals,
+                (SELECT COALESCE(SUM(amount),0) FROM wallet_transactions WHERE transaction_type='ad_reward' AND status='completed') ad_rewards""").fetchone()
+        return jsonify(ok=True, **{k: str(v) if isinstance(v, Decimal) else v for k,v in d.items()})
+    except Exception: return admin_error('dashboard')
+
+
+@app.route('/api/admin/withdrawals', methods=['POST','OPTIONS'])
+@admin_required
+def admin_withdrawals():
+    if request.method == 'OPTIONS': return '', 204
+    try:
+        status = str(request.admin_body.get('status','all'))
+        with get_db() as db:
+            create_tables(db)
+            if status == 'all':
+                rows = db.execute("""SELECT id,telegram_id,amount,upi_id,status,rejection_reason,created_at
+                    FROM withdrawals ORDER BY created_at DESC LIMIT 300""").fetchall()
+            else:
+                rows = db.execute("""SELECT id,telegram_id,amount,upi_id,status,rejection_reason,created_at
+                    FROM withdrawals WHERE status=%s ORDER BY created_at DESC LIMIT 300""",(status,)).fetchall()
+        return jsonify(ok=True, withdrawals=[{**r,'amount':str(r['amount']),'created_at':r['created_at'].isoformat() if r['created_at'] else None} for r in rows])
+    except Exception: return admin_error('withdrawals')
+
+
+@app.route('/api/admin/withdrawals/review', methods=['POST','OPTIONS'])
+@admin_required
+def admin_review_withdrawal():
+    if request.method == 'OPTIONS': return '', 204
+    body=request.admin_body
+    try: wid=int(body.get('withdrawal_id'))
+    except (TypeError,ValueError): return jsonify(ok=False,error='Invalid withdrawal ID'),400
+    action=str(body.get('action','')).lower()
+    if action not in ('approve','reject'): return jsonify(ok=False,error='Invalid action'),400
+    reason=str(body.get('reason','')).strip()[:500]
+    try:
+        with get_db() as db:
+            create_tables(db)
+            w=db.execute("SELECT * FROM withdrawals WHERE id=%s FOR UPDATE",(wid,)).fetchone()
+            if not w: return jsonify(ok=False,error='Withdrawal not found'),404
+            if w['status'] != 'pending': return jsonify(ok=False,error='Withdrawal already reviewed'),409
+            ledger = db.execute("""SELECT id FROM wallet_transactions
+                WHERE telegram_id=%s AND transaction_type='withdrawal' AND status='pending'
+                AND amount=%s ORDER BY created_at DESC LIMIT 1 FOR UPDATE""",
+                (w['telegram_id'], -w['amount'])).fetchone()
+            if not ledger: return jsonify(ok=False,error='Matching withdrawal ledger entry not found'),409
+            if action=='approve':
+                db.execute("UPDATE withdrawals SET status='approved',reviewed_at=NOW() WHERE id=%s",(wid,))
+                db.execute("UPDATE wallet_transactions SET status='completed' WHERE id=%s",(ledger['id'],))
+                db.execute('UPDATE user_settings SET first_paid_withdrawal=TRUE WHERE telegram_id=%s',(w['telegram_id'],))
+            else:
+                if not reason: return jsonify(ok=False,error='Rejection reason required'),400
+                db.execute("UPDATE withdrawals SET status='rejected',rejection_reason=%s,reviewed_at=NOW() WHERE id=%s",(reason,wid))
+                db.execute("UPDATE wallet_transactions SET status='rejected' WHERE id=%s",(ledger['id'],))
+                credit_wallet(db,int(w['telegram_id']),w['amount'],'withdrawal_refund',f'withdrawal-refund:{wid}')
+        return jsonify(ok=True,status='approved' if action=='approve' else 'rejected')
+    except Exception: return admin_error('withdrawal review')
+
+
+@app.route('/api/admin/users', methods=['POST','OPTIONS'])
+@admin_required
+def admin_users():
+    if request.method == 'OPTIONS': return '', 204
+    q=str(request.admin_body.get('q','')).strip()[:100]
+    try:
+        with get_db() as db:
+            create_tables(db)
+            if q:
+                rows=db.execute("""SELECT telegram_id,username,first_name,last_name,balance,created_at FROM users
+                    WHERE telegram_id::text ILIKE %s OR COALESCE(username,'') ILIKE %s OR COALESCE(first_name,'') ILIKE %s OR COALESCE(last_name,'') ILIKE %s
+                    ORDER BY created_at DESC LIMIT 100""",(f'%{q}%',f'%{q}%',f'%{q}%',f'%{q}%')).fetchall()
+            else:
+                rows=db.execute("SELECT telegram_id,username,first_name,last_name,balance,created_at FROM users ORDER BY created_at DESC LIMIT 50").fetchall()
+        return jsonify(ok=True,users=[{**r,'balance':str(r['balance']),'created_at':r['created_at'].isoformat() if r['created_at'] else None} for r in rows])
+    except Exception: return admin_error('users')
+
+
+@app.route('/api/admin/user-transactions', methods=['POST','OPTIONS'])
+@admin_required
+def admin_user_transactions():
+    if request.method == 'OPTIONS': return '', 204
+    try: tid=int(request.admin_body.get('telegram_id'))
+    except (TypeError,ValueError): return jsonify(ok=False,error='Invalid Telegram ID'),400
+    try:
+        with get_db() as db:
+            create_tables(db)
+            rows=db.execute("""SELECT amount,transaction_type,status,created_at FROM wallet_transactions
+                WHERE telegram_id=%s ORDER BY created_at DESC LIMIT 100""",(tid,)).fetchall()
+        return jsonify(ok=True,transactions=[{**r,'amount':str(r['amount']),'created_at':r['created_at'].isoformat() if r['created_at'] else None} for r in rows])
+    except Exception: return admin_error('user transactions')
+
+
+@app.route('/api/admin/user-detail', methods=['POST','OPTIONS'])
+@admin_required
+def admin_user_detail():
+    if request.method == 'OPTIONS': return '', 204
+    try:
+        tid = int(request.admin_body.get('telegram_id'))
+    except (TypeError, ValueError):
+        return jsonify(ok=False, error='Invalid Telegram ID'), 400
+    try:
+        with get_db() as db:
+            create_tables(db)
+            user = db.execute("""SELECT telegram_id,username,first_name,last_name,balance,created_at
+                FROM users WHERE telegram_id=%s""", (tid,)).fetchone()
+            if not user:
+                return jsonify(ok=False, error='User not found'), 404
+            totals = db.execute("""SELECT
+                COALESCE(SUM(amount) FILTER (
+                    WHERE status='completed' AND amount>0
+                    AND transaction_type <> 'withdrawal_refund'
+                ),0) total_earned
+                FROM wallet_transactions WHERE telegram_id=%s""", (tid,)).fetchone()
+            task_stats = db.execute("""SELECT
+                COUNT(*) FILTER (WHERE status='completed') completed_tasks,
+                COUNT(*) FILTER (WHERE status='rejected') rejected_tasks,
+                COUNT(*) FILTER (WHERE status='pending') pending_tasks
+                FROM task_completions WHERE telegram_id=%s""", (tid,)).fetchone()
+            referral_count = db.execute("SELECT COUNT(*) total FROM referrals WHERE referrer_id=%s AND status='approved'", (tid,)).fetchone()
+            withdrawn = db.execute("SELECT COALESCE(SUM(amount),0) total FROM withdrawals WHERE telegram_id=%s AND status='approved'", (tid,)).fetchone()
+            transactions = db.execute("""SELECT id,amount,transaction_type,status,created_at
+                FROM wallet_transactions WHERE telegram_id=%s ORDER BY created_at DESC LIMIT 100""", (tid,)).fetchall()
+            tasks = db.execute("""SELECT c.id,c.task_id,c.status,c.reward,c.created_at,t.title
+                FROM task_completions c LEFT JOIN tasks t ON t.id=c.task_id
+                WHERE c.telegram_id=%s ORDER BY c.created_at DESC LIMIT 100""", (tid,)).fetchall()
+            referrals = db.execute("""SELECT id,referrer_id,referred_id,status,created_at FROM referrals
+                WHERE referrer_id=%s OR referred_id=%s ORDER BY created_at DESC LIMIT 100""", (tid,tid)).fetchall()
+            withdrawals = db.execute("""SELECT id,amount,upi_id,status,created_at,reviewed_at
+                FROM withdrawals WHERE telegram_id=%s ORDER BY created_at DESC LIMIT 100""", (tid,)).fetchall()
+        def iso(row, key='created_at'):
+            value = row.get(key)
+            return value.isoformat() if value else None
+        activity = [{
+            'id': r['id'], 'label': str(r['transaction_type']).replace('_',' ').title(),
+            'amount': str(r['amount']), 'status': r['status'], 'created_at': iso(r)
+        } for r in transactions if r['status'] == 'completed']
+        referral_rows = [{
+            'id': r['id'], 'role': 'referrer' if int(r['referrer_id']) == tid else 'referred',
+            'other_user_id': int(r['referred_id'] if int(r['referrer_id']) == tid else r['referrer_id']),
+            'status': r['status'], 'created_at': iso(r)
+        } for r in referrals]
+        return jsonify(ok=True,
+            user={**user,'balance':str(user['balance']),'created_at':iso(user)},
+            summary={
+                'total_earned':str(totals['total_earned']),
+                'completed_tasks':task_stats['completed_tasks'],
+                'rejected_tasks':task_stats['rejected_tasks'],
+                'pending_tasks':task_stats['pending_tasks'],
+                'referrals':referral_count['total'],
+                'withdrawn':str(withdrawn['total'])
+            },
+            activity=activity,
+            transactions=[{**r,'amount':str(r['amount']),'created_at':iso(r)} for r in transactions],
+            tasks=[{**r,'reward':str(r['reward']),'created_at':iso(r)} for r in tasks],
+            referrals=referral_rows,
+            withdrawals=[{**r,'amount':str(r['amount']),'created_at':iso(r),'reviewed_at':iso(r,'reviewed_at')} for r in withdrawals]
+        ), 200
+    except Exception:
+        return admin_error('user detail')
+
+
+@app.route('/api/admin/tasks', methods=['POST','OPTIONS'])
+@admin_required
+def admin_tasks():
+    if request.method == 'OPTIONS': return '', 204
+    try:
+        with get_db() as db:
+            create_tables(db)
+            rows=db.execute("SELECT id,title,description,task_type,reward,target_url,active,verification FROM tasks ORDER BY id DESC").fetchall()
+        return jsonify(ok=True,tasks=[{**r,'reward':str(r['reward'])} for r in rows])
+    except Exception: return admin_error('tasks')
+
+
+@app.route('/api/admin/tasks/create', methods=['POST','OPTIONS'])
+@admin_required
+def admin_create_task():
+    if request.method == 'OPTIONS': return '', 204
+    b=request.admin_body
+    title=str(b.get('title','')).strip()[:160]
+    try: reward=Decimal(str(b.get('reward',''))).quantize(Decimal('0.01'))
+    except (InvalidOperation,ValueError): return jsonify(ok=False,error='Invalid reward'),400
+    verification=str(b.get('verification','manual'))
+    if not title or not reward.is_finite() or reward<=0 or verification != 'manual':
+        return jsonify(ok=False,error='Only manual review tasks are supported; enter a title and positive reward'),400
+    try:
+        with get_db() as db:
+            create_tables(db)
+            row=db.execute("""INSERT INTO tasks(title,description,task_type,reward,target_url,verification)
+                VALUES(%s,%s,%s,%s,%s,%s) RETURNING id""",(title,str(b.get('description',''))[:1000],str(b.get('task_type','custom'))[:40],reward,str(b.get('target_url',''))[:1000] or None,verification)).fetchone()
+        return jsonify(ok=True,task_id=row['id'])
+    except Exception: return admin_error('create task')
+
+
+@app.route('/api/admin/tasks/update', methods=['POST','OPTIONS'])
+@admin_required
+def admin_update_task():
+    if request.method == 'OPTIONS': return '', 204
+    try: task_id=int(request.admin_body.get('task_id'))
+    except (TypeError,ValueError): return jsonify(ok=False,error='Invalid task ID'),400
+    active=request.admin_body.get('active')
+    if not isinstance(active,bool): return jsonify(ok=False,error='Active must be true or false'),400
+    try:
+        with get_db() as db:
+            create_tables(db)
+            row=db.execute("UPDATE tasks SET active=%s WHERE id=%s RETURNING id",(active,task_id)).fetchone()
+        if not row: return jsonify(ok=False,error='Task not found'),404
+        return jsonify(ok=True)
+    except Exception: return admin_error('update task')
+
+
+@app.route('/api/admin/task-submissions', methods=['POST','OPTIONS'])
+@admin_required
+def admin_task_submissions():
+    if request.method == 'OPTIONS': return '', 204
+    status=str(request.admin_body.get('status','pending'))
+    try:
+        with get_db() as db:
+            create_tables(db)
+            rows=db.execute("""SELECT c.id,c.task_id,c.telegram_id,c.status,c.reward,c.created_at,t.title
+                FROM task_completions c JOIN tasks t ON t.id=c.task_id
+                WHERE c.status=%s ORDER BY c.created_at ASC LIMIT 300""",(status,)).fetchall()
+        return jsonify(ok=True,submissions=[{**r,'reward':str(r['reward']),'created_at':r['created_at'].isoformat() if r['created_at'] else None} for r in rows])
+    except Exception: return admin_error('task submissions')
+
+
+@app.route('/api/admin/task-submissions/review', methods=['POST','OPTIONS'])
+@admin_required
+def admin_review_task_submission():
+    if request.method == 'OPTIONS': return '', 204
+    b=request.admin_body
+    try: sid=int(b.get('submission_id'))
+    except (TypeError,ValueError): return jsonify(ok=False,error='Invalid submission ID'),400
+    action=str(b.get('action','')).lower()
+    if action not in ('approve','reject'): return jsonify(ok=False,error='Invalid action'),400
+    try:
+        with get_db() as db:
+            create_tables(db)
+            row=db.execute("SELECT * FROM task_completions WHERE id=%s FOR UPDATE",(sid,)).fetchone()
+            if not row: return jsonify(ok=False,error='Submission not found'),404
+            if row['status']!='pending': return jsonify(ok=False,error='Submission already reviewed'),409
+            if action=='approve':
+                db.execute("UPDATE task_completions SET status='completed',reviewed_at=NOW() WHERE id=%s",(sid,))
+                credit_wallet(db,int(row['telegram_id']),row['reward'],'task_reward',f'task:{row["task_id"]}:{row["telegram_id"]}')
+            else:
+                db.execute("UPDATE task_completions SET status='rejected',reviewed_at=NOW() WHERE id=%s",(sid,))
+        return jsonify(ok=True,status='approved' if action=='approve' else 'rejected')
+    except Exception: return admin_error('review task submission')
+
+
+@app.route('/api/admin/bonus-codes', methods=['POST','OPTIONS'])
+@admin_required
+def admin_bonus_codes():
+    if request.method == 'OPTIONS': return '', 204
+    try:
+        with get_db() as db:
+            create_tables(db)
+            rows=db.execute("SELECT id,code,reward,max_claims,claims,expires_at,active,release_at FROM bonus_codes ORDER BY id DESC LIMIT 300").fetchall()
+        return jsonify(ok=True,codes=[{**r,'reward':str(r['reward']),'expires_at':r['expires_at'].isoformat() if r['expires_at'] else None,'release_at':r['release_at'].isoformat() if r['release_at'] else None} for r in rows])
+    except Exception: return admin_error('bonus codes')
+
+
+@app.route('/api/admin/bonus-codes/create', methods=['POST','OPTIONS'])
+@admin_required
+def admin_create_bonus_code():
+    if request.method == 'OPTIONS': return '', 204
+    b=request.admin_body
+    code=str(b.get('code','')).strip().upper()[:64]
+    try:
+        reward=Decimal(str(b.get('reward',''))).quantize(Decimal('0.01'))
+        max_claims=int(b.get('max_claims',100))
+    except (InvalidOperation,ValueError,TypeError): return jsonify(ok=False,error='Invalid reward or claim limit'),400
+    if not code or not reward.is_finite() or reward<=0 or max_claims<1 or max_claims>1000000:
+        return jsonify(ok=False,error='Valid code, positive reward and claim limit required'),400
+    try:
+        with get_db() as db:
+            create_tables(db)
+            row=db.execute("""INSERT INTO bonus_codes(code,reward,max_claims,release_at,expires_at)
+                VALUES(%s,%s,%s,%s,%s) RETURNING id""",(code,reward,max_claims,b.get('release_at') or None,b.get('expires_at') or None)).fetchone()
+        return jsonify(ok=True,bonus_id=row['id'])
+    except Exception:
+        app.logger.exception('Admin create bonus failed')
+        return jsonify(ok=False,error='Could not create bonus code (code may already exist)'),400
+
+
+@app.route('/api/admin/bonus-codes/update', methods=['POST','OPTIONS'])
+@admin_required
+def admin_update_bonus_code():
+    if request.method == 'OPTIONS': return '', 204
+    try: bonus_id=int(request.admin_body.get('bonus_id'))
+    except (TypeError,ValueError): return jsonify(ok=False,error='Invalid bonus ID'),400
+    active=request.admin_body.get('active')
+    if not isinstance(active,bool): return jsonify(ok=False,error='Active must be true or false'),400
+    try:
+        with get_db() as db:
+            create_tables(db)
+            row=db.execute("UPDATE bonus_codes SET active=%s WHERE id=%s RETURNING id",(active,bonus_id)).fetchone()
+        if not row: return jsonify(ok=False,error='Bonus code not found'),404
+        return jsonify(ok=True)
+    except Exception: return admin_error('update bonus code')
+
+
+@app.route('/api/admin/referrals', methods=['POST','OPTIONS'])
+@admin_required
+def admin_referrals():
+    if request.method == 'OPTIONS': return '', 204
+    status=str(request.admin_body.get('status','all'))
+    try:
+        with get_db() as db:
+            create_tables(db)
+            if status=='all':
+                rows=db.execute("""SELECT r.id,r.referrer_id,r.referred_id,r.status,r.created_at,
+                    ru.username AS referrer_username,ru.first_name AS referrer_first_name,
+                    du.username AS referred_username,du.first_name AS referred_first_name
+                    FROM referrals r
+                    LEFT JOIN users ru ON ru.telegram_id=r.referrer_id
+                    LEFT JOIN users du ON du.telegram_id=r.referred_id
+                    ORDER BY r.created_at DESC LIMIT 500""").fetchall()
+            else:
+                rows=db.execute("""SELECT r.id,r.referrer_id,r.referred_id,r.status,r.created_at,
+                    ru.username AS referrer_username,ru.first_name AS referrer_first_name,
+                    du.username AS referred_username,du.first_name AS referred_first_name
+                    FROM referrals r
+                    LEFT JOIN users ru ON ru.telegram_id=r.referrer_id
+                    LEFT JOIN users du ON du.telegram_id=r.referred_id
+                    WHERE r.status=%s ORDER BY r.created_at DESC LIMIT 500""",(status,)).fetchall()
+            summary=db.execute("""SELECT r.referrer_id,
+                COALESCE(u.first_name,'') AS first_name,COALESCE(u.username,'') AS username,
+                COUNT(*) AS total,
+                COUNT(*) FILTER(WHERE r.status='approved') AS approved,
+                COUNT(*) FILTER(WHERE r.status='pending') AS pending,
+                COUNT(*) FILTER(WHERE r.status='rejected') AS rejected
+                FROM referrals r LEFT JOIN users u ON u.telegram_id=r.referrer_id
+                GROUP BY r.referrer_id,u.first_name,u.username
+                ORDER BY COUNT(*) DESC,r.referrer_id ASC LIMIT 500""").fetchall()
+        return jsonify(ok=True,
+            referrals=[{**r,'created_at':r['created_at'].isoformat() if r['created_at'] else None} for r in rows],
+            summary=summary)
+    except Exception: return admin_error('referrals')
+
+
+@app.route('/api/admin/referrals/review', methods=['POST','OPTIONS'])
+@admin_required
+def admin_review_referral():
+    if request.method == 'OPTIONS': return '', 204
+    b=request.admin_body
+    try: rid=int(b.get('referral_id'))
+    except (TypeError,ValueError): return jsonify(ok=False,error='Invalid referral ID'),400
+    action=str(b.get('action','')).lower()
+    if action not in ('approve','reject'): return jsonify(ok=False,error='Invalid action'),400
+    try:
+        with get_db() as db:
+            create_tables(db)
+            row=db.execute("SELECT * FROM referrals WHERE id=%s FOR UPDATE",(rid,)).fetchone()
+            if not row: return jsonify(ok=False,error='Referral not found'),404
+            if row['status']!='pending': return jsonify(ok=False,error='Referral already reviewed'),409
+            if action=='approve':
+                db.execute("UPDATE referrals SET status='approved',approved_at=NOW() WHERE id=%s",(rid,))
+            else:
+                db.execute("UPDATE referrals SET status='rejected' WHERE id=%s",(rid,))
+        return jsonify(ok=True,status='approved' if action=='approve' else 'rejected')
+    except Exception: return admin_error('review referral')
+
+
+# Separate admin bot webhook. It does not change the existing user-bot webhook.
+def send_admin_telegram_message(chat_id, text, reply_markup=None):
+    if not ADMIN_BOT_TOKEN or not chat_id:
+        raise RuntimeError('ADMIN_BOT_TOKEN is not configured')
+    import urllib.request
+    payload = {'chat_id': chat_id, 'text': text}
+    if reply_markup:
+        payload['reply_markup'] = json.dumps(reply_markup)
+    data = __import__('urllib.parse', fromlist=['urlencode']).urlencode(payload).encode()
+    req = urllib.request.Request(
+        f'https://api.telegram.org/bot{ADMIN_BOT_TOKEN}/sendMessage', data=data
+    )
+    with urllib.request.urlopen(req, timeout=15) as response:
+        result = json.loads(response.read().decode())
+    if not result.get('ok'):
+        raise RuntimeError('Telegram sendMessage failed')
+
+
+@app.route('/admin/telegram/webhook', methods=['POST'])
+def admin_telegram_webhook():
+    if not ADMIN_BOT_TOKEN or not ADMIN_WEBHOOK_SECRET:
+        return jsonify(ok=False, error='Admin bot is not configured'), 503
+    supplied = request.headers.get('X-Telegram-Bot-Api-Secret-Token', '')
+    if not hmac.compare_digest(supplied, ADMIN_WEBHOOK_SECRET):
+        return jsonify(ok=False), 403
+
+    update = request.get_json(silent=True) or {}
+    msg = update.get('message') or {}
+    chat = msg.get('chat') or {}
+    tguser = msg.get('from') or {}
+    text_in = (msg.get('text') or '').strip()
+    if not chat.get('id') or not tguser.get('id'):
+        return jsonify(ok=True), 200
+
+    if int(tguser['id']) != ADMIN_ID:
+        if text_in.startswith('/start'):
+            send_admin_telegram_message(chat['id'], '⛔ यह Admin Bot केवल अधिकृत Admin के लिए है।')
+        return jsonify(ok=True), 200
+
+    if text_in.startswith('/start'):
+        keyboard = {'inline_keyboard': [[{
+            'text': '⚙️ Open EARNOVA Admin Panel',
+            'web_app': {'url': ADMIN_MINI_APP_URL}
+        }]]}
+        send_admin_telegram_message(
+            chat['id'],
+            '✅ EARNOVA Admin Bot चालू है। नीचे बटन दबाकर Admin Panel खोलें।',
+            keyboard
+        )
+    elif text_in.startswith('/help'):
+        send_admin_telegram_message(chat['id'], 'Admin Panel खोलने के लिए /start भेजें।')
+    return jsonify(ok=True), 200
+
+
+@app.route('/setup-user-webhook', methods=['GET'])
+def setup_user_webhook():
+    # One-time setup helper, protected by the existing admin webhook secret.
+    supplied = request.args.get('key', '')
+    setup_secret = os.environ.get('ADMIN_WEBHOOK_SECRET', '')
+    if not setup_secret or not hmac.compare_digest(supplied, setup_secret):
+        return jsonify(ok=False, error='Unauthorized'), 403
+    if not BOT_TOKEN:
+        return jsonify(ok=False, error='BOT_TOKEN is not configured'), 503
+    try:
+        import urllib.request
+        webhook_url = request.url_root.rstrip('/') + '/telegram/webhook'
+        payload = __import__('urllib.parse', fromlist=['urlencode']).urlencode({
+            'url': webhook_url,
+            'secret_token': setup_secret,
+            'allowed_updates': json.dumps(['message'])
+        }).encode()
+        req = urllib.request.Request(
+            f'https://api.telegram.org/bot{BOT_TOKEN}/setWebhook', data=payload
+        )
+        with urllib.request.urlopen(req, timeout=20) as response:
+            result = json.loads(response.read().decode())
+        if not result.get('ok'):
+            app.logger.error('User webhook setup rejected by Telegram')
+            return jsonify(ok=False, error='Telegram rejected webhook setup'), 502
+        return jsonify(ok=True, message='User bot webhook configured'), 200
+    except Exception:
+        app.logger.exception('User webhook setup failed')
+        return jsonify(ok=False, error='Could not configure user webhook'), 502
+
+
+@app.route('/admin/setup-webhook', methods=['GET'])
+def setup_admin_webhook():
+    # One-time setup helper. The key is the same secret Telegram will send in webhook headers.
+    supplied = request.args.get('key', '')
+    if not ADMIN_WEBHOOK_SECRET or not hmac.compare_digest(supplied, ADMIN_WEBHOOK_SECRET):
+        return jsonify(ok=False, error='Unauthorized'), 403
+    if not ADMIN_BOT_TOKEN:
+        return jsonify(ok=False, error='ADMIN_BOT_TOKEN is not configured'), 503
+    try:
+        import urllib.request
+        webhook_url = request.url_root.rstrip('/') + '/admin/telegram/webhook'
+        payload = __import__('urllib.parse', fromlist=['urlencode']).urlencode({
+            'url': webhook_url,
+            'secret_token': ADMIN_WEBHOOK_SECRET,
+            'allowed_updates': json.dumps(['message'])
+        }).encode()
+        req = urllib.request.Request(
+            f'https://api.telegram.org/bot{ADMIN_BOT_TOKEN}/setWebhook', data=payload
+        )
+        with urllib.request.urlopen(req, timeout=20) as response:
+            result = json.loads(response.read().decode())
+        if not result.get('ok'):
+            app.logger.error('Admin webhook setup rejected by Telegram')
+            return jsonify(ok=False, error='Telegram rejected webhook setup'), 502
+        return jsonify(ok=True, message='Admin bot webhook configured', webhook_url=webhook_url), 200
+    except Exception:
+        app.logger.exception('Admin webhook setup failed')
+        return jsonify(ok=False, error='Could not configure admin webhook'), 502
+
+
+if __name__=='__main__':
+    app.run(host='0.0.0.0',port=int(os.environ.get('PORT',5001)))
+
+
+, text_in)
+            referrer_id = int(match.group(1)) if match and match.group(1) else None
+            with get_db() as db:
+                create_tables(db); ensure_user(db,tguser,referrer_id)
+            first_name=(tguser.get('first_name') or 'there').strip()
+            welcome=(
+                f"⚡ EARNOVA REWARD\n"
+                f"Welcome, {first_name}! 🎉\n\n"
+                "Your rewards journey starts here.\n"
+                "🎯 Explore available tasks\n"
+                "💰 Track your points and wallet\n"
+                "👥 Invite friends with your referral link\n"
+                "📋 Check your task and withdrawal status\n\n"
+                "Tap the button below to open EARNOVA.\n"
+                "Good luck and enjoy! 🚀"
+            )
+            send_telegram_message(chat.get('id'), welcome,
+                {'inline_keyboard':[[{'text':'🚀 Open EARNOVA','web_app':{'url':'https://paisapaisa773-svg.github.io/earnova-miniapp/'}}],
+                                    [{'text':'📢 Official Channel','url':CHANNEL_URL},{'text':'💬 Support Group','url':GROUP_URL}]]})
+        except Exception: app.logger.exception('Telegram start handler failed')
+    return jsonify(ok=True),200
+
+
+def send_telegram_message(chat_id,text,reply_markup=None):
+    if not BOT_TOKEN or not chat_id: return
+    import urllib.request
+    payload={'chat_id':chat_id,'text':text}
+    if reply_markup: payload['reply_markup']=json.dumps(reply_markup)
+    data=__import__('urllib.parse',fromlist=['urlencode']).urlencode(payload).encode()
+    req=urllib.request.Request(f'https://api.telegram.org/bot{BOT_TOKEN}/sendMessage',data=data)
+    with urllib.request.urlopen(req,timeout=10) as response: response.read()
+
+
+
+
+# ---------------- Secure Admin API ----------------
+def verify_admin_init_data(init_data):
+    """Validate Telegram Mini App initData using the separate Admin Bot token."""
+    if not ADMIN_BOT_TOKEN or not init_data:
+        return None
+    try:
+        data = dict(parse_qsl(init_data, keep_blank_values=True))
+        received_hash = data.pop('hash', None)
+        if not received_hash:
+            return None
+        auth_date = int(data.get('auth_date', '0'))
+        now = int(time.time())
+        if auth_date <= 0 or now - auth_date > 86400 or auth_date > now + 60:
+            return None
+        check_string = '\n'.join(f'{k}={v}' for k, v in sorted(data.items()))
+        secret_key = hmac.new(b'WebAppData', ADMIN_BOT_TOKEN.encode(), hashlib.sha256).digest()
+        calculated = hmac.new(secret_key, check_string.encode(), hashlib.sha256).hexdigest()
+        if not hmac.compare_digest(calculated, received_hash):
+            return None
+        user = json.loads(data.get('user', '{}'))
+        if not isinstance(user, dict) or int(user.get('id', 0)) != ADMIN_ID:
+            return None
+        return user
+    except (ValueError, TypeError, json.JSONDecodeError):
+        return None
+
+
+def admin_body():
+    body = request.get_json(silent=True) or {}
+    init_data = request.headers.get('X-Telegram-Init-Data', '') or body.get('initData', '')
+    user = verify_admin_init_data(init_data)
+    return (user, body) if user else (None, body)
+
+
+def admin_required(fn):
+    from functools import wraps
+    @wraps(fn)
+    def wrapped(*args, **kwargs):
+        if request.method == 'OPTIONS':
+            return '', 204
+        user, body = admin_body()
+        if not user:
+            return jsonify(ok=False, error='Unauthorized admin session'), 401
+        request.admin_user = user
+        request.admin_body = body
+        return fn(*args, **kwargs)
+    return wrapped
+
+
+def admin_error(label):
+    app.logger.exception('Admin API failed: %s', label)
+    return jsonify(ok=False, error='Admin operation failed; check server logs'), 500
+
+
+@app.route('/api/admin/dashboard', methods=['POST','OPTIONS'])
+@admin_required
+def admin_dashboard():
+    if request.method == 'OPTIONS': return '', 204
+    try:
+        with get_db() as db:
+            create_tables(db)
+            d = db.execute("""SELECT
+                (SELECT COUNT(*) FROM users) total_users,
+                (SELECT COALESCE(SUM(balance),0) FROM users) total_balance,
+                (SELECT COUNT(*) FROM withdrawals WHERE status='pending') pending_withdrawals,
+                (SELECT COUNT(*) FROM withdrawals) total_withdrawals,
+                (SELECT COUNT(*) FROM task_completions WHERE status='pending') pending_tasks,
+                (SELECT COUNT(*) FROM task_completions WHERE status='completed') completed_tasks,
+                (SELECT COUNT(*) FROM referrals) total_referrals,
+                (SELECT COALESCE(SUM(amount),0) FROM wallet_transactions WHERE transaction_type='ad_reward' AND status='completed') ad_rewards""").fetchone()
+        return jsonify(ok=True, **{k: str(v) if isinstance(v, Decimal) else v for k,v in d.items()})
+    except Exception: return admin_error('dashboard')
+
+
+@app.route('/api/admin/withdrawals', methods=['POST','OPTIONS'])
+@admin_required
+def admin_withdrawals():
+    if request.method == 'OPTIONS': return '', 204
+    try:
+        status = str(request.admin_body.get('status','all'))
+        with get_db() as db:
+            create_tables(db)
+            if status == 'all':
+                rows = db.execute("""SELECT id,telegram_id,amount,upi_id,status,rejection_reason,created_at
+                    FROM withdrawals ORDER BY created_at DESC LIMIT 300""").fetchall()
+            else:
+                rows = db.execute("""SELECT id,telegram_id,amount,upi_id,status,rejection_reason,created_at
+                    FROM withdrawals WHERE status=%s ORDER BY created_at DESC LIMIT 300""",(status,)).fetchall()
+        return jsonify(ok=True, withdrawals=[{**r,'amount':str(r['amount']),'created_at':r['created_at'].isoformat() if r['created_at'] else None} for r in rows])
+    except Exception: return admin_error('withdrawals')
+
+
+@app.route('/api/admin/withdrawals/review', methods=['POST','OPTIONS'])
+@admin_required
+def admin_review_withdrawal():
+    if request.method == 'OPTIONS': return '', 204
+    body=request.admin_body
+    try: wid=int(body.get('withdrawal_id'))
+    except (TypeError,ValueError): return jsonify(ok=False,error='Invalid withdrawal ID'),400
+    action=str(body.get('action','')).lower()
+    if action not in ('approve','reject'): return jsonify(ok=False,error='Invalid action'),400
+    reason=str(body.get('reason','')).strip()[:500]
+    try:
+        with get_db() as db:
+            create_tables(db)
+            w=db.execute("SELECT * FROM withdrawals WHERE id=%s FOR UPDATE",(wid,)).fetchone()
+            if not w: return jsonify(ok=False,error='Withdrawal not found'),404
+            if w['status'] != 'pending': return jsonify(ok=False,error='Withdrawal already reviewed'),409
+            ledger = db.execute("""SELECT id FROM wallet_transactions
+                WHERE telegram_id=%s AND transaction_type='withdrawal' AND status='pending'
+                AND amount=%s ORDER BY created_at DESC LIMIT 1 FOR UPDATE""",
+                (w['telegram_id'], -w['amount'])).fetchone()
+            if not ledger: return jsonify(ok=False,error='Matching withdrawal ledger entry not found'),409
+            if action=='approve':
+                db.execute("UPDATE withdrawals SET status='approved',reviewed_at=NOW() WHERE id=%s",(wid,))
+                db.execute("UPDATE wallet_transactions SET status='completed' WHERE id=%s",(ledger['id'],))
+                db.execute('UPDATE user_settings SET first_paid_withdrawal=TRUE WHERE telegram_id=%s',(w['telegram_id'],))
+            else:
+                if not reason: return jsonify(ok=False,error='Rejection reason required'),400
+                db.execute("UPDATE withdrawals SET status='rejected',rejection_reason=%s,reviewed_at=NOW() WHERE id=%s",(reason,wid))
+                db.execute("UPDATE wallet_transactions SET status='rejected' WHERE id=%s",(ledger['id'],))
+                credit_wallet(db,int(w['telegram_id']),w['amount'],'withdrawal_refund',f'withdrawal-refund:{wid}')
+        return jsonify(ok=True,status='approved' if action=='approve' else 'rejected')
+    except Exception: return admin_error('withdrawal review')
+
+
+@app.route('/api/admin/users', methods=['POST','OPTIONS'])
+@admin_required
+def admin_users():
+    if request.method == 'OPTIONS': return '', 204
+    q=str(request.admin_body.get('q','')).strip()[:100]
+    try:
+        with get_db() as db:
+            create_tables(db)
+            if q:
+                rows=db.execute("""SELECT telegram_id,username,first_name,last_name,balance,created_at FROM users
+                    WHERE telegram_id::text ILIKE %s OR COALESCE(username,'') ILIKE %s OR COALESCE(first_name,'') ILIKE %s OR COALESCE(last_name,'') ILIKE %s
+                    ORDER BY created_at DESC LIMIT 100""",(f'%{q}%',f'%{q}%',f'%{q}%',f'%{q}%')).fetchall()
+            else:
+                rows=db.execute("SELECT telegram_id,username,first_name,last_name,balance,created_at FROM users ORDER BY created_at DESC LIMIT 50").fetchall()
+        return jsonify(ok=True,users=[{**r,'balance':str(r['balance']),'created_at':r['created_at'].isoformat() if r['created_at'] else None} for r in rows])
+    except Exception: return admin_error('users')
+
+
+@app.route('/api/admin/user-transactions', methods=['POST','OPTIONS'])
+@admin_required
+def admin_user_transactions():
+    if request.method == 'OPTIONS': return '', 204
+    try: tid=int(request.admin_body.get('telegram_id'))
+    except (TypeError,ValueError): return jsonify(ok=False,error='Invalid Telegram ID'),400
+    try:
+        with get_db() as db:
+            create_tables(db)
+            rows=db.execute("""SELECT amount,transaction_type,status,created_at FROM wallet_transactions
+                WHERE telegram_id=%s ORDER BY created_at DESC LIMIT 100""",(tid,)).fetchall()
+        return jsonify(ok=True,transactions=[{**r,'amount':str(r['amount']),'created_at':r['created_at'].isoformat() if r['created_at'] else None} for r in rows])
+    except Exception: return admin_error('user transactions')
+
+
+@app.route('/api/admin/user-detail', methods=['POST','OPTIONS'])
+@admin_required
+def admin_user_detail():
+    if request.method == 'OPTIONS': return '', 204
+    try:
+        tid = int(request.admin_body.get('telegram_id'))
+    except (TypeError, ValueError):
+        return jsonify(ok=False, error='Invalid Telegram ID'), 400
+    try:
+        with get_db() as db:
+            create_tables(db)
+            user = db.execute("""SELECT telegram_id,username,first_name,last_name,balance,created_at
+                FROM users WHERE telegram_id=%s""", (tid,)).fetchone()
+            if not user:
+                return jsonify(ok=False, error='User not found'), 404
+            totals = db.execute("""SELECT
+                COALESCE(SUM(amount) FILTER (
+                    WHERE status='completed' AND amount>0
+                    AND transaction_type <> 'withdrawal_refund'
+                ),0) total_earned
+                FROM wallet_transactions WHERE telegram_id=%s""", (tid,)).fetchone()
+            task_stats = db.execute("""SELECT
+                COUNT(*) FILTER (WHERE status='completed') completed_tasks,
+                COUNT(*) FILTER (WHERE status='rejected') rejected_tasks,
+                COUNT(*) FILTER (WHERE status='pending') pending_tasks
+                FROM task_completions WHERE telegram_id=%s""", (tid,)).fetchone()
+            referral_count = db.execute("SELECT COUNT(*) total FROM referrals WHERE referrer_id=%s AND status='approved'", (tid,)).fetchone()
+            withdrawn = db.execute("SELECT COALESCE(SUM(amount),0) total FROM withdrawals WHERE telegram_id=%s AND status='approved'", (tid,)).fetchone()
+            transactions = db.execute("""SELECT id,amount,transaction_type,status,created_at
+                FROM wallet_transactions WHERE telegram_id=%s ORDER BY created_at DESC LIMIT 100""", (tid,)).fetchall()
+            tasks = db.execute("""SELECT c.id,c.task_id,c.status,c.reward,c.created_at,t.title
+                FROM task_completions c LEFT JOIN tasks t ON t.id=c.task_id
+                WHERE c.telegram_id=%s ORDER BY c.created_at DESC LIMIT 100""", (tid,)).fetchall()
+            referrals = db.execute("""SELECT id,referrer_id,referred_id,status,created_at FROM referrals
+                WHERE referrer_id=%s OR referred_id=%s ORDER BY created_at DESC LIMIT 100""", (tid,tid)).fetchall()
+            withdrawals = db.execute("""SELECT id,amount,upi_id,status,created_at,reviewed_at
+                FROM withdrawals WHERE telegram_id=%s ORDER BY created_at DESC LIMIT 100""", (tid,)).fetchall()
+        def iso(row, key='created_at'):
+            value = row.get(key)
+            return value.isoformat() if value else None
+        activity = [{
+            'id': r['id'], 'label': str(r['transaction_type']).replace('_',' ').title(),
+            'amount': str(r['amount']), 'status': r['status'], 'created_at': iso(r)
+        } for r in transactions if r['status'] == 'completed']
+        referral_rows = [{
+            'id': r['id'], 'role': 'referrer' if int(r['referrer_id']) == tid else 'referred',
+            'other_user_id': int(r['referred_id'] if int(r['referrer_id']) == tid else r['referrer_id']),
+            'status': r['status'], 'created_at': iso(r)
+        } for r in referrals]
+        return jsonify(ok=True,
+            user={**user,'balance':str(user['balance']),'created_at':iso(user)},
+            summary={
+                'total_earned':str(totals['total_earned']),
+                'completed_tasks':task_stats['completed_tasks'],
+                'rejected_tasks':task_stats['rejected_tasks'],
+                'pending_tasks':task_stats['pending_tasks'],
+                'referrals':referral_count['total'],
+                'withdrawn':str(withdrawn['total'])
+            },
+            activity=activity,
+            transactions=[{**r,'amount':str(r['amount']),'created_at':iso(r)} for r in transactions],
+            tasks=[{**r,'reward':str(r['reward']),'created_at':iso(r)} for r in tasks],
+            referrals=referral_rows,
+            withdrawals=[{**r,'amount':str(r['amount']),'created_at':iso(r),'reviewed_at':iso(r,'reviewed_at')} for r in withdrawals]
+        ), 200
+    except Exception:
+        return admin_error('user detail')
+
+
+@app.route('/api/admin/tasks', methods=['POST','OPTIONS'])
+@admin_required
+def admin_tasks():
+    if request.method == 'OPTIONS': return '', 204
+    try:
+        with get_db() as db:
+            create_tables(db)
+            rows=db.execute("SELECT id,title,description,task_type,reward,target_url,active,verification FROM tasks ORDER BY id DESC").fetchall()
+        return jsonify(ok=True,tasks=[{**r,'reward':str(r['reward'])} for r in rows])
+    except Exception: return admin_error('tasks')
+
+
+@app.route('/api/admin/tasks/create', methods=['POST','OPTIONS'])
+@admin_required
+def admin_create_task():
+    if request.method == 'OPTIONS': return '', 204
+    b=request.admin_body
+    title=str(b.get('title','')).strip()[:160]
+    try: reward=Decimal(str(b.get('reward',''))).quantize(Decimal('0.01'))
+    except (InvalidOperation,ValueError): return jsonify(ok=False,error='Invalid reward'),400
+    verification=str(b.get('verification','manual'))
+    if not title or not reward.is_finite() or reward<=0 or verification != 'manual':
+        return jsonify(ok=False,error='Only manual review tasks are supported; enter a title and positive reward'),400
+    try:
+        with get_db() as db:
+            create_tables(db)
+            row=db.execute("""INSERT INTO tasks(title,description,task_type,reward,target_url,verification)
+                VALUES(%s,%s,%s,%s,%s,%s) RETURNING id""",(title,str(b.get('description',''))[:1000],str(b.get('task_type','custom'))[:40],reward,str(b.get('target_url',''))[:1000] or None,verification)).fetchone()
+        return jsonify(ok=True,task_id=row['id'])
+    except Exception: return admin_error('create task')
+
+
+@app.route('/api/admin/tasks/update', methods=['POST','OPTIONS'])
+@admin_required
+def admin_update_task():
+    if request.method == 'OPTIONS': return '', 204
+    try: task_id=int(request.admin_body.get('task_id'))
+    except (TypeError,ValueError): return jsonify(ok=False,error='Invalid task ID'),400
+    active=request.admin_body.get('active')
+    if not isinstance(active,bool): return jsonify(ok=False,error='Active must be true or false'),400
+    try:
+        with get_db() as db:
+            create_tables(db)
+            row=db.execute("UPDATE tasks SET active=%s WHERE id=%s RETURNING id",(active,task_id)).fetchone()
+        if not row: return jsonify(ok=False,error='Task not found'),404
+        return jsonify(ok=True)
+    except Exception: return admin_error('update task')
+
+
+@app.route('/api/admin/task-submissions', methods=['POST','OPTIONS'])
+@admin_required
+def admin_task_submissions():
+    if request.method == 'OPTIONS': return '', 204
+    status=str(request.admin_body.get('status','pending'))
+    try:
+        with get_db() as db:
+            create_tables(db)
+            rows=db.execute("""SELECT c.id,c.task_id,c.telegram_id,c.status,c.reward,c.created_at,t.title
+                FROM task_completions c JOIN tasks t ON t.id=c.task_id
+                WHERE c.status=%s ORDER BY c.created_at ASC LIMIT 300""",(status,)).fetchall()
+        return jsonify(ok=True,submissions=[{**r,'reward':str(r['reward']),'created_at':r['created_at'].isoformat() if r['created_at'] else None} for r in rows])
+    except Exception: return admin_error('task submissions')
+
+
+@app.route('/api/admin/task-submissions/review', methods=['POST','OPTIONS'])
+@admin_required
+def admin_review_task_submission():
+    if request.method == 'OPTIONS': return '', 204
+    b=request.admin_body
+    try: sid=int(b.get('submission_id'))
+    except (TypeError,ValueError): return jsonify(ok=False,error='Invalid submission ID'),400
+    action=str(b.get('action','')).lower()
+    if action not in ('approve','reject'): return jsonify(ok=False,error='Invalid action'),400
+    try:
+        with get_db() as db:
+            create_tables(db)
+            row=db.execute("SELECT * FROM task_completions WHERE id=%s FOR UPDATE",(sid,)).fetchone()
+            if not row: return jsonify(ok=False,error='Submission not found'),404
+            if row['status']!='pending': return jsonify(ok=False,error='Submission already reviewed'),409
+            if action=='approve':
+                db.execute("UPDATE task_completions SET status='completed',reviewed_at=NOW() WHERE id=%s",(sid,))
+                credit_wallet(db,int(row['telegram_id']),row['reward'],'task_reward',f'task:{row["task_id"]}:{row["telegram_id"]}')
+            else:
+                db.execute("UPDATE task_completions SET status='rejected',reviewed_at=NOW() WHERE id=%s",(sid,))
+        return jsonify(ok=True,status='approved' if action=='approve' else 'rejected')
+    except Exception: return admin_error('review task submission')
+
+
+@app.route('/api/admin/bonus-codes', methods=['POST','OPTIONS'])
+@admin_required
+def admin_bonus_codes():
+    if request.method == 'OPTIONS': return '', 204
+    try:
+        with get_db() as db:
+            create_tables(db)
+            rows=db.execute("SELECT id,code,reward,max_claims,claims,expires_at,active,release_at FROM bonus_codes ORDER BY id DESC LIMIT 300").fetchall()
+        return jsonify(ok=True,codes=[{**r,'reward':str(r['reward']),'expires_at':r['expires_at'].isoformat() if r['expires_at'] else None,'release_at':r['release_at'].isoformat() if r['release_at'] else None} for r in rows])
+    except Exception: return admin_error('bonus codes')
+
+
+@app.route('/api/admin/bonus-codes/create', methods=['POST','OPTIONS'])
+@admin_required
+def admin_create_bonus_code():
+    if request.method == 'OPTIONS': return '', 204
+    b=request.admin_body
+    code=str(b.get('code','')).strip().upper()[:64]
+    try:
+        reward=Decimal(str(b.get('reward',''))).quantize(Decimal('0.01'))
+        max_claims=int(b.get('max_claims',100))
+    except (InvalidOperation,ValueError,TypeError): return jsonify(ok=False,error='Invalid reward or claim limit'),400
+    if not code or not reward.is_finite() or reward<=0 or max_claims<1 or max_claims>1000000:
+        return jsonify(ok=False,error='Valid code, positive reward and claim limit required'),400
+    try:
+        with get_db() as db:
+            create_tables(db)
+            row=db.execute("""INSERT INTO bonus_codes(code,reward,max_claims,release_at,expires_at)
+                VALUES(%s,%s,%s,%s,%s) RETURNING id""",(code,reward,max_claims,b.get('release_at') or None,b.get('expires_at') or None)).fetchone()
+        return jsonify(ok=True,bonus_id=row['id'])
+    except Exception:
+        app.logger.exception('Admin create bonus failed')
+        return jsonify(ok=False,error='Could not create bonus code (code may already exist)'),400
+
+
+@app.route('/api/admin/bonus-codes/update', methods=['POST','OPTIONS'])
+@admin_required
+def admin_update_bonus_code():
+    if request.method == 'OPTIONS': return '', 204
+    try: bonus_id=int(request.admin_body.get('bonus_id'))
+    except (TypeError,ValueError): return jsonify(ok=False,error='Invalid bonus ID'),400
+    active=request.admin_body.get('active')
+    if not isinstance(active,bool): return jsonify(ok=False,error='Active must be true or false'),400
+    try:
+        with get_db() as db:
+            create_tables(db)
+            row=db.execute("UPDATE bonus_codes SET active=%s WHERE id=%s RETURNING id",(active,bonus_id)).fetchone()
+        if not row: return jsonify(ok=False,error='Bonus code not found'),404
+        return jsonify(ok=True)
+    except Exception: return admin_error('update bonus code')
+
+
+@app.route('/api/admin/referrals', methods=['POST','OPTIONS'])
+@admin_required
+def admin_referrals():
+    if request.method == 'OPTIONS': return '', 204
+    status=str(request.admin_body.get('status','all'))
+    try:
+        with get_db() as db:
+            create_tables(db)
+            if status=='all':
+                rows=db.execute("""SELECT r.id,r.referrer_id,r.referred_id,r.status,r.created_at,
+                    ru.username AS referrer_username,ru.first_name AS referrer_first_name,
+                    du.username AS referred_username,du.first_name AS referred_first_name
+                    FROM referrals r
+                    LEFT JOIN users ru ON ru.telegram_id=r.referrer_id
+                    LEFT JOIN users du ON du.telegram_id=r.referred_id
+                    ORDER BY r.created_at DESC LIMIT 500""").fetchall()
+            else:
+                rows=db.execute("""SELECT r.id,r.referrer_id,r.referred_id,r.status,r.created_at,
+                    ru.username AS referrer_username,ru.first_name AS referrer_first_name,
+                    du.username AS referred_username,du.first_name AS referred_first_name
+                    FROM referrals r
+                    LEFT JOIN users ru ON ru.telegram_id=r.referrer_id
+                    LEFT JOIN users du ON du.telegram_id=r.referred_id
+                    WHERE r.status=%s ORDER BY r.created_at DESC LIMIT 500""",(status,)).fetchall()
+            summary=db.execute("""SELECT r.referrer_id,
+                COALESCE(u.first_name,'') AS first_name,COALESCE(u.username,'') AS username,
+                COUNT(*) AS total,
+                COUNT(*) FILTER(WHERE r.status='approved') AS approved,
+                COUNT(*) FILTER(WHERE r.status='pending') AS pending,
+                COUNT(*) FILTER(WHERE r.status='rejected') AS rejected
+                FROM referrals r LEFT JOIN users u ON u.telegram_id=r.referrer_id
+                GROUP BY r.referrer_id,u.first_name,u.username
+                ORDER BY COUNT(*) DESC,r.referrer_id ASC LIMIT 500""").fetchall()
+        return jsonify(ok=True,
+            referrals=[{**r,'created_at':r['created_at'].isoformat() if r['created_at'] else None} for r in rows],
+            summary=summary)
+    except Exception: return admin_error('referrals')
+
+
+@app.route('/api/admin/referrals/review', methods=['POST','OPTIONS'])
+@admin_required
+def admin_review_referral():
+    if request.method == 'OPTIONS': return '', 204
+    b=request.admin_body
+    try: rid=int(b.get('referral_id'))
+    except (TypeError,ValueError): return jsonify(ok=False,error='Invalid referral ID'),400
+    action=str(b.get('action','')).lower()
+    if action not in ('approve','reject'): return jsonify(ok=False,error='Invalid action'),400
+    try:
+        with get_db() as db:
+            create_tables(db)
+            row=db.execute("SELECT * FROM referrals WHERE id=%s FOR UPDATE",(rid,)).fetchone()
+            if not row: return jsonify(ok=False,error='Referral not found'),404
+            if row['status']!='pending': return jsonify(ok=False,error='Referral already reviewed'),409
+            if action=='approve':
+                db.execute("UPDATE referrals SET status='approved',approved_at=NOW() WHERE id=%s",(rid,))
+            else:
+                db.execute("UPDATE referrals SET status='rejected' WHERE id=%s",(rid,))
+        return jsonify(ok=True,status='approved' if action=='approve' else 'rejected')
+    except Exception: return admin_error('review referral')
+
+
+# Separate admin bot webhook. It does not change the existing user-bot webhook.
+def send_admin_telegram_message(chat_id, text, reply_markup=None):
+    if not ADMIN_BOT_TOKEN or not chat_id:
+        raise RuntimeError('ADMIN_BOT_TOKEN is not configured')
+    import urllib.request
+    payload = {'chat_id': chat_id, 'text': text}
+    if reply_markup:
+        payload['reply_markup'] = json.dumps(reply_markup)
+    data = __import__('urllib.parse', fromlist=['urlencode']).urlencode(payload).encode()
+    req = urllib.request.Request(
+        f'https://api.telegram.org/bot{ADMIN_BOT_TOKEN}/sendMessage', data=data
+    )
+    with urllib.request.urlopen(req, timeout=15) as response:
+        result = json.loads(response.read().decode())
+    if not result.get('ok'):
+        raise RuntimeError('Telegram sendMessage failed')
+
+
+@app.route('/admin/telegram/webhook', methods=['POST'])
+def admin_telegram_webhook():
+    if not ADMIN_BOT_TOKEN or not ADMIN_WEBHOOK_SECRET:
+        return jsonify(ok=False, error='Admin bot is not configured'), 503
+    supplied = request.headers.get('X-Telegram-Bot-Api-Secret-Token', '')
+    if not hmac.compare_digest(supplied, ADMIN_WEBHOOK_SECRET):
+        return jsonify(ok=False), 403
+
+    update = request.get_json(silent=True) or {}
+    msg = update.get('message') or {}
+    chat = msg.get('chat') or {}
+    tguser = msg.get('from') or {}
+    text_in = (msg.get('text') or '').strip()
+    if not chat.get('id') or not tguser.get('id'):
+        return jsonify(ok=True), 200
+
+    if int(tguser['id']) != ADMIN_ID:
+        if text_in.startswith('/start'):
+            send_admin_telegram_message(chat['id'], '⛔ यह Admin Bot केवल अधिकृत Admin के लिए है।')
+        return jsonify(ok=True), 200
+
+    if text_in.startswith('/start'):
+        keyboard = {'inline_keyboard': [[{
+            'text': '⚙️ Open EARNOVA Admin Panel',
+            'web_app': {'url': ADMIN_MINI_APP_URL}
+        }]]}
+        send_admin_telegram_message(
+            chat['id'],
+            '✅ EARNOVA Admin Bot चालू है। नीचे बटन दबाकर Admin Panel खोलें।',
+            keyboard
+        )
+    elif text_in.startswith('/help'):
+        send_admin_telegram_message(chat['id'], 'Admin Panel खोलने के लिए /start भेजें।')
+    return jsonify(ok=True), 200
+
+
+@app.route('/setup-user-webhook', methods=['GET'])
+def setup_user_webhook():
+    # One-time setup helper, protected by the existing admin webhook secret.
+    supplied = request.args.get('key', '')
+    setup_secret = os.environ.get('ADMIN_WEBHOOK_SECRET', '')
+    if not setup_secret or not hmac.compare_digest(supplied, setup_secret):
+        return jsonify(ok=False, error='Unauthorized'), 403
+    if not BOT_TOKEN:
+        return jsonify(ok=False, error='BOT_TOKEN is not configured'), 503
+    try:
+        import urllib.request
+        webhook_url = request.url_root.rstrip('/') + '/telegram/webhook'
+        payload = __import__('urllib.parse', fromlist=['urlencode']).urlencode({
+            'url': webhook_url,
+            'secret_token': setup_secret,
+            'allowed_updates': json.dumps(['message'])
+        }).encode()
+        req = urllib.request.Request(
+            f'https://api.telegram.org/bot{BOT_TOKEN}/setWebhook', data=payload
+        )
+        with urllib.request.urlopen(req, timeout=20) as response:
+            result = json.loads(response.read().decode())
+        if not result.get('ok'):
+            app.logger.error('User webhook setup rejected by Telegram')
+            return jsonify(ok=False, error='Telegram rejected webhook setup'), 502
+        return jsonify(ok=True, message='User bot webhook configured'), 200
+    except Exception:
+        app.logger.exception('User webhook setup failed')
+        return jsonify(ok=False, error='Could not configure user webhook'), 502
+
+
+@app.route('/admin/setup-webhook', methods=['GET'])
+def setup_admin_webhook():
+    # One-time setup helper. The key is the same secret Telegram will send in webhook headers.
+    supplied = request.args.get('key', '')
+    if not ADMIN_WEBHOOK_SECRET or not hmac.compare_digest(supplied, ADMIN_WEBHOOK_SECRET):
+        return jsonify(ok=False, error='Unauthorized'), 403
+    if not ADMIN_BOT_TOKEN:
+        return jsonify(ok=False, error='ADMIN_BOT_TOKEN is not configured'), 503
+    try:
+        import urllib.request
+        webhook_url = request.url_root.rstrip('/') + '/admin/telegram/webhook'
+        payload = __import__('urllib.parse', fromlist=['urlencode']).urlencode({
+            'url': webhook_url,
+            'secret_token': ADMIN_WEBHOOK_SECRET,
+            'allowed_updates': json.dumps(['message'])
+        }).encode()
+        req = urllib.request.Request(
+            f'https://api.telegram.org/bot{ADMIN_BOT_TOKEN}/setWebhook', data=payload
+        )
+        with urllib.request.urlopen(req, timeout=20) as response:
+            result = json.loads(response.read().decode())
+        if not result.get('ok'):
+            app.logger.error('Admin webhook setup rejected by Telegram')
+            return jsonify(ok=False, error='Telegram rejected webhook setup'), 502
+        return jsonify(ok=True, message='Admin bot webhook configured', webhook_url=webhook_url), 200
+    except Exception:
+        app.logger.exception('Admin webhook setup failed')
+        return jsonify(ok=False, error='Could not configure admin webhook'), 502
+
+
+if __name__=='__main__':
+    app.run(host='0.0.0.0',port=int(os.environ.get('PORT',5001)))
+
+
