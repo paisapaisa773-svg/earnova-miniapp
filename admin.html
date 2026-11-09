@@ -167,6 +167,7 @@
         <button class="tab" data-tab="submissions" onclick="loadSection('submissions')">☑ &nbsp; Task Reviews</button>
         <button class="tab" data-tab="bonuses" onclick="loadSection('bonuses')">✦ &nbsp; Bonus Codes</button>
         <button class="tab" data-tab="referrals" onclick="loadSection('referrals')">⇄ &nbsp; Referrals</button>
+        <button class="tab" data-tab="ads" onclick="loadSection('ads')">▶ &nbsp; Ads Monitor</button>
         <button class="tab" data-tab="announcements" onclick="loadSection('announcements')">◉ &nbsp; Announcements</button>
         <button class="tab" data-tab="logs" onclick="loadSection('logs')">▤ &nbsp; Logs</button>
         <button class="tab" data-tab="support" onclick="loadSection('support')">◌ &nbsp; Support</button>
@@ -238,11 +239,53 @@
     if(tab==='submissions') await submissions();
     if(tab==='bonuses') await bonuses();
     if(tab==='referrals') await referrals();
+    if(tab==='ads') await adsMonitor();
     if(tab==='announcements') featurePage('Announcements','Send platform-wide Telegram announcements.','The current backend has no admin announcement endpoint, so sending is intentionally disabled until a secure broadcast API is added.');
     if(tab==='logs') featurePage('Activity Logs','Review administrative and platform events.','The current backend does not expose an admin audit-log endpoint yet.');
     if(tab==='support') featurePage('Support Center','Support tools and user assistance.','A support-ticket endpoint and workflow are not present in the current backend yet.');
     if(tab==='settings') featurePage('Settings & Security','Admin preferences and service configuration.','Sensitive configuration stays in Render environment variables; this page does not expose secrets or change server settings.');
   }catch(e){$('content').innerHTML=`<div class="notice danger-text">${esc(e.message)}</div>`}};
+  async function adsMonitor(telegramId=''){
+    const d=await api('/api/admin/ads','POST',telegramId?{telegram_id:telegramId}:{});
+    const s=d.summary||{};
+    const rows=(d.activity||[]).map(r=>{
+      const title=r.source==='ad_history'?'Ad session':'Monetag '+(r.event_type||'event');
+      const detail=[r.network,r.event_id?'Event ID: '+r.event_id:'',r.reward_event_type||'',r.status||''].filter(Boolean).join(' · ');
+      const tone=r.status==='credited'||r.reward_event_type==='valued'?'completed':r.status==='pending'?'pending':'';
+      return '<article class="item"><div class="row"><b>'+esc(title)+'</b><span class="pill '+tone+'">'+esc(r.status||r.reward_event_type||'recorded')+'</span></div><p>'+esc(detail)+'</p><p class="muted small">'+esc(formatIndiaDateTime(r.created_at))+(r.reward?' · Reward: '+money(r.reward):'')+'</p></article>';
+    }).join('');
+    const who=d.user?'<div class="notice">User: <b>'+esc([d.user.first_name,d.user.last_name].filter(Boolean).join(' ')||d.user.username||'EARNOVA User')+'</b> · Telegram ID: '+esc(d.user.telegram_id)+'</div>':(telegramId?'<div class="notice">Is ID ka user profile nahi mila; agar ad records hain to neeche dikh sakte hain.</div>':'<div class="notice">All users ka combined ad activity overview.</div>');
+    $('content').innerHTML=
+      '<div class="dash-heading"><div><h2>▶ Ads Monitor</h2><p>Ad sessions, Monetag postback events aur wallet credits ka audit</p></div><span class="live-chip">● Live records</span></div>'+
+      '<form class="user-search" onsubmit="searchAds(event)"><input id="adsUserId" inputmode="numeric" placeholder="Telegram User ID daalein (blank = all users)" value="'+esc(telegramId)+'"><button class="primary" type="submit">Search User</button></form>'+
+      who+
+      '<div class="grid">'+
+        card('Ad sessions',s.sessions_total)+
+        card('Credited sessions',s.credited_sessions)+
+        card('Pending sessions',s.pending_sessions)+
+        card('Valued impressions (events)',s.valued_impressions)+
+        card('Valued click events',s.valued_clicks)+
+        card('Non-valued events',s.nonvalued_events)+
+        card('Wallet credit count',s.wallet_credit_count)+
+        card('Wallet credited',money(s.wallet_credit_amount))+
+      '</div>'+
+      '<div class="dash-panel" style="margin-top:14px"><h3>🔎 Reconciliation Check</h3>'+
+        '<div class="activity-line"><span>Credited ad-history records</span><b>'+esc(s.credited_sessions||0)+'</b></div>'+
+        '<div class="activity-line"><span>Completed ad-reward wallet entries</span><b>'+esc(s.wallet_credit_count||0)+'</b></div>'+
+        '<div class="activity-line"><span>Ad-history reward total</span><b>'+money(s.session_reward_sum)+'</b></div>'+
+        '<div class="activity-line"><span>Wallet ad-reward total</span><b>'+money(s.wallet_credit_amount)+'</b></div>'+
+        '<p class="muted small">Difference review ke liye signal hai, fraud ka automatic proof nahi. Monetag postback records ko actual human ad views ki guarantee na samjhein.</p>'+
+      '</div>'+
+      '<div class="user-section-head"><h3>Recent Ad Activity</h3><span class="pill">'+(d.activity||[]).length+' records shown</span></div>'+
+      '<div class="stack">'+(rows||'<div class="empty">Is filter ke liye koi ad activity record nahi mila.</div>')+'</div>';
+  }
+  window.searchAds=(event)=>{
+    if(event)event.preventDefault();
+    const id=String($('adsUserId')?.value||'').trim();
+    if(id&&!/^\d+$/.test(id)){toast('Valid numeric Telegram ID daalein');return;}
+    adsMonitor(id).catch(e=>{$('content').innerHTML='<div class="notice danger-text">'+esc(e.message)+'</div>';});
+  };
+
   async function dashboard(initialData=null){
     const d=initialData||await api('/api/admin/dashboard','POST');
     const [wr,tr,rr]=await Promise.allSettled([
