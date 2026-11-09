@@ -630,6 +630,12 @@ html[data-theme="light"] .mission-copy b{color:#241a35}
    <div style="flex:1;text-align:center;background:#ffffff20;border-radius:14px;padding:12px 4px"><div style="font-size:25px">🥉</div><b style="font-size:20px">₹200</b><div style="font-size:11px">3rd Place</div></div>
   </div><div style="font-size:11px;opacity:.8;margin-top:10px">Total monthly prize pool: ₹1,000 • Admin verification required</div>
  </div>
+ <div class="panel" style="padding:10px 14px;margin-top:-8px">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+   <span style="font-size:12px;color:var(--muted);font-weight:600">⏳ Month ends in</span>
+   <b id="leaderboardCountdown" style="font-size:14px;color:#16a34a;font-variant-numeric:tabular-nums">Calculating...</b>
+  </div>
+ </div>
  <div class="panel">
   <div style="display:flex;gap:8px;margin-bottom:14px"><button id="leaderMonthly" class="primary" style="flex:1" onclick="loadLeaderboard('monthly')">Monthly</button><button id="leaderAllTime" class="secondary" style="flex:1" onclick="loadLeaderboard('all_time')">All Time</button></div>
   <div id="leadersList">Loading...</div>
@@ -1089,6 +1095,23 @@ async function requestWithdraw(){
   await refreshBalance();await loadWalletDetails();
  }catch(e){box.textContent=e.message}
 }
+function updateLeaderboardCountdown(){
+ const el=document.getElementById("leaderboardCountdown");
+ if(!el)return;
+ const now=new Date();
+ const istNow=new Date(now.getTime()+330*60*1000);
+ const nextMonthUtc=Date.UTC(istNow.getUTCFullYear(),istNow.getUTCMonth()+1,1)-330*60*1000;
+ let remaining=Math.max(0,nextMonthUtc-now.getTime());
+ if(remaining<=0){el.textContent="New month starting";return}
+ const days=Math.floor(remaining/86400000);remaining%=86400000;
+ const hours=Math.floor(remaining/3600000);remaining%=3600000;
+ const minutes=Math.floor(remaining/60000);remaining%=60000;
+ const seconds=Math.floor(remaining/1000);
+ el.textContent=days+"d "+String(hours).padStart(2,"0")+"h "+String(minutes).padStart(2,"0")+"m "+String(seconds).padStart(2,"0")+"s";
+}
+updateLeaderboardCountdown();
+if(!window.earnovaLeaderboardTimer)window.earnovaLeaderboardTimer=setInterval(updateLeaderboardCountdown,1000);
+
 async function loadLeaderboard(period="monthly"){
   if(!document.getElementById("leaderboard").classList.contains("active"))goTo("leaderboard");
   const box=document.getElementById("leadersList");box.textContent="Loading rankings...";
