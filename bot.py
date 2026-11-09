@@ -539,7 +539,7 @@ def leaderboard():
                 rows=db.execute("SELECT u.first_name,u.username,COUNT(r.id) successful_referrals FROM referrals r JOIN users u ON u.telegram_id=r.referrer_id WHERE r.status='approved' AND r.approved_at>=date_trunc('month',NOW()) GROUP BY u.telegram_id,u.first_name,u.username ORDER BY successful_referrals DESC LIMIT 50").fetchall()
             else:
                 rows=db.execute("SELECT u.first_name,u.username,COUNT(r.id) successful_referrals FROM referrals r JOIN users u ON u.telegram_id=r.referrer_id WHERE r.status='approved' GROUP BY u.telegram_id,u.first_name,u.username ORDER BY successful_referrals DESC LIMIT 50").fetchall()
-        return jsonify(ok=True,period=period,leaders=rows),200
+        return jsonify(ok=True,period=period,leaders=rows,prizes=[{'rank':1,'amount':'500','label':'🥇 1st Place'},{'rank':2,'amount':'300','label':'🥈 2nd Place'},{'rank':3,'amount':'200','label':'🥉 3rd Place'}],reward_note='Monthly prizes are reviewed and confirmed by admin after month end.'),200
     except Exception:
         app.logger.exception('Leaderboard failed'); return jsonify(ok=False,error='Server error'),500
 
