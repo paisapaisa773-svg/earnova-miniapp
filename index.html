@@ -420,6 +420,70 @@ html[data-theme="light"] .profile-avatar{background:#eee5fa;color:#6b2fa7}html[d
 html[data-theme="light"] .theme-options button{background:#f1ebf8;color:#514064;border-color:#ded2ec}html[data-theme="light"] .theme-options button.selected{background:#7b20ed;color:#fff;border-color:#7b20ed}
 html[data-theme="light"] .status{color:#655778}
 
+
+/* Tasks page cards — explicit layout and visual treatment */
+.earn-streak-card{
+ display:block;position:relative;overflow:hidden;margin:16px 0 18px;padding:17px;
+ border-radius:19px;background:linear-gradient(135deg,#172554 0%,#312e81 55%,#4c1d95 100%);
+ border:1px solid rgba(129,140,248,.48);box-shadow:0 12px 28px rgba(49,46,129,.24);
+}
+.streak-top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.streak-top>span:first-child{font-size:12px;font-weight:800;letter-spacing:.8px;color:#e0e7ff}
+.streak-tag{font-size:10px;font-weight:800;letter-spacing:.7px;padding:6px 9px;border-radius:20px;background:rgba(255,255,255,.15);color:#fff}
+.streak-main{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.streak-main>div{min-width:0;flex:1}
+.streak-main b{display:block;font-size:17px;line-height:1.35;color:#fff}
+.streak-main small{display:block;margin-top:5px;font-size:12px;line-height:1.5;color:#dbeafe}
+.streak-fire{font-size:30px;flex:none}
+.streak-status{margin-top:13px;padding:10px 11px;border-radius:11px;background:rgba(8,12,35,.28);font-size:12px;line-height:1.5;color:#e0e7ff}
+.earn-streak-card .primary{width:100%;margin-top:12px;background:linear-gradient(135deg,#a5b4fc,#818cf8 55%,#7c3aed);color:#170b2b}
+.watch-feature-card{
+ display:block;position:relative;overflow:hidden;margin:18px 0;padding:17px;
+ border-radius:21px;background:linear-gradient(135deg,#581c87 0%,#7e22ce 43%,#be185d 100%);
+ border:1px solid rgba(249,168,212,.5);box-shadow:0 14px 32px rgba(126,34,206,.28);
+}
+.watch-feature-head{display:flex;align-items:center;justify-content:space-between;gap:9px;flex-wrap:wrap;margin-bottom:15px}
+.watch-feature-label{font-size:11px;font-weight:900;letter-spacing:1px;color:#fdf4ff}
+.watch-feature-chip{font-size:10px;font-weight:900;letter-spacing:.7px;padding:6px 9px;border-radius:20px;background:#fef08a;color:#581c87}
+.watch-feature-body{display:flex;align-items:center;gap:13px;min-width:0}
+.watch-play-icon{width:48px;height:48px;flex:none;display:grid;place-items:center;border-radius:15px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);font-size:20px;color:#fff}
+.watch-feature-copy{min-width:0;flex:1}
+.watch-feature-copy h2{font-size:21px;line-height:1.2;margin:0 0 5px;color:#fff;font-weight:900;letter-spacing:.2px}
+.watch-feature-copy>b{display:block;font-size:12px;letter-spacing:1px;color:#fce7f3}
+.watch-feature-copy p{font-size:12px;line-height:1.5;margin:7px 0 0;color:#fce7f3}
+.watch-feature-bottom{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:16px;padding-top:13px;border-top:1px solid rgba(255,255,255,.2)}
+.watch-feature-bottom>div{min-width:0}
+.watch-feature-bottom small{display:block;font-size:10px;letter-spacing:1px;color:#fbcfe8}
+.watch-feature-bottom strong{display:block;margin-top:3px;font-size:12px;line-height:1.35;color:#fff}
+.watch-feature-bottom button{flex:none;border:0;border-radius:12px;padding:11px 14px;background:#fff;color:#701a75;font-size:12px;font-weight:900;box-shadow:0 5px 15px rgba(0,0,0,.16)}
+.watch-feature-note{margin-top:10px;font-size:10px;line-height:1.4;color:#fce7f3;opacity:.9}
+.mission-card{display:flex;align-items:center;gap:12px;margin:16px 0;padding:14px;border-radius:16px;background:linear-gradient(110deg,rgba(22,163,74,.16),rgba(13,148,136,.10));border:1px solid rgba(74,222,128,.25)}
+.mission-icon{font-size:23px;flex:none}
+.mission-copy{min-width:0;flex:1}
+.mission-copy b{display:block;font-size:13px;color:var(--text)}
+.mission-copy small{display:block;margin-top:4px;font-size:11px;line-height:1.45;color:var(--muted)}
+.mission-arrow{font-size:24px;color:#86efac}
+.task-category-heading,.task-section-title{display:flex;flex-direction:column;gap:4px;margin:20px 0 11px}
+.task-category-heading b,.task-section-title b{font-size:15px;color:var(--text)}
+.task-category-heading small,.task-section-title small{font-size:11px;line-height:1.4;color:var(--muted)}
+.task-tabs{display:flex;gap:8px;overflow-x:auto;padding:2px 0 7px;margin-bottom:15px;scrollbar-width:none}
+.task-tabs::-webkit-scrollbar{display:none}
+.task-tabs button{flex:none;border:1px solid rgba(167,139,250,.24);border-radius:20px;padding:8px 13px;background:#211936;color:#d9c8f5;font-size:11px;font-weight:700}
+.task-tabs button.active{background:linear-gradient(135deg,#8b5cf6,#c084fc);border-color:transparent;color:#170b2b}
+@media(max-width:360px){
+ .earn-streak-card,.watch-feature-card{padding:14px}
+ .watch-feature-copy h2{font-size:18px}
+ .watch-feature-bottom{align-items:flex-start;flex-direction:column}
+ .watch-feature-bottom button{width:100%}
+}
+html[data-theme="light"] .earn-streak-card{background:linear-gradient(135deg,#dbeafe,#c7d2fe 55%,#e9d5ff);border-color:#a5b4fc}
+html[data-theme="light"] .streak-top>span:first-child,html[data-theme="light"] .streak-main b{color:#241447}
+html[data-theme="light"] .streak-tag{background:#fff9;color:#38215f}
+html[data-theme="light"] .streak-main small,html[data-theme="light"] .streak-status{color:#38215f}
+html[data-theme="light"] .streak-status{background:#ffffff80}
+html[data-theme="light"] .watch-feature-card{background:linear-gradient(135deg,#6d28d9,#9333ea 48%,#db2777);border-color:#d8b4fe}
+html[data-theme="light"] .mission-copy b{color:#241a35}
+
 </style>
 </head>
 <body>
