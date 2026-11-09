@@ -594,8 +594,20 @@ def telegram_webhook():
             import re
             match = re.match(r'^/start(?:@[A-Za-z0-9_]+)?(?:\s+(\d+))?$', text_in)
             referrer_id = match.group(1) if match else None
+            already_referred_by_other = False
             with get_db() as db:
                 create_tables(db); newly_referred_by=ensure_user(db,tguser,referrer_id)
+                if referrer_id:
+                    existing_referral = db.execute(
+                        '''SELECT COALESCE(r.referrer_id,u.referred_by) AS referrer_id
+                           FROM users u LEFT JOIN referrals r ON r.referred_id=u.telegram_id
+                           WHERE u.telegram_id=%s''',
+                        (int(tguser['id']),)
+                    ).fetchone()
+                    original_referrer = existing_referral.get('referrer_id') if existing_referral else None
+                    already_referred_by_other = bool(
+                        original_referrer and int(original_referrer) != int(referrer_id)
+                    )
             if newly_referred_by:
                 joined_name=(tguser.get('first_name') or tguser.get('username') or 'New member').strip()
                 joined_username=(' @'+tguser['username']) if tguser.get('username') else ''
@@ -613,6 +625,12 @@ def telegram_webhook():
                 "Tap the button below to open EARNOVA.\n"
                 "Good luck and enjoy! 🚀"
             )
+            if already_referred_by_other:
+                welcome += (
+                    "\n\n⚠️ ALREADY REFERRED!\n"
+                    "You have already joined through another user's referral link.\n"
+                    "🔒 Your original referral is protected. This new link cannot change it."
+                )
             send_telegram_message(chat.get('id'), welcome,
                 {'inline_keyboard':[[{'text':'🚀 Open EARNOVA','web_app':{'url':'https://paisapaisa773-svg.github.io/earnova-miniapp/'}}],
                                     [{'text':'📢 Official Channel','url':CHANNEL_URL},{'text':'💬 Support Group','url':GROUP_URL}]]})
