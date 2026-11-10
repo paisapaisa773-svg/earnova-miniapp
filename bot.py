@@ -799,7 +799,7 @@ def admin_review_withdrawal():
                 amount_text = f"{Decimal(str(w['amount'])):.2f}"
                 send_user_telegram_message(
                     int(w['telegram_id']),
-                    f"🎉 Withdrawal Approved!\\n\\nAapka ₹{amount_text} withdrawal request approve ho gaya hai.\\nPayment process ki ja rahi hai.\\n\\nDhanyavaad! ❤️"
+                    f"🎉 Withdrawal Approved!\n\nAapka ₹{amount_text} withdrawal approve ho gaya hai.\nPayment aapke account mein transfer hone ki process mein hai.\n\nDhanyavaad! ❤️"
                 )
                 notification_sent = True
             except Exception:
