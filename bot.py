@@ -830,7 +830,7 @@ def admin_mark_withdrawal_paid():
         try:
             send_user_telegram_message(
                 int(w['telegram_id']),
-                f"🎉 Payment Successful!\\n\\nAapka ₹{amount_text} withdrawal amount aapke account mein successfully transfer ho gaya hai.\\n\\nDhanyavaad! ❤️"
+                f"🎉 Payment Successful!\n\nAapka ₹{amount_text} withdrawal amount aapke account mein successfully transfer ho gaya hai.\n\nDhanyavaad! ❤️"
             )
             notification_status='sent'
         except Exception:
