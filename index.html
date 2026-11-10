@@ -1282,5 +1282,20 @@ async function initializeApp(){
 startIntroFlow();
 initializeApp();
 </script>
+<script>
+/* Monetag In-App Interstitial test */
+if (typeof window.show_12183521 === "function") {
+  window.show_12183521({
+    type: "inApp",
+    inAppSettings: {
+      frequency: 2,
+      capping: 0.1,
+      interval: 30,
+      timeout: 5,
+      everyPage: false
+    }
+  });
+}
+</script>
 </body>
 </html>
