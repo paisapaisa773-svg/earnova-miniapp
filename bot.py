@@ -110,6 +110,8 @@ def create_tables(db):
     db.execute('ALTER TABLE users ADD COLUMN IF NOT EXISTS last_name TEXT')
     db.execute('ALTER TABLE users ADD COLUMN IF NOT EXISTS referred_by BIGINT')
     db.execute('ALTER TABLE users ADD COLUMN IF NOT EXISTS upi_id TEXT')
+    db.execute("ALTER TABLE withdrawals ADD COLUMN IF NOT EXISTS payment_status TEXT NOT NULL DEFAULT 'pending'")
+    db.execute("ALTER TABLE withdrawals ADD COLUMN IF NOT EXISTS payment_notification_status TEXT NOT NULL DEFAULT 'not_sent'")
 
 
 def verify_telegram_data(init_data):
@@ -738,7 +740,7 @@ def admin_withdrawals():
         with get_db() as db:
             create_tables(db)
             if status == 'all':
-                rows = db.execute("""SELECT id,telegram_id,amount,upi_id,status,rejection_reason,created_at
+                rows = db.execute("""SELECT id,telegram_id,amount,upi_id,status,rejection_reason,created_at,payment_status,payment_notification_status
                     FROM withdrawals ORDER BY created_at DESC LIMIT 300""").fetchall()
             else:
                 rows = db.execute("""SELECT id,telegram_id,amount,upi_id,status,rejection_reason,created_at
@@ -807,6 +809,38 @@ def admin_review_withdrawal():
         return jsonify(ok=True,status='approved' if action=='approve' else 'rejected',
                        notification_sent=notification_sent if action=='approve' else None)
     except Exception: return admin_error('withdrawal review')
+
+
+@app.route('/api/admin/withdrawals/mark-paid', methods=['POST','OPTIONS'])
+@admin_required
+def admin_mark_withdrawal_paid():
+    if request.method == 'OPTIONS': return '', 204
+    body=request.admin_body
+    try: wid=int(body.get('withdrawal_id'))
+    except (TypeError,ValueError): return jsonify(ok=False,error='Invalid withdrawal ID'),400
+    try:
+        with get_db() as db:
+            create_tables(db)
+            w=db.execute("SELECT * FROM withdrawals WHERE id=%s FOR UPDATE",(wid,)).fetchone()
+            if not w: return jsonify(ok=False,error='Withdrawal not found'),404
+            if w['status'] != 'approved': return jsonify(ok=False,error='Approve the withdrawal request first'),409
+            if w.get('payment_status') == 'paid': return jsonify(ok=False,error='Payment already marked successful'),409
+            db.execute("UPDATE withdrawals SET payment_status='paid' WHERE id=%s",(wid,))
+        amount_text = f"{Decimal(str(w['amount'])):.2f}"
+        try:
+            send_user_telegram_message(
+                int(w['telegram_id']),
+                f"🎉 Payment Successful!\\n\\nAapka ₹{amount_text} withdrawal amount aapke account mein successfully transfer ho gaya hai.\\n\\nDhanyavaad! ❤️"
+            )
+            notification_status='sent'
+        except Exception:
+            app.logger.exception('Payment marked paid but success notification failed')
+            notification_status='failed'
+        with get_db() as db:
+            create_tables(db)
+            db.execute("UPDATE withdrawals SET payment_notification_status=%s WHERE id=%s",(notification_status,wid))
+        return jsonify(ok=True,payment_status='paid',notification_status=notification_status)
+    except Exception: return admin_error('mark withdrawal paid')
 
 
 @app.route('/api/admin/users', methods=['POST','OPTIONS'])
