@@ -920,7 +920,7 @@ async function refreshBalance(){
 
 function openTaskPopup(){goTo("earn");loadEarnScreen();}
 function closeTaskPopup(){document.getElementById("tasksModal")?.classList.remove("show")}
-async function loadEarnScreen(){await verifyEarnMembership(false);await loadCheckin();await loadTasks();}
+async function loadEarnScreen(){await verifyEarnMembership(false);await loadTasks();}
 function applyMembershipTaskVisibility(verified){
  const ids=["membershipTasks","modalMembershipTasks"];
  ids.forEach(id=>{const el=document.getElementById(id);if(el)el.style.display=verified?"none":"";});
