@@ -864,8 +864,9 @@ function openLink(url){
    if(typeof tg.openLink==="function"){tg.openLink(href,{try_instant_view:false});return true;}
    window.location.href=href;return true;
   }
-  const opened=window.open(href,"_blank","noopener,noreferrer");
+  const opened=window.open(href,"_blank");
   if(!opened){showMessage("Your browser blocked the link. Please allow pop-ups or open EARNOVA in Telegram.");return false;}
+  try{opened.opener=null}catch(e){}
   return true;
  }catch(e){showMessage("Could not open this task link: "+e.message);return false;}
 }
