@@ -996,7 +996,8 @@ async function loadTasks(){
    });
   }
   const activeFilter=document.querySelector("#earn .task-tabs button.active");
-  filterTasks(activeFilter?.textContent.trim().toLowerCase()||"all",activeFilter);
+  const activeType=activeFilter?.getAttribute("onclick")?.match(/filterTasks\('([^']+)'/)?.[1]||"all";
+  filterTasks(activeType,activeFilter);
  }catch(e){box.textContent=e.message}
 }
 async function completeTask(id,b){
