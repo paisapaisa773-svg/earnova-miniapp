@@ -602,6 +602,7 @@ html[data-theme="light"] #earn .task-page-tabs button.active{background:#8700ef;
  <div class="hot-task"><span class="task-icon red">▶</span><span><b>Watch Video</b><small>Earn rewards</small></span><button onclick="watchAd()">Start</button></div>
  <div class="hot-task"><span class="task-icon blue">➤</span><span><b>Join Channel</b><small>Earn rewards</small></span><button onclick="goTo('earn')">Join</button></div>
  <div class="hot-task"><span class="task-icon green">▣</span><span><b>Complete Tasks</b><small>Earn more rewards</small></span><button onclick="goTo('earn')">View</button></div>
+<div class="hot-task"><span class="task-icon purple">📢</span><span><b>Sponsored Ad</b><small>Optional ad • No wallet reward</small></span><button id="ownerPopupAdButton" onclick="openOwnerPopupAd(this)">View</button></div>
 </section>
 
 <section class="screen" id="earn">
@@ -1040,6 +1041,26 @@ async function redeemBonus(){
   await refreshBalance();
   showMessage("Bonus code accepted. Reward: "+money(r.reward));
  }catch(e){box.textContent=e.message}
+}
+
+let isOpeningOwnerPopupAd=false;
+async function openOwnerPopupAd(button){
+ if(isOpeningOwnerPopupAd)return;
+ if(typeof window.show_12183521!=="function"){
+  showMessage("Advertisement is not available right now. Please try again later.","Sponsored Ad");
+  return;
+ }
+ isOpeningOwnerPopupAd=true;
+ if(button){button.disabled=true;button.textContent="Opening...";}
+ try{
+  await window.show_12183521("pop");
+  showMessage("Thanks for viewing the sponsored ad. No reward has been added to your EARNOVA wallet.","Sponsored Ad");
+ }catch(e){
+  showMessage("The ad could not be opened right now. Please try again later.","Sponsored Ad");
+ }finally{
+  isOpeningOwnerPopupAd=false;
+  if(button){button.disabled=false;button.textContent="View";}
+ }
 }
 
 async function watchAd(){
