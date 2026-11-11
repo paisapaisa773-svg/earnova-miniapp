@@ -491,9 +491,6 @@ html[data-theme="light"] .mission-copy b{color:#241a35}
 #earn .task-balance-copy{flex:1;min-width:0}
 #earn .task-balance-copy small{display:block;color:#d8c5ff;font-size:12px}
 #earn .task-balance-copy strong{display:block;color:#fff;font-size:31px;letter-spacing:-1px;margin-top:3px}
-#earn .task-level{border:1px solid #7135b8;border-radius:17px;padding:11px 10px;background:#210b45;color:#fff;text-align:left;white-space:nowrap}
-#earn .task-level span{display:block;font-size:12px;font-weight:800}
-#earn .task-level small{display:block;color:#d7c3f3;font-size:10px;margin-top:5px}
 #earn .task-page-heading{display:flex;align-items:center;gap:11px;margin:10px 1px 18px}
 #earn .task-heading-check{width:47px;height:47px;display:grid;place-items:center;flex:none;border-radius:50%;font-size:27px;font-weight:900;background:linear-gradient(145deg,#9b00ff,#4b00d7);box-shadow:0 0 18px #7800ff88}
 #earn .task-heading-copy{flex:1;min-width:0}
@@ -710,7 +707,7 @@ body{background:#eef2ff!important;color:#101a43!important}
  <div class="task-balance-banner">
   <div class="task-gift-art">🎁</div>
   <div class="task-balance-copy"><small>Your Balance</small><strong id="taskPageBalance">₹0.00</strong></div>
-  <button class="task-level" type="button" onclick="showMessage('Level 1 • 0 / 100 XP')"><span>👑 Level 1</span><small>0 / 100 XP　›</small></button>
+
  </div>
  <div class="task-page-heading"><div class="task-heading-check">✓</div><div class="task-heading-copy"><h1>Tasks</h1><p>Complete verified tasks and earn rewards.</p></div><span class="task-easy-pill">⚡ Easy &amp; Fast</span></div>
  <div class="task-category-heading"><b>Official EARNOVA Tasks</b><small>Join our official community and verify your membership.</small></div>
@@ -725,8 +722,6 @@ body{background:#eef2ff!important;color:#101a43!important}
   <button class="primary full" id="earnCheckinButton" onclick="claimCheckin()" disabled>Complete 1 Valid Task First</button>
   <small class="earn-checkin-note">Daily Check-in unlocks only after at least one task is approved today. A submitted task awaiting review does not count.</small>
  </div>
- <div class="task-category-heading"><b>Visit Website</b><small>Sponsored website tasks configured by EARNOVA admin.</small></div>
- <div id="earnWebsiteTasksList"><div class="task-empty">Loading website offers...</div></div>
  <div class="task-category-heading"><b>Sponsored Telegram Channels</b><small>Join partner channels and submit for verification.</small></div>
  <div id="earnTelegramTasksList"><div class="task-empty">Loading Telegram offers...</div></div>
 </section>
