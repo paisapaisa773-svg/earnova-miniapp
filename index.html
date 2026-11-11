@@ -661,6 +661,14 @@ body{background:#eef2ff!important;color:#101a43!important}
 .bottom-nav{background:#fff!important;border-top:1px solid #dce2f7!important}.nav-btn{color:#8791ac!important}.nav-btn.active{color:#3f5eea!important}
 @media(max-width:370px){.home-shortcuts{gap:5px}.home-shortcuts button{font-size:10px}.home-play-icon{width:62px;height:62px;flex-basis:62px}.home-watch-card{padding:16px 12px}.home-reward-pill{padding:10px;font-size:12px}}
 
+
+/* Approved EARNOVA task cards and 7-day check-in */
+.task-static-card{display:grid;grid-template-columns:42px minmax(0,1fr) auto auto;align-items:center;gap:9px;margin:9px 0;padding:13px;border:1px solid #d6def8;border-radius:17px;background:#fff;box-shadow:0 5px 16px rgba(35,55,130,.06)}
+.task-static-icon{width:40px;height:40px;display:grid;place-items:center;border-radius:13px;background:#edf2ff;font-size:20px}.task-static-copy{min-width:0;display:grid;gap:4px}.task-static-copy b{font-size:12px;color:#14204c}.task-static-copy small{font-size:10px;color:#7783a5;line-height:1.3}.task-static-card button{padding:8px 11px;border-radius:10px;font-size:10px;font-weight:800}
+.earn-checkin-card{margin:18px 0;padding:16px;border:1px solid #b8c8ff;border-radius:20px;background:linear-gradient(145deg,#fff,#f0f4ff);box-shadow:0 8px 22px rgba(48,75,160,.09)}.earn-checkin-head{display:flex;justify-content:space-between;align-items:center;gap:8px}.earn-checkin-head b{display:block;font-size:16px;color:#15245d}.earn-checkin-head small{display:block;margin-top:4px;color:#7783a5;font-size:11px}.earn-checkin-head>span{padding:6px 9px;border-radius:20px;background:#e6edff;color:#405cf5;font-size:9px;font-weight:900;letter-spacing:.6px}
+.earn-checkin-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;margin:15px 0}.earn-checkin-day{display:grid;gap:6px;justify-items:center;padding:9px 2px;border:1px solid #e0e6fb;border-radius:11px;background:#f7f8ff}.earn-checkin-day b{font-size:9px;color:#7a85a6}.earn-checkin-day strong{font-size:11px;color:#263b94}.earn-checkin-day.done{background:#e5fbf4;border-color:#8ce0c8}.earn-checkin-day.done:after{content:'✓';font-size:10px;color:#079b79;font-weight:900}.earn-checkin-status{padding:11px;border-radius:12px;background:#edf2ff;color:#304477;font-size:11px;line-height:1.5;margin:10px 0}.earn-checkin-card button:disabled{opacity:.55;cursor:not-allowed}.earn-checkin-note{display:block;margin-top:9px;color:#7783a5;font-size:10px;line-height:1.45}
+.task-empty{padding:15px;border:1px dashed #cbd5ee;border-radius:14px;background:#fff;color:#7783a5;font-size:11px;text-align:center}.task-card-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}.task-card-actions button{padding:8px 13px;border-radius:10px;font-size:11px}
+@media(max-width:380px){.task-static-card{grid-template-columns:38px minmax(0,1fr) auto;gap:7px}.task-static-card button:last-child{grid-column:2/-1;width:100%}.earn-checkin-days{gap:3px}.earn-checkin-day{padding:8px 1px}.earn-checkin-day b{font-size:8px}.earn-checkin-day strong{font-size:10px}}
 </style>
 </head>
 <body>
@@ -704,12 +712,23 @@ body{background:#eef2ff!important;color:#101a43!important}
   <div class="task-balance-copy"><small>Your Balance</small><strong id="taskPageBalance">₹0.00</strong></div>
   <button class="task-level" type="button" onclick="showMessage('Level 1 • 0 / 100 XP')"><span>👑 Level 1</span><small>0 / 100 XP　›</small></button>
  </div>
- <div class="task-page-heading"><div class="task-heading-check">✓</div><div class="task-heading-copy"><h1>Tasks</h1><p>Complete tasks and earn rewards instantly!</p></div><span class="task-easy-pill">⚡ Easy &amp; Fast</span></div>
- <div class="panel" style="text-align:center;padding:24px;margin-top:18px">
-  <div style="font-size:34px">🗂️</div>
-  <h2 style="margin:10px 0 6px">Tasks Coming Soon</h2>
-  <p style="margin:0">All current tasks have been cleared. New tasks will be added after setup.</p>
+ <div class="task-page-heading"><div class="task-heading-check">✓</div><div class="task-heading-copy"><h1>Tasks</h1><p>Complete verified tasks and earn rewards.</p></div><span class="task-easy-pill">⚡ Easy &amp; Fast</span></div>
+ <div class="task-category-heading"><b>Official EARNOVA Tasks</b><small>Join our official community and verify your membership.</small></div>
+ <article class="task-static-card"><div class="task-static-icon">📢</div><div class="task-static-copy"><b>Official Telegram Channel</b><small id="officialChannelStatus">Membership not verified</small></div><button class="secondary" onclick="openChannel()">Join</button><button class="primary" onclick="verifyEarnMembership(true)">Verify</button></article>
+ <article class="task-static-card"><div class="task-static-icon">👥</div><div class="task-static-copy"><b>Official Telegram Group</b><small id="officialGroupStatus">Membership not verified</small></div><button class="secondary" onclick="openGroup()">Join</button><button class="primary" onclick="verifyEarnMembership(true)">Verify</button></article>
+ <div class="earn-checkin-card">
+  <div class="earn-checkin-head"><div><b>🎁 Daily Check-in</b><small>7-day reward streak · Total ₹100</small></div><span>DAILY</span></div>
+  <div class="earn-checkin-days">
+   <div class="earn-checkin-day" id="checkinDay1"><b>Day 1</b><strong>₹5</strong></div><div class="earn-checkin-day" id="checkinDay2"><b>Day 2</b><strong>₹10</strong></div><div class="earn-checkin-day" id="checkinDay3"><b>Day 3</b><strong>₹10</strong></div><div class="earn-checkin-day" id="checkinDay4"><b>Day 4</b><strong>₹15</strong></div><div class="earn-checkin-day" id="checkinDay5"><b>Day 5</b><strong>₹15</strong></div><div class="earn-checkin-day" id="checkinDay6"><b>Day 6</b><strong>₹20</strong></div><div class="earn-checkin-day" id="checkinDay7"><b>Day 7</b><strong>₹25</strong></div>
+  </div>
+  <div class="earn-checkin-status" id="earnCheckinInfo">Checking today's task requirement...</div>
+  <button class="primary full" id="earnCheckinButton" onclick="claimCheckin()" disabled>Complete 1 Valid Task First</button>
+  <small class="earn-checkin-note">Daily Check-in unlocks only after at least one task is approved today. A submitted task awaiting review does not count.</small>
  </div>
+ <div class="task-category-heading"><b>Visit Website</b><small>Sponsored website tasks configured by EARNOVA admin.</small></div>
+ <div id="earnWebsiteTasksList"><div class="task-empty">Loading website offers...</div></div>
+ <div class="task-category-heading"><b>Sponsored Telegram Channels</b><small>Join partner channels and submit for verification.</small></div>
+ <div id="earnTelegramTasksList"><div class="task-empty">Loading Telegram offers...</div></div>
 </section>
 
 <section class="screen" id="refer">
@@ -990,7 +1009,7 @@ async function refreshBalance(){
 
 function openTaskPopup(){goTo("earn");loadEarnScreen();}
 function closeTaskPopup(){document.getElementById("tasksModal")?.classList.remove("show")}
-async function loadEarnScreen(){await verifyEarnMembership(false);await loadTasks();}
+async function loadEarnScreen(){await verifyEarnMembership(false);await loadTasks();await loadCheckin();}
 function applyMembershipTaskVisibility(verified){
  const ids=["membershipTasks","modalMembershipTasks"];
  ids.forEach(id=>{const el=document.getElementById(id);if(el)el.style.display=verified?"none":"";});
@@ -1004,22 +1023,28 @@ async function verifyEarnMembership(show=true){
   const c=r.channel_joined===true, g=r.group_joined===true, verified=c&&g;
   const detail=(c?"✓ Channel joined":"Channel not verified")+" • "+(g?"✓ Group joined":"Group not verified");
   boxes.forEach(box=>box.textContent=verified?"✓ Channel and Support Group membership verified. Join tasks completed.":detail);
+  const channelStatus=document.getElementById("officialChannelStatus");
+  const groupStatus=document.getElementById("officialGroupStatus");
+  if(channelStatus)channelStatus.textContent=c?"✓ Membership verified":"Membership not verified";
+  if(groupStatus)groupStatus.textContent=g?"✓ Membership verified":(r.configured===false?"Group verification is not configured yet":"Membership not verified");
   applyMembershipTaskVisibility(verified);
-  if(show&&verified)showMessage("Both memberships verified. Join tasks are now completed.");
-  else if(show)showMessage("Please join both the official channel and support group, then tap Verify again.");
+  if(show&&verified)showMessage("Official channel and group memberships verified.");
+  else if(show)showMessage(r.configured===false?"Group verification is not configured on the server yet.":"Join both official chats, then tap Verify again.");
   return verified;
  }catch(e){
   boxes.forEach(box=>box.textContent=e.message);
+  const channelStatus=document.getElementById("officialChannelStatus");
+  const groupStatus=document.getElementById("officialGroupStatus");
+  if(channelStatus)channelStatus.textContent=e.message;
+  if(groupStatus)groupStatus.textContent=e.message;
   applyMembershipTaskVisibility(false);
   if(show)showMessage(e.message);
   return false;
  }
 }
-async function claimEarnCheckin(){
- const b=document.getElementById("earnCheckinButton");b.disabled=true;
- try{const joined=await verifyEarnMembership(true);if(!joined)throw new Error("Join both official chats before claiming this task.");const r=await apiPost("/api/checkin");showMessage("Daily reward credited: "+money(r.reward));await refreshBalance();await loadCheckin();}
- catch(e){showMessage(e.message);b.disabled=false;}
-}
+
+async function claimEarnCheckin(){return claimCheckin();}
+
 async function redeemEarnBonus(){
  const code=document.getElementById("earnBonusCode").value.trim(),box=document.getElementById("earnBonusStatus");
  if(!code){box.textContent="Please enter bonus code.";return;}
@@ -1027,76 +1052,72 @@ async function redeemEarnBonus(){
  catch(e){box.textContent=e.message;}
 }
 
-async function loadTasks(){
- const box=document.getElementById("earnTasksList") || document.getElementById("tasksList");
- if(!box)return;
- box.textContent="Loading partner offers...";
- try{
-  const r=await apiPost("/api/tasks");
-  box.innerHTML="";
-  const allTasks=r.tasks||[];
-  const profileTasks=document.getElementById("profileTasks");if(profileTasks)profileTasks.textContent=allTasks.length;
-  if(!allTasks.length){
-   box.textContent="No active partner offers right now. Please check again later.";
-  }else{
-   allTasks.forEach(t=>{
-    const d=document.createElement("div");d.className="task-card task-filter-item";
-    const rawType=String(t.task_type||t.type||t.category||"other").toLowerCase();
-    const type=rawType.includes("video")||rawType.includes("ad")?"video":
-      (rawType.includes("join")||rawType.includes("channel")||rawType.includes("group")||rawType.includes("social")?"join":
-      (rawType.includes("daily")||rawType.includes("bonus")?"daily":
-      (rawType.includes("partner")||rawType.includes("website")||rawType.includes("survey")||rawType.includes("custom")?"partner":"partner")));
-    d.dataset.taskType=type;
-    const title=document.createElement("b");title.textContent="🎯 "+(t.title||"Partner Task");
-    const desc=document.createElement("p");desc.textContent=t.description||"Open the partner task link and follow the instructions.";
-    const reward=document.createElement("p");reward.className="reward";reward.textContent="Reward: "+money(t.reward);
-    d.append(title,desc,reward);
-    const actionRow=document.createElement("div");
-    if(t.target_url){
-     const link=document.createElement("button");link.className="secondary";link.type="button";link.textContent="↗ Open Task Link";
-     link.addEventListener("click",()=>openLink(t.target_url));actionRow.appendChild(link);
-    }else{
-     const missing=document.createElement("p");missing.textContent="Task link is not configured. Please contact admin.";missing.className="status";actionRow.appendChild(missing);
-    }
-    const b=document.createElement("button");b.className="primary";
-    b.textContent=t.user_status==="completed"?"Completed":t.user_status==="pending"?"Pending Review":"Submit Task";
-    b.disabled=t.user_status==="completed"||t.user_status==="pending";
-    b.addEventListener("click",()=>completeTask(t.id,b));
-    actionRow.appendChild(b);d.appendChild(actionRow);box.appendChild(d);
-   });
-  }
-  const activeFilter=document.querySelector("#earn .task-tabs button.active");
-  const activeType=activeFilter?.getAttribute("onclick")?.match(/filterTasks\('([^']+)'/)?.[1]||"all";
-  filterTasks(activeType,activeFilter);
- }catch(e){box.textContent=e.message}
+function renderTaskBucket(boxId,tasks,emptyText){
+ const box=document.getElementById(boxId);if(!box)return;
+ box.innerHTML="";
+ if(!tasks.length){const empty=document.createElement("div");empty.className="task-empty";empty.textContent=emptyText;box.appendChild(empty);return;}
+ tasks.forEach(t=>{
+  const d=document.createElement("article");d.className="task-card";
+  const title=document.createElement("b");title.textContent="🎯 "+(t.title||"Partner Task");
+  const desc=document.createElement("p");desc.textContent=t.description||"Follow the sponsor's instructions, then submit for review.";
+  const reward=document.createElement("p");reward.className="reward";reward.textContent="Reward: "+money(t.reward);
+  d.append(title,desc,reward);
+  const actions=document.createElement("div");actions.className="task-card-actions";
+  if(t.target_url){const link=document.createElement("button");link.className="secondary";link.type="button";link.textContent="↗ Open Task";link.addEventListener("click",()=>openLink(t.target_url));actions.appendChild(link);}
+  else{const missing=document.createElement("small");missing.className="status";missing.textContent="Task link is not configured yet.";actions.appendChild(missing);}
+  const submit=document.createElement("button");submit.className="primary";submit.type="button";
+  submit.textContent=t.user_status==="completed"?"Completed":t.user_status==="pending"?"Pending Review":"Submit Task";
+  submit.disabled=t.user_status==="completed"||t.user_status==="pending"||!t.target_url;
+  submit.addEventListener("click",()=>completeTask(t.id,submit));actions.appendChild(submit);
+  d.appendChild(actions);box.appendChild(d);
+ });
 }
+async function loadTasks(){
+ const websiteBox=document.getElementById("earnWebsiteTasksList"),telegramBox=document.getElementById("earnTelegramTasksList");
+ if(!websiteBox&&!telegramBox)return;
+ if(websiteBox)websiteBox.textContent="Loading website offers...";
+ if(telegramBox)telegramBox.textContent="Loading Telegram offers...";
+ try{
+  const r=await apiPost("/api/tasks"),allTasks=r.tasks||[];
+  const profileTasks=document.getElementById("profileTasks");if(profileTasks)profileTasks.textContent=allTasks.length;
+  const websites=[],telegrams=[];
+  allTasks.forEach(t=>{
+   const type=String(t.task_type||"").toLowerCase();
+   if(type.includes("telegram")||type.includes("channel")||type.includes("group")||type.includes("join"))telegrams.push(t);
+   else websites.push(t);
+  });
+  renderTaskBucket("earnWebsiteTasksList",websites,"No sponsored website offers are active right now.");
+  renderTaskBucket("earnTelegramTasksList",telegrams,"No sponsored Telegram channel offers are active right now.");
+ }catch(e){if(websiteBox)websiteBox.textContent=e.message;if(telegramBox)telegramBox.textContent=e.message;}
+}
+
 async function completeTask(id,b){
  try{
   b.disabled=true;
   const r=await apiPost("/api/tasks/complete",{task_id:id});
   showMessage(r.message||"Task submitted.");
-  await loadTasks();await refreshBalance();
+  await loadTasks();await refreshBalance();await loadCheckin();
  }catch(e){b.disabled=false;showMessage(e.message)}
 }
 
 async function loadCheckin(){
- const box=document.getElementById("earnCheckinInfo") || document.getElementById("checkinInfo");
- const btn=document.getElementById("earnCheckinButton") || document.getElementById("checkinButton");
+ const box=document.getElementById("earnCheckinInfo"),btn=document.getElementById("earnCheckinButton");
+ if(!box||!btn)return;
  try{
-  const r=await apiPost("/api/checkin/status");
-  box.textContent=r.checked_today?"You have already claimed today's reward.":"Your next reward is Day "+r.next_day+": "+money(r.rewards[r.next_day-1]);
-  btn.disabled=!!r.checked_today;
-  btn.textContent=r.checked_today?"Already Claimed":"Claim Daily Reward";
- }catch(e){box.textContent=e.message;btn.disabled=true}
+  const r=await apiPost("/api/checkin/status"),reward=money(r.rewards[r.next_day-1]);
+  const completedDays=r.checked_today?Number(r.last_day||0):Math.max(0,Number(r.next_day||1)-1);
+  for(let i=1;i<=7;i++){const day=document.getElementById("checkinDay"+i);if(day)day.classList.toggle("done",i<=completedDays);}
+  if(r.checked_today){box.textContent="✓ Today's Daily Check-in is complete. Come back tomorrow.";btn.textContent="Already Claimed";btn.disabled=true;}
+  else if(!r.valid_task_today){box.textContent="Complete at least 1 valid task today and wait for admin approval. Then today's "+reward+" check-in reward will unlock.";btn.textContent="Complete 1 Valid Task First";btn.disabled=true;}
+  else{box.textContent="✓ Valid task approved. Day "+r.next_day+" reward "+reward+" is unlocked!";btn.textContent="Claim "+reward;btn.disabled=false;}
+ }catch(e){box.textContent=e.message;btn.disabled=true;}
 }
 async function claimCheckin(){
- const btn=document.getElementById("earnCheckinButton") || document.getElementById("checkinButton");btn.disabled=true;
- try{
-  const r=await apiPost("/api/checkin");
-  showMessage("Day "+r.day+" reward credited: "+money(r.reward));
-  await refreshBalance();await loadCheckin();
- }catch(e){showMessage(e.message);btn.disabled=false}
+ const btn=document.getElementById("earnCheckinButton");if(!btn)return;btn.disabled=true;
+ try{const r=await apiPost("/api/checkin");showMessage("Day "+r.day+" reward credited: "+money(r.reward));await refreshBalance();await loadCheckin();}
+ catch(e){showMessage(e.message);await loadCheckin();}
 }
+
 async function redeemBonus(){
  const code=document.getElementById("bonusCode").value.trim();
  const box=document.getElementById("bonusStatus");
