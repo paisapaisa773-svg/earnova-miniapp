@@ -452,7 +452,7 @@ def list_tasks():
             rows=db.execute('''SELECT t.id,t.title,t.description,t.task_type,t.reward,t.target_url,t.verification,
                 COALESCE(c.status,'not_started') AS user_status FROM tasks t
                 LEFT JOIN task_completions c ON c.task_id=t.id AND c.telegram_id=%s
-                WHERE t.active=TRUE AND COALESCE(c.status,'') <> 'completed' ORDER BY t.id DESC''',(int(user['id']),)).fetchall()
+                WHERE t.active=TRUE ORDER BY t.id DESC''',(int(user['id']),)).fetchall()
         return jsonify(ok=True,tasks=[{**r,'reward':str(r['reward'])} for r in rows]),200
     except Exception:
         app.logger.exception('Task list failed'); return jsonify(ok=False,error='Server error'),500
