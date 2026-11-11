@@ -199,6 +199,24 @@ def credit_wallet(db, telegram_id, amount, tx_type, key):
     return True
 
 
+def approve_referral_and_reward(db, referral_row):
+    """Approve one referral; pay ₹5 to referrer and ₹100 for each 10 approvals."""
+    referrer_id = int(referral_row['referrer_id'])
+    referred_id = int(referral_row['referred_id'])
+    approved = db.execute("""UPDATE referrals SET status='approved',approved_at=NOW()
+        WHERE referred_id=%s AND status='pending' RETURNING referred_id""", (referred_id,)).fetchone()
+    if not approved:
+        return False
+    credit_wallet(db, referrer_id, Decimal('5.00'), 'referral_bonus', f'referrer-bonus:{referred_id}')
+    count = db.execute("SELECT COUNT(*) AS total FROM referrals WHERE referrer_id=%s AND status='approved'", (referrer_id,)).fetchone()
+    successful = int(count['total'] or 0)
+    if successful > 0 and successful % 10 == 0:
+        milestone_number = successful // 10
+        credit_wallet(db, referrer_id, Decimal('100.00'), 'referral_milestone_bonus',
+                      f'referral-milestone:{referrer_id}:{milestone_number}')
+    return True
+
+
 def membership_status(telegram_id, chat_id):
     if not BOT_TOKEN or not chat_id:
         return None
@@ -432,7 +450,7 @@ def referral_summary():
             rows=db.execute('''SELECT r.status,u.first_name,u.username FROM referrals r JOIN users u ON u.telegram_id=r.referred_id
                 WHERE r.referrer_id=%s ORDER BY r.created_at DESC LIMIT 20''',(tid,)).fetchall()
             counts=db.execute("SELECT COUNT(*) total,COUNT(*) FILTER(WHERE status='approved') successful,COUNT(*) FILTER(WHERE status='pending') pending FROM referrals WHERE referrer_id=%s",(tid,)).fetchone()
-            earnings=db.execute("SELECT COALESCE(SUM(amount),0) amount FROM wallet_transactions WHERE telegram_id=%s AND transaction_type IN ('referral_bonus','referral_commission') AND status='completed'",(tid,)).fetchone()
+            earnings=db.execute("SELECT COALESCE(SUM(amount),0) amount FROM wallet_transactions WHERE telegram_id=%s AND transaction_type IN ('referral_bonus','referral_commission','referral_milestone_bonus') AND status='completed'",(tid,)).fetchone()
         return jsonify(ok=True,referral_link=f'https://t.me/{BOT_USERNAME}?start={tid}',total=counts['total'],successful=counts['successful'],pending=counts['pending'],earnings=str(earnings['amount']),referrals=rows),200
     except Exception:
         app.logger.exception('Referral summary failed'); return jsonify(ok=False,error='Server error'),500
@@ -486,15 +504,14 @@ def redeem_bonus_code():
             db.execute('UPDATE bonus_codes SET claims=claims+1 WHERE id=%s',(row['id'],))
             db.execute('UPDATE user_checks SET channel_joined=TRUE,group_joined=TRUE,bonus_code_entered=TRUE,bonus_code=%s,updated_at=NOW() WHERE telegram_id=%s',(code,tid))
             credit_wallet(db,tid,row['reward'],'bonus_code',f'bonus-code:{row["id"]}:{tid}')
-            # Referral bonus is released only after all three conditions pass.
-            ref=db.execute('SELECT referrer_id FROM referrals WHERE referred_id=%s AND status=%s FOR UPDATE',(tid,'pending')).fetchone()
+            # Existing channel, group and bonus-code checks verify the referral.
+            ref=db.execute('SELECT referrer_id,referred_id FROM referrals WHERE referred_id=%s AND status=%s FOR UPDATE',(tid,'pending')).fetchone()
+            referral_approved=False
             if ref:
-                approved=db.execute("UPDATE referrals SET status='approved',approved_at=NOW() WHERE referred_id=%s AND status='pending' RETURNING referrer_id",(tid,)).fetchone()
-                if approved:
+                referral_approved=approve_referral_and_reward(db,ref)
+                if referral_approved:
                     db.execute('UPDATE user_checks SET bonus_claimed=TRUE WHERE telegram_id=%s',(tid,))
-                    credit_wallet(db,tid,Decimal('5.00'),'referral_bonus',f'referred-bonus:{tid}')
-                    credit_wallet(db,int(approved['referrer_id']),Decimal('5.00'),'referral_bonus',f'referrer-bonus:{tid}')
-        return jsonify(ok=True,reward=str(row['reward']),referral_bonus_unlocked=bool(ref)),200
+        return jsonify(ok=True,reward=str(row['reward']),referral_bonus_unlocked=bool(referral_approved)),200
     except Exception:
         app.logger.exception('Bonus code redemption failed'); return jsonify(ok=False,error='Server error'),500
 
@@ -1243,7 +1260,7 @@ def admin_review_referral():
             if not row: return jsonify(ok=False,error='Referral not found'),404
             if row['status']!='pending': return jsonify(ok=False,error='Referral already reviewed'),409
             if action=='approve':
-                db.execute("UPDATE referrals SET status='approved',approved_at=NOW() WHERE id=%s",(rid,))
+                approve_referral_and_reward(db,row)
             else:
                 db.execute("UPDATE referrals SET status='rejected' WHERE id=%s",(rid,))
         return jsonify(ok=True,status='approved' if action=='approve' else 'rejected')
