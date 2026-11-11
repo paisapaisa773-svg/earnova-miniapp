@@ -7,6 +7,7 @@
 <meta name="theme-color" content="#090714">
 <title>EARNOVA - Earn Smart</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://libtl.com/sdk.js" data-zone="12183521" data-sdk="show_12183521"></script>
 <style>
 :root{--bg:#080808;--card:#151515;--gold:#e8b94f;--gold2:#ffda79;--text:#fff;--muted:#aaa49a;--border:#393020}
 *{box-sizing:border-box}
@@ -645,6 +646,22 @@ input{background:#eaf0ff;color:#17214c;border:1px solid #d2daf8}
  #home .quick-action{font-size:11px}
 }
 
+
+body{background:#eef2ff!important;color:#101a43!important}
+#home{color:#111b45}
+.home-balance-card{position:relative;overflow:hidden;margin:14px 0 26px;padding:24px 20px 18px;border-radius:34px;background:linear-gradient(125deg,#3d53f5,#2447ed 48%,#0870cf);color:#fff;box-shadow:0 15px 34px #274bdc38}
+.home-balance-card:before{content:"";position:absolute;width:250px;height:250px;right:-115px;top:-110px;border-radius:50%;background:#ffffff12}
+.home-user-row{display:flex;align-items:center;gap:13px;position:relative}.home-avatar{width:58px;height:58px;display:grid;place-items:center;border:5px solid #c8d5ff;border-radius:50%;background:#151a34;font-size:25px}
+.home-user-copy{display:grid;gap:4px}.home-user-copy b{font-size:19px}.home-user-copy small{font-size:13px;color:#cbd7ff}
+.home-total-label{margin-top:28px;font-size:12px;letter-spacing:1px;color:#d3ddff}.home-total-balance{font-size:43px;line-height:1.1;font-weight:900;margin:7px 0}.home-available{font-size:14px;color:#d1ddff}
+.home-shortcuts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:22px}.home-shortcuts button{min-width:0;padding:11px 2px;border:2px solid #ffffff52;border-radius:18px;background:#ffffff22;color:#fff;font-weight:800;font-size:12px}
+.home-wallet-status{font-size:10px;color:#e0e8ff;margin-top:8px}
+.home-section-heading{display:flex;align-items:center;gap:10px;margin:23px 1px 13px}.home-section-heading h2{font-size:21px;margin:0;font-weight:900;color:#101a43}.home-green-dot{width:12px;height:12px;background:#0ac6a6;border-radius:50%}.home-bars{margin-left:auto;color:#0ac6a6;font-size:19px;letter-spacing:2px}
+.home-stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.home-stat-card{padding:19px 17px;border:1px solid #d6ddf6;border-radius:23px;background:#fff;box-shadow:0 5px 16px #1f36820f}.home-stat-card small{display:block;color:#8792b0;font-size:11px;font-weight:800;letter-spacing:.7px}.home-stat-card b{display:block;margin-top:8px;color:#111b45;font-size:25px}.home-stat-card .home-earned{color:#08bda1;font-size:23px}
+.home-watch-card{margin:24px 0 18px;padding:22px 18px;border:3px solid #4260ed;border-radius:35px;background:#fff;box-shadow:0 8px 24px #2843be14}.home-watch-main{display:flex;align-items:center;gap:13px}.home-play-icon{width:78px;height:78px;flex:0 0 78px;display:grid;place-items:center;border-radius:25px;background:linear-gradient(135deg,#4260f4,#6684ff);color:#fff;font-size:32px;box-shadow:0 8px 22px #526ff044}.home-watch-copy{display:grid;gap:5px;flex:1;min-width:0}.home-watch-copy b{font-size:17px;color:#111b45}.home-watch-copy span{font-size:14px;line-height:1.35;color:#5c6480}.home-reward-pill{border:0;border-radius:17px;background:#08bda1;color:#fff;padding:12px 14px;font-size:14px;font-weight:900}.home-reward-pill:disabled{opacity:.65}.home-progress{height:9px;background:#e7ecfc;border-radius:99px;margin-top:18px;overflow:hidden}.home-progress span{display:block;width:0;height:100%;background:linear-gradient(90deg,#08bda1,#4b78f7);border-radius:99px}.home-watch-foot{display:flex;justify-content:space-between;gap:8px;margin-top:9px;color:#8993b0;font-size:12px}
+.bottom-nav{background:#fff!important;border-top:1px solid #dce2f7!important}.nav-btn{color:#8791ac!important}.nav-btn.active{color:#3f5eea!important}
+@media(max-width:370px){.home-shortcuts{gap:5px}.home-shortcuts button{font-size:10px}.home-play-icon{width:62px;height:62px;flex-basis:62px}.home-watch-card{padding:16px 12px}.home-reward-pill{padding:10px;font-size:12px}}
+
 </style>
 </head>
 <body>
@@ -671,23 +688,15 @@ input{background:#eaf0ff;color:#17214c;border:1px solid #d2daf8}
 <main>
 
 <section class="screen active" id="home">
- <div class="home-top"><button class="menu-button" onclick="goTo('profileScreen')">☰</button><div class="home-brand"><span class="brand-crown">♛</span> EARNOVA</div><button class="notify-button" onclick="goTo('profileScreen')">♟<i>2</i></button></div>
- <div class="balance-banner"><div><small>Your Balance</small><strong id="balance">Loading...</strong><button class="withdraw-pill" onclick="goTo('wallet')">Withdraw&nbsp; →</button><div class="status" id="walletStatus">Connecting...</div><small id="minimumHome">Minimum withdrawal: ₹20</small></div><div class="wallet-art">👛</div></div>
- <div id="referralMissionCard" class="referral-mission" style="display:none">
-  <div class="referral-mission-head"><span>🎁 REFERRAL ACTIVATION</span><b id="refMissionCount">0/3</b></div>
-  <strong>Complete these 3 steps to verify your referral</strong>
-  <div id="refMissionSteps" class="referral-mission-steps"></div>
-  <button class="primary full" onclick="goTo('earn')">Complete Tasks →</button>
+ <div class="home-balance-card">
+  <div class="home-user-row"><div class="home-avatar">👤</div><div class="home-user-copy"><b id="homeUserName">EARNOVA Member</b><small>ID: <span id="homeTelegramId">Telegram User</span></small></div></div>
+  <div class="home-total-label">TOTAL BALANCE</div><div class="home-total-balance" id="balance">Loading...</div><div class="home-available">Available to withdraw</div>
+  <div class="home-shortcuts"><button onclick="goTo('home')">Ads</button><button onclick="goTo('earn')">Tasks</button><button onclick="goTo('refer')">Invite</button><button onclick="goTo('wallet')">Withdraw</button></div>
+  <div class="status home-wallet-status" id="walletStatus">Connecting...</div>
  </div>
- <div class="quick-grid">
-  <button class="quick-action" onclick="goTo('earn')"><span class="quick-icon">🗂️</span><b>Tasks</b></button>
-  <button class="quick-action" onclick="goTo('earn')"><span class="quick-icon">🎁</span><b>Rewards</b></button>
-  <button class="quick-action" onclick="goTo('refer')"><span class="quick-icon">👥</span><b>Invite</b></button>
-  <button class="quick-action" onclick="openSupport()"><span class="quick-icon">🎧</span><b>Support</b></button>
- </div>
- <button class="referral-banner" onclick="goTo('refer')"><span><b>Refer & Earn</b><small>Get rewards for every friend!</small></span><span class="gift-art">🎁</span></button>
- <div class="dashboard-heading"><h2 class="section-title">Tasks</h2><button class="text-link" onclick="goTo('earn')">View All →</button></div>
- <div class="panel" style="text-align:center;padding:20px"><b>No tasks added yet</b><p>New tasks will appear here after setup.</p></div>
+ <div class="home-section-heading"><span class="home-green-dot"></span><h2>Watch &amp; Earn</h2><span class="home-bars">▮▮▮</span></div>
+ <div class="home-stats-grid"><div class="home-stat-card"><small>TOTAL WATCHED</small><b id="homeAdsWatched">0</b></div><div class="home-stat-card"><small>TOTAL EARNED</small><b class="home-earned" id="homeAdsEarned">₹0.00</b></div></div>
+ <div class="home-watch-card"><div class="home-watch-main"><div class="home-play-icon">▶</div><div class="home-watch-copy"><b>Watch Ad</b><span>Complete video<br>to earn instantly</span></div><button class="home-reward-pill" id="watchAdButton" onclick="watchAd()">Watch</button></div><div class="home-progress"><span id="homeAdProgress"></span></div><div class="home-watch-foot"><span id="homeAdStatus">Ready to earn</span><span id="homeAdCount">0 watched</span></div></div>
 </section>
 
 <section class="screen" id="earn">
@@ -796,7 +805,7 @@ input{background:#eaf0ff;color:#17214c;border:1px solid #d2daf8}
 </main>
 
 <nav class="bottom-nav earnova-tonwave-nav">
- <button class="nav-btn active" data-screen="home" onclick="goTo('home',this)"><span>🏠</span>Home</button>
+ <button class="nav-btn active" data-screen="home" onclick="goTo('home',this)"><span>▶️</span>Ads</button>
  <button class="nav-btn" data-screen="earn" onclick="goTo('earn',this)"><span>✅</span>Tasks</button>
  <button class="nav-btn" data-screen="refer" onclick="goTo('refer',this)"><span>👥</span>Invite</button>
  <button class="nav-btn" data-screen="wallet" onclick="goTo('wallet',this)"><span>💸</span>Withdraw</button>
@@ -891,6 +900,8 @@ if(tg){
  referralStartParam=String(tg.initDataUnsafe?.start_param||"").trim();
  const user=tg.initDataUnsafe?.user;
  if(user){
+  const hn=document.getElementById("homeUserName");if(hn)hn.textContent=[user.first_name,user.last_name].filter(Boolean).join(" ")||user.username||"EARNOVA Member";
+  const hi=document.getElementById("homeTelegramId");if(hi)hi.textContent=String(user.id);
   const name=user.first_name||user.username||"Member";
   document.getElementById("profile").textContent="👤 "+name;
   const welcomeName=document.getElementById("welcomeName");if(welcomeName)welcomeName.textContent=name;
