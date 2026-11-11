@@ -617,6 +617,17 @@ main{max-width:720px;padding:16px 15px 24px}
 #wallet .wallet-actions button{flex:1}
 #wallet .panel input{background:#eaf0ff;color:#18234f;border:1px solid #d2daf8;border-radius:13px;padding:15px}
 #wallet .panel .primary{background:linear-gradient(120deg,#405cf5,#6683ff);color:#fff}
+.referral-reward-card{margin:12px 0 15px;padding:17px;border-radius:18px;background:linear-gradient(135deg,#eef3ff,#fff);border:1px solid #cdd9ff;color:#18234f;box-shadow:0 5px 18px rgba(48,75,160,.08)}
+.referral-reward-top{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:10px;font-weight:800;color:#5368bd}
+.referral-reward-top b{background:#405cf5;color:#fff;padding:7px 10px;border-radius:18px}
+.referral-reward-card h2{font-size:17px;margin:13px 0 5px;color:#1c2b62}
+.referral-reward-card p{font-size:12px;color:#66739a;margin:0 0 13px}
+.referral-milestone-track{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.referral-milestone-track>div{display:grid;gap:3px}.referral-milestone-track b{font-size:13px;color:#263b94}.referral-milestone-track small{font-size:10px;color:#7783a5}
+.referral-milestone-track>strong{font-size:11px;color:#405cf5;white-space:nowrap}
+.referral-progress{height:8px;border-radius:20px;background:#dce4ff;overflow:hidden;margin:9px 0}
+.referral-progress span{display:block;height:100%;border-radius:20px;background:linear-gradient(90deg,#405cf5,#8b9fff)}
+.referral-rule-note{display:block;color:#7c87a6;font-size:10px;line-height:1.45}
 .bottom-nav.earnova-tonwave-nav{
  background:rgba(255,255,255,.97);border-top:1px solid #d9e0fa;
  box-shadow:0 -5px 18px rgba(40,60,130,.07);padding:9px 3px calc(9px + env(safe-area-inset-bottom))
@@ -664,8 +675,8 @@ input{background:#eaf0ff;color:#17214c;border:1px solid #d2daf8}
  <div class="home-top"><button class="menu-button" onclick="goTo('profileScreen')">☰</button><div class="home-brand"><span class="brand-crown">♛</span> EARNOVA</div><button class="notify-button" onclick="goTo('profileScreen')">♟<i>2</i></button></div>
  <div class="balance-banner"><div><small>Your Balance</small><strong id="balance">Loading...</strong><button class="withdraw-pill" onclick="goTo('wallet')">Withdraw&nbsp; →</button><div class="status" id="walletStatus">Connecting...</div><small id="minimumHome">Minimum withdrawal: ₹20</small></div><div class="wallet-art">👛</div></div>
  <div id="referralMissionCard" class="referral-mission" style="display:none">
-  <div class="referral-mission-head"><span>🎁 NEW USER REFERRAL BONUS</span><b id="refMissionCount">0/3</b></div>
-  <strong>Complete these 3 steps to unlock ₹5 bonus</strong>
+  <div class="referral-mission-head"><span>🎁 REFERRAL ACTIVATION</span><b id="refMissionCount">0/3</b></div>
+  <strong>Complete these 3 steps to verify your referral</strong>
   <div id="refMissionSteps" class="referral-mission-steps"></div>
   <button class="primary full" onclick="goTo('earn')">Complete Tasks →</button>
  </div>
@@ -727,7 +738,7 @@ input{background:#eaf0ff;color:#17214c;border:1px solid #d2daf8}
 <section class="screen" id="refer">
  <div class="screen-heading"><div class="eyebrow">INVITATION CENTER</div><h1>Referrals <span class="gold">👥</span></h1><p>View your referral link and invitation activity.</p></div>
  <div class="panel">
-  <h2>Invite your friends</h2>
+  <div class="referral-reward-card"><div class="referral-reward-top"><span>🎁 REFERRAL REWARDS</span><b>₹5 / referral</b></div><h2>Earn ₹5 for every successful referral</h2><p>Get an extra ₹100 bonus whenever you reach 10 successful referrals.</p><div class="referral-milestone-track"><div><b id="refMilestoneCount">0 / 10</b><small>Successful referrals toward next bonus</small></div><strong id="refMilestoneRemaining">10 to go</strong></div><div class="referral-progress"><span id="refMilestoneBar" style="width:0%"></span></div><small class="referral-rule-note">Only verified and approved referrals count. Reward is credited to the person who shared the link.</small></div><h2>Invite your friends</h2>
   <p>Share your referral link and track your invitations.</p>
   <div class="status" id="refLink">Loading referral link...</div>
   <button class="primary full" onclick="copyReferral()">Copy Referral Link</button>
@@ -1190,7 +1201,7 @@ async function loadReferralMission(){
    d.append(icon,label);list.appendChild(d);
   });
   const heading=card.querySelector("strong");
-  if(heading)heading.textContent=r.bonus_unlocked?"🎉 Referral bonus unlocked! ₹5 credited.":"Complete these 3 steps to unlock ₹5 bonus";
+  if(heading)heading.textContent=r.bonus_unlocked?"🎉 Referral verified! Your invite is now counted as successful.":"Complete these 3 steps to verify your referral";
  }catch(e){card.style.display="none";console.warn("Referral mission unavailable",e)}
 }
 
@@ -1205,6 +1216,14 @@ async function loadReferral(){
   document.getElementById("refSuccess").textContent=r.successful??0;
   document.getElementById("refPending").textContent=r.pending??0;
   document.getElementById("refEarnings").textContent=money(r.earnings);
+  const milestoneProgress=Number(r.successful||0)%10;
+  const milestoneRemaining=milestoneProgress===0?10:10-milestoneProgress;
+  const milestoneCount=document.getElementById("refMilestoneCount");
+  const milestoneRemainingEl=document.getElementById("refMilestoneRemaining");
+  const milestoneBar=document.getElementById("refMilestoneBar");
+  if(milestoneCount)milestoneCount.textContent=milestoneProgress+" / 10";
+  if(milestoneRemainingEl)milestoneRemainingEl.textContent=milestoneRemaining+" to go";
+  if(milestoneBar)milestoneBar.style.width=(milestoneProgress*10)+"%";
   const list=document.getElementById("refList");list.innerHTML="";
   if(!r.referrals||!r.referrals.length){list.textContent="No referrals yet.";return}
   r.referrals.forEach(x=>{
