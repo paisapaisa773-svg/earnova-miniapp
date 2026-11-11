@@ -47,6 +47,13 @@ def create_tables(db):
         network TEXT NOT NULL, event_id TEXT, reward NUMERIC(12,2) NOT NULL DEFAULT 0.00,
         status TEXT NOT NULL DEFAULT 'pending', created_at TIMESTAMPTZ DEFAULT NOW(),
         UNIQUE(network, event_id))''')
+    db.execute("ALTER TABLE ad_history ADD COLUMN IF NOT EXISTS batch_id TEXT")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_ad_history_batch ON ad_history(batch_id,status)")
+    db.execute('''CREATE TABLE IF NOT EXISTS ad_batches (
+        batch_id TEXT PRIMARY KEY, telegram_id BIGINT NOT NULL REFERENCES users(telegram_id),
+        required_ads INTEGER NOT NULL DEFAULT 3, reward NUMERIC(12,2) NOT NULL DEFAULT 0.00,
+        status TEXT NOT NULL DEFAULT 'pending', created_at TIMESTAMPTZ DEFAULT NOW(),
+        completed_at TIMESTAMPTZ)''')
     db.execute('''CREATE TABLE IF NOT EXISTS network_events (
         id BIGSERIAL PRIMARY KEY, network TEXT NOT NULL, ymid TEXT NOT NULL,
         telegram_id BIGINT, event_type TEXT NOT NULL, reward_event_type TEXT,
@@ -298,13 +305,16 @@ def start_ad():
     user,_=body_user()
     if not user: return jsonify(ok=False,error='Invalid Telegram data'),401
     try:
-        tid=int(user['id']); ymid=uuid.uuid4().hex
+        tid=int(user['id']); batch_id=uuid.uuid4().hex
+        ymids=[f"{batch_id}_{i}" for i in range(1,4)]
         with get_db() as db:
             create_tables(db); ensure_user(db,user)
-            db.execute("INSERT INTO ad_history(telegram_id,network,event_id,status) VALUES(%s,'monetag',%s,'pending')",(tid,ymid))
-        return jsonify(ok=True,ymid=ymid,network='monetag'),200
+            db.execute("INSERT INTO ad_batches(batch_id,telegram_id,required_ads,status) VALUES(%s,%s,3,'pending')",(batch_id,tid))
+            for index,ymid in enumerate(ymids,1):
+                db.execute("INSERT INTO ad_history(telegram_id,network,event_id,status,batch_id) VALUES(%s,'monetag',%s,'pending',%s)",(tid,ymid,batch_id))
+        return jsonify(ok=True,batch_id=batch_id,ymids=ymids,required_ads=3,network='monetag'),200
     except Exception:
-        app.logger.exception('Ad session creation failed'); return jsonify(ok=False,error='Could not start ad'),500
+        app.logger.exception('Ad batch creation failed'); return jsonify(ok=False,error='Could not start ad session'),500
 
 
 @app.route('/api/ad/status', methods=['POST','OPTIONS'])
@@ -312,11 +322,20 @@ def ad_status():
     if request.method=='OPTIONS': return '',204
     user,body=body_user()
     if not user: return jsonify(ok=False,error='Invalid Telegram data'),401
+    batch_id=str(body.get('batch_id','')).strip()
     ymid=str(body.get('ymid','')).strip()
-    if not ymid or len(ymid)>100: return jsonify(ok=False,error='Invalid ad session'),400
     try:
         with get_db() as db:
-            create_tables(db); row=db.execute("SELECT status,reward FROM ad_history WHERE network='monetag' AND event_id=%s AND telegram_id=%s",(ymid,int(user['id']))).fetchone()
+            create_tables(db)
+            if batch_id:
+                batch=db.execute("SELECT required_ads,reward,status FROM ad_batches WHERE batch_id=%s AND telegram_id=%s",(batch_id,int(user['id']))).fetchone()
+                if not batch: return jsonify(ok=False,error='Ad session not found'),404
+                progress=db.execute("SELECT COUNT(*) AS verified FROM ad_history WHERE batch_id=%s AND status='credited'",(batch_id,)).fetchone()
+                return jsonify(ok=True,status=batch['status'],reward=str(batch['reward']),
+                    ads_verified=int(progress['verified']),required_ads=int(batch['required_ads']),
+                    credited=batch['status']=='credited'),200
+            if not ymid or len(ymid)>100: return jsonify(ok=False,error='Invalid ad session'),400
+            row=db.execute("SELECT status,reward FROM ad_history WHERE network='monetag' AND event_id=%s AND telegram_id=%s",(ymid,int(user['id']))).fetchone()
         if not row: return jsonify(ok=False,error='Ad session not found'),404
         return jsonify(ok=True,status=row['status'],reward=str(row['reward']),credited=row['status']=='credited'),200
     except Exception:
@@ -559,7 +578,7 @@ def monetag_postback():
     try:
         with get_db() as db:
             create_tables(db)
-            ad=db.execute("SELECT telegram_id,status FROM ad_history WHERE network='monetag' AND event_id=%s FOR UPDATE",(ymid,)).fetchone()
+            ad=db.execute("SELECT telegram_id,status,batch_id FROM ad_history WHERE network='monetag' AND event_id=%s FOR UPDATE",(ymid,)).fetchone()
             if not ad: return jsonify(ok=False,error='Unknown ymid'),404
             tid=int(ad['telegram_id'])
             reported=request.args.get('telegram_id','').strip()
@@ -569,17 +588,33 @@ def monetag_postback():
                 (ymid,tid,event_type,reward_type,request.args.get('zone_id'),request.args.get('sub_zone_id'),request.args.get('request_var'),price)).fetchone()
             if not inserted: return jsonify(ok=True,message='Duplicate event ignored'),200
             if event_type!='impression' or reward_type!='valued': return jsonify(ok=True,message='Event recorded; no reward'),200
-            if ad['status']=='credited': return jsonify(ok=True,message='Reward already credited'),200
-            db.execute('SELECT balance FROM users WHERE telegram_id=%s FOR UPDATE',(tid,)).fetchone()
-            count=db.execute("SELECT COUNT(*) total FROM ad_history WHERE telegram_id=%s AND status='credited'",(tid,)).fetchone()
+            if ad['status']=='credited': return jsonify(ok=True,message='Ad impression already counted'),200
+            count=db.execute('''SELECT COUNT(*) AS total
+                FROM ad_history ah LEFT JOIN ad_batches b ON b.batch_id=ah.batch_id
+                WHERE ah.telegram_id=%s AND ah.status='credited'
+                AND (ah.batch_id IS NULL OR b.status='credited' OR ah.batch_id=%s)''',
+                (tid,ad['batch_id'] or '')).fetchone()
             reward=reward_for_ad(int(count['total'])+1)
+            db.execute("UPDATE ad_history SET reward=%s,status='credited' WHERE network='monetag' AND event_id=%s",(reward,ymid))
+            if ad['batch_id']:
+                batch=db.execute("SELECT required_ads,status FROM ad_batches WHERE batch_id=%s FOR UPDATE",(ad['batch_id'],)).fetchone()
+                if not batch: return jsonify(ok=False,error='Ad batch not found'),404
+                progress=db.execute("SELECT COUNT(*) AS verified,COALESCE(SUM(reward),0) AS total_reward FROM ad_history WHERE batch_id=%s AND status='credited'",(ad['batch_id'],)).fetchone()
+                if int(progress['verified'])>=int(batch['required_ads']) and batch['status']!='credited':
+                    combined=Decimal(str(progress['total_reward'])).quantize(Decimal('0.01'))
+                    if credit_wallet(db,tid,combined,'ad_reward','monetag-batch:'+ad['batch_id']):
+                        db.execute("UPDATE ad_batches SET reward=%s,status='credited',completed_at=NOW() WHERE batch_id=%s",(combined,ad['batch_id']))
+                    else:
+                        db.execute("UPDATE ad_batches SET reward=%s,status='credited',completed_at=NOW() WHERE batch_id=%s",(combined,ad['batch_id']))
+                    return jsonify(ok=True,message='All three ads verified; combined reward credited',reward=str(combined)),200
+                return jsonify(ok=True,message='Verified ad recorded; waiting for remaining ads',
+                    ads_verified=int(progress['verified']),required_ads=int(batch['required_ads'])),200
+            # Preserve the existing one-ad reward behavior for older sessions.
             if credit_wallet(db,tid,reward,'ad_reward','monetag:'+ymid):
-                db.execute("UPDATE ad_history SET reward=%s,status='credited' WHERE network='monetag' AND event_id=%s",(reward,ymid))
-                # 10% direct referral commission on eligible task earnings only; ads are excluded.
-            return jsonify(ok=True,message='Reward credited',reward=str(reward)),200
+                return jsonify(ok=True,message='Reward credited',reward=str(reward)),200
+            return jsonify(ok=True,message='Reward already credited'),200
     except Exception:
         app.logger.exception('Monetag postback processing failed'); return jsonify(ok=False,error='Postback processing failed'),500
-
 
 # Telegram /start webhook: configure Telegram webhook URL to /telegram/webhook and set WEBHOOK_SECRET.
 @app.route('/telegram/webhook', methods=['POST'])
