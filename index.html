@@ -666,6 +666,8 @@ body{background:#eef2ff!important;color:#101a43!important}
 .earn-checkin-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;margin:15px 0}.earn-checkin-day{display:grid;gap:6px;justify-items:center;padding:9px 2px;border:1px solid #e0e6fb;border-radius:11px;background:#f7f8ff}.earn-checkin-day b{font-size:9px;color:#7a85a6}.earn-checkin-day strong{font-size:11px;color:#263b94}.earn-checkin-day.done{background:#e5fbf4;border-color:#8ce0c8}.earn-checkin-day.done:after{content:'✓';font-size:10px;color:#079b79;font-weight:900}.earn-checkin-status{padding:11px;border-radius:12px;background:#edf2ff;color:#304477;font-size:11px;line-height:1.5;margin:10px 0}.earn-checkin-card button:disabled{opacity:.55;cursor:not-allowed}.earn-checkin-note{display:block;margin-top:9px;color:#7783a5;font-size:10px;line-height:1.45}
 .task-empty{padding:15px;border:1px dashed #cbd5ee;border-radius:14px;background:#fff;color:#7783a5;font-size:11px;text-align:center}.task-card-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}.task-card-actions button{padding:8px 13px;border-radius:10px;font-size:11px}
 @media(max-width:380px){.task-static-card{grid-template-columns:38px minmax(0,1fr) auto;gap:7px}.task-static-card button:last-child{grid-column:2/-1;width:100%}.earn-checkin-days{gap:3px}.earn-checkin-day{padding:8px 1px}.earn-checkin-day b{font-size:8px}.earn-checkin-day strong{font-size:10px}}
+
+.task-card-actions .task-done-status{background:#e5fbf2!important;color:#087e5b!important;border:1px solid #9ce3c7!important;opacity:1!important;cursor:default!important;box-shadow:none!important}
 </style>
 </head>
 <body>
@@ -1061,7 +1063,8 @@ function renderTaskBucket(boxId,tasks,emptyText){
   if(t.target_url){const link=document.createElement("button");link.className="secondary";link.type="button";link.textContent="↗ Open Task";link.addEventListener("click",()=>openLink(t.target_url));actions.appendChild(link);}
   else{const missing=document.createElement("small");missing.className="status";missing.textContent="Task link is not configured yet.";actions.appendChild(missing);}
   const submit=document.createElement("button");submit.className="primary";submit.type="button";
-  submit.textContent=t.user_status==="completed"?"Completed":t.user_status==="pending"?"Pending Review":"Submit Task";
+  submit.textContent=t.user_status==="completed"?"✓ Done":t.user_status==="pending"?"Pending Review":"Submit Task";
+  if(t.user_status==="completed")submit.classList.add("task-done-status");
   submit.disabled=t.user_status==="completed"||t.user_status==="pending"||!t.target_url;
   submit.addEventListener("click",()=>completeTask(t.id,submit));actions.appendChild(submit);
   d.appendChild(actions);box.appendChild(d);
