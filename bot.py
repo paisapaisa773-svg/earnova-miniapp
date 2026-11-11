@@ -22,7 +22,7 @@ CHANNEL_URL = 'https://t.me/Earnova0fficial'
 GROUP_URL = os.environ.get('GROUP_URL', 'https://t.me/+ncm5joi6ZzMxY2M1')
 MIN_WITHDRAWAL_FIRST = Decimal('20.00')
 MIN_WITHDRAWAL_AFTER_PAID = Decimal('50.00')
-CHECKIN_REWARDS = [Decimal(x) for x in ('0.50','0.75','1.00','1.50','2.00','3.00','5.00')]
+CHECKIN_REWARDS = [Decimal(x) for x in ('5.00','10.00','10.00','15.00','15.00','20.00','25.00')]
 
 
 def get_db():
@@ -362,40 +362,83 @@ def ad_status():
 
 @app.route('/api/checkin', methods=['POST','OPTIONS'])
 def daily_checkin():
-    if request.method=='OPTIONS': return '',204
-    user,_=body_user()
-    if not user: return jsonify(ok=False,error='Invalid Telegram data'),401
-    tid=int(user['id']); today=date.today()
+    if request.method == 'OPTIONS': return '', 204
+    user, _ = body_user()
+    if not user: return jsonify(ok=False, error='Invalid Telegram data'), 401
+    tid = int(user['id'])
+    today = datetime.now(timezone.utc).astimezone(__import__('zoneinfo').ZoneInfo('Asia/Kolkata')).date()
+
+    # Preserve the existing official-chat membership requirement.
     channel, group, gate_error = membership_error(tid)
-    if gate_error: return jsonify(ok=False,error=gate_error,channel_joined=channel,group_joined=group),403
+    if gate_error:
+        return jsonify(ok=False, error=gate_error, channel_joined=channel, group_joined=group), 403
+
     try:
         with get_db() as db:
-            create_tables(db); ensure_user(db,user)
-            last=db.execute('SELECT checkin_date,day_number FROM daily_checkins WHERE telegram_id=%s ORDER BY checkin_date DESC LIMIT 1',(tid,)).fetchone()
-            if last and last['checkin_date']==today:
-                return jsonify(ok=False,error='Already checked in today'),409
-            day_no=1 if not last or (today-last['checkin_date']).days>1 else (int(last['day_number'])%7)+1
-            reward=CHECKIN_REWARDS[day_no-1]
-            db.execute('INSERT INTO daily_checkins(telegram_id,checkin_date,day_number,reward) VALUES(%s,%s,%s,%s)',(tid,today,day_no,reward))
-            credit_wallet(db,tid,reward,'daily_checkin',f'checkin:{tid}:{today.isoformat()}')
-        return jsonify(ok=True,day=day_no,reward=str(reward)),200
+            create_tables(db)
+            ensure_user(db, user)
+            # Serialize claims for this user so two simultaneous requests cannot double-credit.
+            db.execute('SELECT telegram_id FROM users WHERE telegram_id=%s FOR UPDATE', (tid,)).fetchone()
+            last = db.execute(
+                'SELECT checkin_date, day_number FROM daily_checkins WHERE telegram_id=%s ORDER BY checkin_date DESC LIMIT 1',
+                (tid,)
+            ).fetchone()
+            if last and last['checkin_date'] == today:
+                return jsonify(ok=False, error="Already checked in today"), 409
+
+            valid_task = db.execute("""SELECT id FROM task_completions
+                WHERE telegram_id=%s AND status='completed' AND reviewed_at IS NOT NULL
+                AND DATE(reviewed_at AT TIME ZONE 'Asia/Kolkata')=%s
+                ORDER BY reviewed_at DESC LIMIT 1""", (tid, today)).fetchone()
+            if not valid_task:
+                return jsonify(ok=False, error='Complete at least one valid task and wait for its approval today to unlock Daily Check-in.'), 403
+
+            day_no = 1 if not last or (today - last['checkin_date']).days > 1 else (int(last['day_number']) % 7) + 1
+            reward = CHECKIN_REWARDS[day_no - 1]
+            inserted = db.execute("""INSERT INTO daily_checkins(telegram_id,checkin_date,day_number,reward)
+                VALUES(%s,%s,%s,%s) ON CONFLICT(telegram_id,checkin_date) DO NOTHING RETURNING id""",
+                (tid, today, day_no, reward)).fetchone()
+            if not inserted:
+                return jsonify(ok=False, error="Already checked in today"), 409
+            if not credit_wallet(db, tid, reward, 'daily_checkin', f'checkin:{tid}:{today.isoformat()}'):
+                raise RuntimeError('Daily check-in wallet credit was already processed')
+        return jsonify(ok=True, day=day_no, reward=str(reward)), 200
     except Exception:
-        app.logger.exception('Daily check-in failed'); return jsonify(ok=False,error='Server error'),500
+        app.logger.exception('Daily check-in failed')
+        return jsonify(ok=False, error='Server error'), 500
 
 
 @app.route('/api/checkin/status', methods=['POST','OPTIONS'])
 def checkin_status():
-    if request.method=='OPTIONS': return '',204
-    user,_=body_user()
-    if not user: return jsonify(ok=False,error='Invalid Telegram data'),401
+    if request.method == 'OPTIONS': return '', 204
+    user, _ = body_user()
+    if not user: return jsonify(ok=False, error='Invalid Telegram data'), 401
+    today = datetime.now(timezone.utc).astimezone(__import__('zoneinfo').ZoneInfo('Asia/Kolkata')).date()
+    tid = int(user['id'])
     try:
         with get_db() as db:
-            create_tables(db); row=db.execute('SELECT checkin_date,day_number FROM daily_checkins WHERE telegram_id=%s ORDER BY checkin_date DESC LIMIT 1',(int(user['id']),)).fetchone()
-        checked=bool(row and row['checkin_date']==date.today())
-        next_day=1 if not row or (date.today()-row['checkin_date']).days>1 else (int(row['day_number'])%7)+1
-        return jsonify(ok=True,checked_today=checked,next_day=next_day,rewards=[str(x) for x in CHECKIN_REWARDS]),200
+            create_tables(db)
+            row = db.execute(
+                'SELECT checkin_date,day_number FROM daily_checkins WHERE telegram_id=%s ORDER BY checkin_date DESC LIMIT 1',
+                (tid,)
+            ).fetchone()
+            valid_task = db.execute("""SELECT id FROM task_completions
+                WHERE telegram_id=%s AND status='completed' AND reviewed_at IS NOT NULL
+                AND DATE(reviewed_at AT TIME ZONE 'Asia/Kolkata')=%s
+                ORDER BY reviewed_at DESC LIMIT 1""", (tid, today)).fetchone()
+        checked = bool(row and row['checkin_date'] == today)
+        next_day = 1 if not row or (today - row['checkin_date']).days > 1 else (int(row['day_number']) % 7) + 1
+        last_day = int(row['day_number']) if row else 0
+        can_claim = bool(valid_task) and not checked
+        return jsonify(
+            ok=True, checked_today=checked, next_day=next_day, last_day=last_day,
+            valid_task_today=bool(valid_task), can_claim=can_claim,
+            task_requirement='At least one task must be approved today.',
+            rewards=[str(x) for x in CHECKIN_REWARDS]
+        ), 200
     except Exception:
-        app.logger.exception('Check-in status failed'); return jsonify(ok=False,error='Server error'),500
+        app.logger.exception('Check-in status failed')
+        return jsonify(ok=False, error='Server error'), 500
 
 
 @app.route('/api/tasks', methods=['POST','OPTIONS'])
