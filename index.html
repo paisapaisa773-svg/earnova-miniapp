@@ -557,6 +557,84 @@ html[data-theme="light"] #earn .task-card-copy p,html[data-theme="light"] #earn 
 html[data-theme="light"] #earn .task-page-tabs button{background:#f0e7fb;color:#52386f}
 html[data-theme="light"] #earn .task-page-tabs button.active{background:#8700ef;color:#fff}
 
+
+/* TonWave-inspired EARNOVA layout refresh */
+:root{
+ --bg:#eef2ff;--card:#ffffff;--gold:#405cf5;--gold2:#6683ff;
+ --text:#111a46;--muted:#8791b0;--border:#d6dcf5;
+ --accent:#405cf5;--accent2:#12c7a5;--surface:#fff;
+}
+html,body{background:#eef2ff;color:#111a46}
+body{background:linear-gradient(180deg,#edf1ff 0%,#f5f6ff 100%);padding-bottom:calc(88px + env(safe-area-inset-bottom))}
+.header{background:#fff;color:#111a46;border-bottom:1px solid #dce2fb;box-shadow:0 2px 12px rgba(40,60,130,.06)}
+.brand-name{color:#253bb9}
+.logo{background:linear-gradient(145deg,#5c76ff,#1748dc);color:#fff;box-shadow:0 5px 18px rgba(49,83,231,.22)}
+.profile{background:#f0f3ff;color:#34416e;border:1px solid #d6defb}
+main{max-width:720px;padding:16px 15px 24px}
+#home .home-top{display:none}
+#home .balance-banner{
+ position:relative;overflow:hidden;margin:8px 0 22px;padding:25px 21px 20px;
+ border:0;border-radius:28px;color:#fff;
+ background:linear-gradient(125deg,#4056f5 0%,#2148ef 52%,#0069d8 100%);
+ box-shadow:0 14px 30px rgba(48,78,225,.22);
+}
+#home .balance-banner:after{content:"";position:absolute;width:190px;height:190px;right:-70px;top:-95px;border-radius:50%;border:1px solid #ffffff25;box-shadow:0 0 0 22px #ffffff0a,0 0 0 45px #ffffff08;pointer-events:none}
+#home .balance-banner>div:first-child{position:relative;z-index:1}
+#home .balance-banner small{color:#dbe5ff}
+#home .balance-banner strong{display:block;color:#fff;font-size:42px;letter-spacing:-1px;margin:10px 0}
+#home .balance-banner .status{color:#dce6ff}
+#home .balance-banner #minimumHome{display:block;margin-top:7px}
+#home .wallet-art{opacity:.13;font-size:90px}
+#home .withdraw-pill{background:#ffffff24;color:#fff;border:1px solid #ffffff55;border-radius:13px;padding:10px 15px;font-weight:800}
+#home .quick-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:0 0 20px}
+#home .quick-action{background:#ffffff;border:1px solid #d6def8;border-radius:15px;padding:12px 4px;color:#4055c8;box-shadow:0 4px 14px #253c8b0b}
+#home .quick-action .quick-icon{font-size:22px}
+#home .referral-banner{border-radius:18px;background:linear-gradient(110deg,#fff7d9,#fff0c0);border:1px solid #f2c65c;color:#29345f}
+#home .hot-task{background:#fff;border:1px solid #d6def8;border-radius:16px;margin:10px 0;padding:13px;box-shadow:0 4px 14px #253c8b0a}
+.screen-heading h1,.task-heading-copy h1{color:#111a46}
+.screen-heading p,.task-heading-copy p{color:#7e89aa}
+.section-title{color:#111a46}
+.card,.panel,.feature-row,.task-card{
+ background:#fff!important;border:1px solid #d5dcf5!important;
+ border-radius:17px!important;box-shadow:0 5px 16px rgba(35,55,130,.06)!important;color:#111a46;
+}
+.panel p,.card p,.task-card p{color:#7581a4}
+.task-feature-card{background:#fff!important;border:2px solid #d6def8!important;border-radius:20px!important;box-shadow:0 6px 18px rgba(35,55,130,.07)!important}
+.task-feature-card h2,.task-feature-card h3{color:#111a46}
+.task-feature-card p{color:#697596}
+.task-reward-chip{background:#e7fbf6!important;color:#08ae91!important;border:1px solid #b6f0e3!important}
+.task-feature-card button{border-radius:12px!important}
+.task-page-tabs button{border-radius:12px!important}
+.task-page-tabs button.active{background:#405cf5!important;color:#fff!important}
+#refer .panel:first-of-type{background:linear-gradient(135deg,#fff8dc,#fff0c6)!important;border:2px solid #efb33d!important;text-align:center}
+#refer .panel:first-of-type h2{font-size:30px;color:#eaa326}
+#refer #refLink{background:#fff;border:1px solid #d8def5;border-radius:13px;padding:13px;text-align:left;color:#596582;overflow-wrap:anywhere}
+#refer .grid .panel{text-align:center}
+#wallet .wallet-card-large{background:linear-gradient(125deg,#4056f5,#174bdc)!important;border:0!important;color:#fff;border-radius:24px!important;padding:22px}
+#wallet .wallet-card-large .wallet-label,#wallet .wallet-card-large .small{color:#e1e8ff}
+#wallet .wallet-card-large .balance{color:#fff;font-size:38px}
+#wallet .wallet-actions{display:flex;gap:10px;margin:12px 0}
+#wallet .wallet-actions button{flex:1}
+#wallet .panel input{background:#eaf0ff;color:#18234f;border:1px solid #d2daf8;border-radius:13px;padding:15px}
+#wallet .panel .primary{background:linear-gradient(120deg,#405cf5,#6683ff);color:#fff}
+.bottom-nav.earnova-tonwave-nav{
+ background:rgba(255,255,255,.97);border-top:1px solid #d9e0fa;
+ box-shadow:0 -5px 18px rgba(40,60,130,.07);padding:9px 3px calc(9px + env(safe-area-inset-bottom))
+}
+.earnova-tonwave-nav .nav-btn{color:#8b94b0;font-size:11px;font-weight:700}
+.earnova-tonwave-nav .nav-btn span{font-size:23px;margin-bottom:4px}
+.earnova-tonwave-nav .nav-btn.active{color:#405cf5}
+.modal{background:#fff!important;color:#111a46!important;border:1px solid #d6def8!important}
+.modal-head{background:#fff!important}
+.close-btn{background:#edf1ff;color:#405cf5;border:1px solid #d6def8}
+input{background:#eaf0ff;color:#17214c;border:1px solid #d2daf8}
+@media(max-width:380px){
+ #home .balance-banner{padding:21px 17px}
+ #home .balance-banner strong{font-size:36px}
+ #home .quick-grid{gap:5px}
+ #home .quick-action{font-size:11px}
+}
+
 </style>
 </head>
 <body>
@@ -737,11 +815,11 @@ html[data-theme="light"] #earn .task-page-tabs button.active{background:#8700ef;
 <div class="footer">EARNOVA • Earn Smart, Stay Genuine</div>
 </main>
 
-<nav class="bottom-nav">
- <button class="nav-btn active" data-screen="home" onclick="goTo('home',this)"><span>⌂</span>Home</button>
- <button class="nav-btn" data-screen="earn" onclick="goTo('earn',this)"><span>▤</span>Tasks</button>
- <button class="nav-btn" data-screen="wallet" onclick="goTo('wallet',this)"><span>▣</span>Wallet</button>
- <button class="nav-btn" data-screen="profileScreen" onclick="goTo('profileScreen',this)"><span>♙</span>Profile</button>
+<nav class="bottom-nav earnova-tonwave-nav">
+ <button class="nav-btn active" data-screen="home" onclick="goTo('home',this)"><span>▶️</span>Ads</button>
+ <button class="nav-btn" data-screen="earn" onclick="goTo('earn',this)"><span>✅</span>Tasks</button>
+ <button class="nav-btn" data-screen="refer" onclick="goTo('refer',this)"><span>👥</span>Invite</button>
+ <button class="nav-btn" data-screen="wallet" onclick="goTo('wallet',this)"><span>💸</span>Withdraw</button>
 </nav>
 
 <!-- AVAILABLE TASKS POPUP -->
