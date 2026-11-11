@@ -1065,28 +1065,33 @@ async function openOwnerPopupAd(button){
 
 async function watchAd(){
  if(isWatchingAd)return;
- isWatchingAd=true;status("Preparing advertisement...");
+ isWatchingAd=true;status("Preparing your 3-ad session...");
  try{
   if(!isRegistered)await registerUser();
-  const s=await apiPost("/api/ad/start");
-  if(!s.ymid)throw new Error("Ad session not received.");
+  const session=await apiPost("/api/ad/start");
+  if(!session.batch_id||!Array.isArray(session.ymids)||session.ymids.length!==3)throw new Error("Ad session could not be prepared.");
   if(typeof window.show_12183521!=="function")throw new Error("Advertisement is not available right now.");
-  status("Opening advertisement...");
-  await window.show_12183521({ymid:s.ymid});
-  status("Waiting for server verification...");
+  for(let index=0;index<session.ymids.length;index++){
+   status("Opening ad "+(index+1)+" of 3...");
+   await window.show_12183521({type:"end",ymid:session.ymids[index],requestVar:"watch_ads_batch"});
+   status("Ad "+(index+1)+" of 3 finished. Preparing the next ad...");
+  }
+  status("All 3 ads finished. Waiting for server verification...");
   for(let i=0;i<60;i++){
    await new Promise(r=>setTimeout(r,1000));
    try{
-    const a=await apiPost("/api/ad/status",{ymid:s.ymid});
-    if(a.credited){
+    const result=await apiPost("/api/ad/status",{batch_id:session.batch_id});
+    if(result.credited){
      await refreshBalance();
-     showMessage("Verified reward: "+money(a.reward));
+     showMessage("All 3 ads verified. Combined reward: "+money(result.reward));
+     status("3 of 3 ads verified. Reward credited.");
      return;
     }
    }catch(e){}
   }
-  status("Reward is pending verification. Check your wallet later.");
-  showMessage("The ad reward is waiting for network verification.");
+  const finalStatus=await apiPost("/api/ad/status",{batch_id:session.batch_id});
+  status("Verified "+(finalStatus.ads_verified||0)+" of 3 ads. Reward is pending network verification.");
+  showMessage("The combined reward will be credited only after all 3 valid ad impressions are verified.");
  }catch(e){status(e.message);showMessage(e.message)}
  finally{isWatchingAd=false}
 }
