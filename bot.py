@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 import os, hmac, hashlib, json, time, uuid, secrets
 from decimal import Decimal, InvalidOperation
-from urllib.parse import parse_qsl
+from urllib.parse import parse_qsl, urlparse
 from datetime import datetime, timezone, date
 import psycopg
 from psycopg.rows import dict_row
@@ -1129,13 +1129,17 @@ def admin_create_task():
     try: reward=Decimal(str(b.get('reward',''))).quantize(Decimal('0.01'))
     except (InvalidOperation,ValueError): return jsonify(ok=False,error='Invalid reward'),400
     verification=str(b.get('verification','manual'))
+    target_url=str(b.get('target_url','')).strip()[:1000]
+    parsed_url=urlparse(target_url)
     if not title or not reward.is_finite() or reward<=0 or verification != 'manual':
-        return jsonify(ok=False,error='Only manual review tasks are supported; enter a title and positive reward'),400
+        return jsonify(ok=False,error='Enter a title and positive reward. Only manual review tasks are supported.'),400
+    if parsed_url.scheme != 'https' or not parsed_url.netloc:
+        return jsonify(ok=False,error='Enter a valid HTTPS sponsor URL.'),400
     try:
         with get_db() as db:
             create_tables(db)
             row=db.execute("""INSERT INTO tasks(title,description,task_type,reward,target_url,verification)
-                VALUES(%s,%s,%s,%s,%s,%s) RETURNING id""",(title,str(b.get('description',''))[:1000],str(b.get('task_type','custom'))[:40],reward,str(b.get('target_url',''))[:1000] or None,verification)).fetchone()
+                VALUES(%s,%s,%s,%s,%s,%s) RETURNING id""",(title,str(b.get('description',''))[:1000],str(b.get('task_type','custom'))[:40],reward,target_url,verification)).fetchone()
         return jsonify(ok=True,task_id=row['id'])
     except Exception: return admin_error('create task')
 
