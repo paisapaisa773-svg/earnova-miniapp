@@ -687,10 +687,8 @@ input{background:#eaf0ff;color:#17214c;border:1px solid #d2daf8}
   <button class="quick-action" onclick="openSupport()"><span class="quick-icon">🎧</span><b>Support</b></button>
  </div>
  <button class="referral-banner" onclick="goTo('refer')"><span><b>Refer & Earn</b><small>Get rewards for every friend!</small></span><span class="gift-art">🎁</span></button>
- <div class="dashboard-heading"><h2 class="section-title">Hot Tasks 🔥</h2><button class="text-link" onclick="goTo('earn')">View All →</button></div>
- <div class="hot-task"><span class="task-icon red">▶</span><span><b>Watch Video</b><small>Earn rewards</small></span><button onclick="watchAd()">Start</button></div>
- <div class="hot-task"><span class="task-icon blue">➤</span><span><b>Join Channel</b><small>Earn rewards</small></span><button onclick="goTo('earn')">Join</button></div>
- <div class="hot-task"><span class="task-icon green">▣</span><span><b>Complete Tasks</b><small>Earn more rewards</small></span><button onclick="goTo('earn')">View</button></div>
+ <div class="dashboard-heading"><h2 class="section-title">Tasks</h2><button class="text-link" onclick="goTo('earn')">View All →</button></div>
+ <div class="panel" style="text-align:center;padding:20px"><b>No tasks added yet</b><p>New tasks will appear here after setup.</p></div>
 <div class="hot-task"><span class="task-icon purple">📢</span><span><b>Sponsored Ad</b><small>Optional ad • No wallet reward</small></span><button id="ownerPopupAdButton" onclick="openOwnerPopupAd(this)">View</button></div>
 </section>
 
@@ -701,38 +699,11 @@ input{background:#eaf0ff;color:#17214c;border:1px solid #d2daf8}
   <button class="task-level" type="button" onclick="showMessage('Level 1 • 0 / 100 XP')"><span>👑 Level 1</span><small>0 / 100 XP　›</small></button>
  </div>
  <div class="task-page-heading"><div class="task-heading-check">✓</div><div class="task-heading-copy"><h1>Tasks</h1><p>Complete tasks and earn rewards instantly!</p></div><span class="task-easy-pill">⚡ Easy &amp; Fast</span></div>
- <div class="task-tabs task-page-tabs">
-  <button class="active" onclick="filterTasks('all',this)">★ All</button>
-  <button onclick="filterTasks('video',this)">▶ Watch Ads</button>
-  <button onclick="filterTasks('join',this)">👥 Social</button>
-  <button onclick="filterTasks('daily',this)">🎁 Daily</button>
-  <button onclick="filterTasks('partner',this)">🤝 Partner</button>
+ <div class="panel" style="text-align:center;padding:24px;margin-top:18px">
+  <div style="font-size:34px">🗂️</div>
+  <h2 style="margin:10px 0 6px">Tasks Coming Soon</h2>
+  <p style="margin:0">All current tasks have been cleared. New tasks will be added after setup.</p>
  </div>
- <div class="task-page-cards">
-  <div class="task-feature-card task-filter-item" data-task-type="video">
-   <div class="task-card-art">🎬</div>
-   <div class="task-card-copy"><h2>Watch Ads</h2><p>Watch short ads and earn rewards instantly.</p><span class="task-reward-chip">▶ &nbsp; + ₹1.00 – ₹5.00</span></div>
-   <div class="task-card-action"><span class="task-popular">Most Popular 🔥</span><button type="button" onclick="watchAd()">Open Task &nbsp; →</button></div>
-  </div>
-  <div class="task-feature-card task-filter-item" data-task-type="join" id="membershipTasks">
-   <div class="task-card-art task-social-art"><span>✈️</span><span>▶️</span><span>◎</span></div>
-   <div class="task-card-copy"><h2>Social Tasks</h2><p>Join our channels &amp; follow for rewards.</p><span class="task-reward-chip">👥 &nbsp; + ₹2.00 – ₹10.00</span></div>
-   <div class="task-card-action"><button type="button" onclick="openChannel()">Join Now &nbsp; →</button><button type="button" class="task-sub-action" onclick="openGroup()">Join Group</button></div>
-   <div class="task-social-verify"><button type="button" class="secondary" onclick="verifyEarnMembership()">✓ Verify Membership</button><small id="membershipInfo">Join both official chats, then verify.</small></div>
-  </div>
-  <div class="task-feature-card task-filter-item task-daily-card" data-task-type="daily">
-   <div class="task-card-art">🗓️</div>
-   <div class="task-card-copy"><h2>Daily Bonus Code</h2><p>Enter daily bonus code and claim rewards.</p><span class="task-reward-chip">🎁 &nbsp; + ₹5.00 – ₹20.00</span></div>
-   <div class="task-card-action task-daily-actions"><input id="earnBonusCode" placeholder="🎁 Enter Code" maxlength="64"><button type="button" onclick="redeemEarnBonus()">🎁 Redeem</button></div>
-   <div id="earnBonusStatus" class="status task-inline-status"></div>
-  </div>
-  <div class="task-partner-section task-filter-item" data-task-type="partner">
-   <div class="task-section-title"><b>🤝 Partner Tasks</b><small>Complete partner offers and earn more rewards.</small></div>
-   <div id="earnTasksList" class="task-partner-list">Loading available offers...</div>
-   <button class="secondary full task-refresh-button" onclick="loadTasks()">↻ Refresh Tasks</button>
-  </div>
- </div>
- <div class="task-tip-banner"><span>💡</span><p><b>Tip:</b> Complete more tasks to level up and get higher rewards!</p><strong>↗</strong></div>
 </section>
 
 <section class="screen" id="refer">
