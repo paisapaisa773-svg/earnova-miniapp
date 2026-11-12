@@ -933,31 +933,56 @@ function showMessage(msg,title="EARNOVA"){
  document.getElementById("messageModal").classList.add("show");
 }
 function closeMessage(){document.getElementById("messageModal").classList.remove("show")}
-function startMonetagAd(){
+async function startMonetagAd(){
  const button=document.getElementById("watchAdButton");
  const statusEl=document.getElementById("homeAdStatus");
  if(isWatchingAd)return;
+ if(!initData){showMessage("Please open EARNOVA from your Telegram bot.","Watch & Earn");return;}
  if(typeof window.show_12183521!=="function"){
   showMessage("Ad is loading. Please try again in a few seconds.","Watch & Earn");
   return;
  }
  isWatchingAd=true;
  if(button){button.disabled=true;button.textContent="Loading...";}
- if(statusEl)statusEl.textContent="Opening ad...";
+ if(statusEl)statusEl.textContent="Starting secure ad session...";
  try{
-  const result=window.show_12183521();
-  Promise.resolve(result).then(()=>{
-   if(statusEl)statusEl.textContent="Ad closed. Reward verification is not enabled yet.";
-  }).catch(()=>{
-   if(statusEl)statusEl.textContent="Ad could not be completed. Try again.";
-  }).finally(()=>{
-   isWatchingAd=false;
-   if(button){button.disabled=false;button.textContent="Watch Ad";}
-  });
+  const session=await apiPost("/api/ad/start");
+  const ymid=String(session.ymid||session.ymids?.[0]||"");
+  if(!ymid)throw new Error("Could not create a verified ad session.");
+  if(statusEl)statusEl.textContent="Opening ad...";
+  const result=await window.show_12183521({ymid,requestVar:"watch_ad"});
+  if(result?.reward_event_type==="non_valued"){
+   if(statusEl)statusEl.textContent="Ad viewed, but Monetag marked it non-valued. No reward was added.";
+   return;
+  }
+  if(statusEl)statusEl.textContent="Checking Monetag reward confirmation...";
+  let verified=null;
+  for(let attempt=0;attempt<25;attempt++){
+   await new Promise(resolve=>setTimeout(resolve,1000));
+   const state=await apiPost("/api/ad/status",{batch_id:session.batch_id});
+   if(state.credited){verified=state;break;}
+  }
+  if(!verified){
+   if(statusEl)statusEl.textContent="Ad received. Monetag verification is still pending; wallet not credited yet.";
+   return;
+  }
+  const reward=Number(verified.reward||0);
+  const balance=await apiPost("/api/balance");
+  updateBalance(balance.balance);
+  const watched=document.getElementById("homeAdsWatched");
+  const earned=document.getElementById("homeAdsEarned");
+  const count=document.getElementById("homeAdCount");
+  if(watched)watched.textContent=String((parseInt(watched.textContent,10)||0)+1);
+  if(earned)earned.textContent=money((Number((earned.textContent||"").replace(/[₹,]/g,""))||0)+reward);
+  if(count)count.textContent=watched?.textContent+" watched";
+  const progress=document.getElementById("homeAdProgress");
+  if(progress)progress.style.width="100%";
+  if(statusEl)statusEl.textContent="✓ Verified. "+money(reward)+" added to your wallet.";
  }catch(e){
+  if(statusEl)statusEl.textContent=e.message||"Ad could not be verified. Please try again.";
+ }finally{
   isWatchingAd=false;
   if(button){button.disabled=false;button.textContent="Watch Ad";}
-  if(statusEl)statusEl.textContent="Ad could not be opened.";
  }
 }
 function status(msg){document.getElementById("walletStatus").textContent=msg}
