@@ -7,6 +7,7 @@
 <meta name="theme-color" content="#090714">
 <title>EARNOVA - Earn Smart</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src='//libtl.com/sdk.js' data-zone='12183521' data-sdk='show_12183521'></script>
 <style>
 :root{--bg:#080808;--card:#151515;--gold:#e8b94f;--gold2:#ffda79;--text:#fff;--muted:#aaa49a;--border:#393020}
 *{box-sizing:border-box}
@@ -702,7 +703,7 @@ body{background:#eef2ff!important;color:#101a43!important}
  </div>
  <div class="home-section-heading"><span class="home-green-dot"></span><h2>Watch &amp; Earn</h2><span class="home-bars">▮▮▮</span></div>
  <div class="home-stats-grid"><div class="home-stat-card"><small>TOTAL WATCHED</small><b id="homeAdsWatched">0</b></div><div class="home-stat-card"><small>TOTAL EARNED</small><b class="home-earned" id="homeAdsEarned">₹0.00</b></div></div>
- <div class="home-watch-card"><div class="home-watch-main"><div class="home-play-icon">▶</div><div class="home-watch-copy"><b>Watch Ad</b><span>Complete video<br>to earn instantly</span></div><button class="home-reward-pill" id="watchAdButton" onclick="showMessage('Rewarded ad setup is pending. Only age-appropriate ads will be enabled.','Watch &amp; Earn')">Soon</button></div><div class="home-progress"><span id="homeAdProgress"></span></div><div class="home-watch-foot"><span id="homeAdStatus">Ready to earn</span><span id="homeAdCount">0 watched</span></div></div>
+ <div class="home-watch-card"><div class="home-watch-main"><div class="home-play-icon">▶</div><div class="home-watch-copy"><b>Watch Ad</b><span>Complete video<br>to earn instantly</span></div><button class="home-reward-pill" id="watchAdButton" onclick="startMonetagAd()">Watch Ad</button></div><div class="home-progress"><span id="homeAdProgress"></span></div><div class="home-watch-foot"><span id="homeAdStatus">Ready to earn</span><span id="homeAdCount">0 watched</span></div></div>
 </section>
 
 <section class="screen" id="earn">
@@ -932,6 +933,33 @@ function showMessage(msg,title="EARNOVA"){
  document.getElementById("messageModal").classList.add("show");
 }
 function closeMessage(){document.getElementById("messageModal").classList.remove("show")}
+function startMonetagAd(){
+ const button=document.getElementById("watchAdButton");
+ const statusEl=document.getElementById("homeAdStatus");
+ if(isWatchingAd)return;
+ if(typeof window.show_12183521!=="function"){
+  showMessage("Ad is loading. Please try again in a few seconds.","Watch & Earn");
+  return;
+ }
+ isWatchingAd=true;
+ if(button){button.disabled=true;button.textContent="Loading...";}
+ if(statusEl)statusEl.textContent="Opening ad...";
+ try{
+  const result=window.show_12183521();
+  Promise.resolve(result).then(()=>{
+   if(statusEl)statusEl.textContent="Ad closed. Reward verification is not enabled yet.";
+  }).catch(()=>{
+   if(statusEl)statusEl.textContent="Ad could not be completed. Try again.";
+  }).finally(()=>{
+   isWatchingAd=false;
+   if(button){button.disabled=false;button.textContent="Watch Ad";}
+  });
+ }catch(e){
+  isWatchingAd=false;
+  if(button){button.disabled=false;button.textContent="Watch Ad";}
+  if(statusEl)statusEl.textContent="Ad could not be opened.";
+ }
+}
 function status(msg){document.getElementById("walletStatus").textContent=msg}
 function openLink(url){
  let safeUrl;
