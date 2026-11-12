@@ -324,13 +324,12 @@ def start_ad():
     if not user: return jsonify(ok=False,error='Invalid Telegram data'),401
     try:
         tid=int(user['id']); batch_id=uuid.uuid4().hex
-        ymids=[f"{batch_id}_{i}" for i in range(1,4)]
+        ymid=batch_id
         with get_db() as db:
             create_tables(db); ensure_user(db,user)
-            db.execute("INSERT INTO ad_batches(batch_id,telegram_id,required_ads,status) VALUES(%s,%s,3,'pending')",(batch_id,tid))
-            for index,ymid in enumerate(ymids,1):
-                db.execute("INSERT INTO ad_history(telegram_id,network,event_id,status,batch_id) VALUES(%s,'monetag',%s,'pending',%s)",(tid,ymid,batch_id))
-        return jsonify(ok=True,batch_id=batch_id,ymids=ymids,required_ads=3,network='monetag'),200
+            db.execute("INSERT INTO ad_batches(batch_id,telegram_id,required_ads,status) VALUES(%s,%s,1,'pending')",(batch_id,tid))
+            db.execute("INSERT INTO ad_history(telegram_id,network,event_id,status,batch_id) VALUES(%s,'monetag',%s,'pending',%s)",(tid,ymid,batch_id))
+        return jsonify(ok=True,batch_id=batch_id,ymid=ymid,ymids=[ymid],required_ads=1,network='monetag'),200
     except Exception:
         app.logger.exception('Ad batch creation failed'); return jsonify(ok=False,error='Could not start ad session'),500
 
